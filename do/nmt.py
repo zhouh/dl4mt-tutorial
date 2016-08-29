@@ -631,7 +631,7 @@ def gru_cond_layer_dad(tparams, state_below, options, prefix='gru',
         # if last word dad update ?
         last_dad_word_embs = reference_embs
 
-        if last_word_index_vec != None:
+        if last_word_index_vec.shape[0] == 0:
 
             # prepare the last word embeddings
             last_dad_word_embs = tparams['Wemb_dec'][last_word_index_vec]
@@ -639,9 +639,9 @@ def gru_cond_layer_dad(tparams, state_below, options, prefix='gru',
 
             # re-compute the x and xx_ because we use different previous word as the reference (predicted word)
             x_ = tensor.dot(last_dad_word_embs, tparams[_p(prefix, 'Wx')]) + \
-                           tparams[_p(prefix, 'bx')]
+                 tparams[_p(prefix, 'bx')]
             xx_ = tensor.dot(last_dad_word_embs, tparams[_p(prefix, 'W')]) + \
-                           tparams[_p(prefix, 'b')]
+                  tparams[_p(prefix, 'b')]
 
         preact1 = tensor.dot(h_, U)
         preact1 += x_
@@ -691,38 +691,38 @@ def gru_cond_layer_dad(tparams, state_below, options, prefix='gru',
         h2 = m_[:, None] * h2 + (1. - m_)[:, None] * h1
 
 
-        be_dad = random.uniform(0, 1.0) > (100 / (100 + math.exp(ti / 100)))
+        last_word_index_vec = tensor.ones((0,0)).astype('int64')
 
-        last_word_index_vec = None
+        if use_dad:
+            be_dad = random.uniform(0, 1.0) > (options['prob_k'] / (options['prob_k'] + math.exp(options['batch_trained_number'] / options['prob_k'])))
+            options['batch_trained_number'] += 1
 
+            if be_dad:
 
-        if be_dad and use_dad:
+                # get the next hidden state
+                next_state = h2
 
-            # get the next hidden state
-            next_state = h2
+                # get the weighted averages of context for this target word y
+                ctxs = ctx_
 
-            # get the weighted averages of context for this target word y
-            ctxs = ctx_
+                logit_lstm = get_layer('ff')[1](tparams, next_state, options,
+                                                prefix='ff_logit_lstm', activ='linear')
+                logit_prev = get_layer('ff')[1](tparams, last_dad_word_embs, options,
+                                                prefix='ff_logit_prev', activ='linear')
+                logit_ctx = get_layer('ff')[1](tparams, ctxs, options,
+                                               prefix='ff_logit_ctx', activ='linear')
+                logit = tensor.tanh(logit_lstm + logit_prev + logit_ctx)
 
-            logit_lstm = get_layer('ff')[1](tparams, next_state, options,
-                                            prefix='ff_logit_lstm', activ='linear')
-            logit_prev = get_layer('ff')[1](tparams,  last_dad_word_embs, options,
-                                            prefix='ff_logit_prev', activ='linear')
-            logit_ctx = get_layer('ff')[1](tparams, ctxs, options,
-                                           prefix='ff_logit_ctx', activ='linear')
-            logit = tensor.tanh(logit_lstm + logit_prev + logit_ctx)
+                if options['use_dropout']:
+                    logit = dropout_layer(logit, use_noise, trng)
+                logit = get_layer('ff')[1](tparams, logit, options,
+                                           prefix='ff_logit', activ='linear')
 
-            if options['use_dropout']:
-                logit = dropout_layer(logit, use_noise, trng)
-            logit = get_layer('ff')[1](tparams, logit, options,
-                                       prefix='ff_logit', activ='linear')
+                # compute the softmax probability
+                next_probs = tensor.nnet.softmax(logit)
 
-            # compute the softmax probability
-            next_probs = tensor.nnet.softmax(logit)
-
-            # sample from softmax distribution to get the sample
-            last_word_index_vec = next_probs.argmax(1)
-
+                # sample from softmax distribution to get the sample
+                last_word_index_vec = next_probs.argmax(1)
 
         return h2, ctx_, alpha.T, last_word_index_vec  # pstate_, preact, preactx, r, u
 
@@ -747,7 +747,7 @@ def gru_cond_layer_dad(tparams, state_below, options, prefix='gru',
                    tparams[_p(prefix, 'b_nl')],
                    tparams[_p(prefix, 'bx_nl')]]
 
-    last_word_index_vec = None
+    last_word_index_vec = tensor.ones((0,0)).astype('int64')
 
     if one_step:
         rval = _step(*(seqs + [init_state, None, None, last_word_index_vec, pctx_, context] +
@@ -806,13 +806,13 @@ def gru_cond_layer_dad(tparams, state_below, options, prefix='gru',
 
 
 
-    rval, updates = theano.scan(_step,
-                                    sequences=seqs,
-                                    name=_p(prefix, '_layers'),
-                                    n_steps=nsteps,
-                                    profile=profile,
-                                    strict=True)
-    return rval
+    # rval, updates = theano.scan(_step,
+    #                                 sequences=seqs,
+    #                                 name=_p(prefix, '_layers'),
+    #                                 n_steps=nsteps,
+    #                                 profile=profile,
+    #                                 strict=True)
+    # return rval
 
 
 # initialize all parameters
@@ -861,7 +861,7 @@ def init_params(options):
 
 
 # build a training model
-def build_model(tparams, options):
+def build_model(tparams, options, number_of_training_instance=0):
     opt_ret = dict()
 
     trng = RandomStreams(1234)
@@ -925,7 +925,7 @@ def build_model(tparams, options):
                                             context_mask=x_mask,
                                             one_step=False,
                                             init_state=init_state,
-                                            use_dad=options['use_dad'])
+                                            use_dad=options['use_dad'], ti=number_of_training_instance)
     # hidden states of the decoder gru
     proj_h = proj[0]
 
@@ -958,7 +958,7 @@ def build_model(tparams, options):
     cost = cost.reshape([y.shape[0], y.shape[1]])
     cost = (cost * y_mask).sum(0)
 
-    return trng, use_noise, x, x_mask, y, y_mask, opt_ret, cost, ti
+    return trng, use_noise, x, x_mask, y, y_mask, opt_ret, cost, number_of_training_instance
 
 
 # build a sampler
@@ -1314,7 +1314,7 @@ def train(dim_word=100,  # word vector dimensionality
               '/data/lisatmp3/chokyun/europarl/europarl-v7.fr-en.fr.tok.pkl'],
           use_dropout=False,
           reload_=False,
-          overwrite=False, use_dad=True):
+          overwrite=False, use_dad=True, batch_trained_number=0, prob_k=1000):
 
     # Model options
     model_options = locals().copy()
@@ -1359,7 +1359,8 @@ def train(dim_word=100,  # word vector dimensionality
     trng, use_noise, \
         x, x_mask, y, y_mask, \
         opt_ret, \
-        cost = \
+        cost,\
+        ti = \
         build_model(tparams, model_options)
     inps = [x, x_mask, y, y_mask]
 
