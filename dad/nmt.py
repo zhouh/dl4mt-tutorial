@@ -625,13 +625,13 @@ def gru_cond_layer_dad(tparams, state_below, options, prefix='gru',
 
 
     def _step_slice(m_, x_, xx_, i, reference_embs,
-                    h_, ctx_, alpha_, last_word_index_vec,
+                    h_, ctx_, alpha_, last_word_index_vec, be_use_dad_last_pos,
                     pctx_, cc_, U, Wc, W_comb_att, U_att, c_tt, Ux, Wcx, U_nl, Ux_nl, b_nl, bx_nl):
 
         # if last word dad update ?
         last_dad_word_embs = reference_embs
 
-        if last_word_index_vec.shape[0] == 0:
+        if be_use_dad_last_pos == True:
 
             # prepare the last word embeddings
             last_dad_word_embs = tparams['Wemb_dec'][last_word_index_vec]
@@ -723,6 +723,7 @@ def gru_cond_layer_dad(tparams, state_below, options, prefix='gru',
 
                 # sample from softmax distribution to get the sample
                 last_word_index_vec = next_probs.argmax(1)
+                be_use_dad_last_pos = True
 
         return h2, ctx_, alpha.T, last_word_index_vec  # pstate_, preact, preactx, r, u
 
@@ -748,6 +749,7 @@ def gru_cond_layer_dad(tparams, state_below, options, prefix='gru',
                    tparams[_p(prefix, 'bx_nl')]]
 
     last_word_index_vec = tensor.ones((0,0)).astype('int64')
+    be_use_dad_last_pos = False
 
     if one_step:
         rval = _step(*(seqs + [init_state, None, None, last_word_index_vec, pctx_, context] +
@@ -760,7 +762,8 @@ def gru_cond_layer_dad(tparams, state_below, options, prefix='gru',
                                                                context.shape[2]),
                                                   tensor.alloc(0., n_samples,
                                                                context.shape[0]),
-                                                  last_word_index_vec],
+                                                  last_word_index_vec,
+                                                  be_use_dad_last_pos],
                                     non_sequences=[pctx_, context]+shared_vars,
                                     name=_p(prefix, '_layers'),
                                     n_steps=nsteps,
