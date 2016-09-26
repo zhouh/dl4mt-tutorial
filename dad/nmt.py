@@ -631,7 +631,7 @@ def gru_cond_layer_dad(tparams, state_below, options, prefix='gru',
         # if last word dad update ?
         last_dad_word_embs = reference_embs
 
-        if be_use_dad_last_pos == True:
+        if be_use_dad_last_pos == 1:
 
             # prepare the last word embeddings
             last_dad_word_embs = tparams['Wemb_dec'][last_word_index_vec]
@@ -723,7 +723,7 @@ def gru_cond_layer_dad(tparams, state_below, options, prefix='gru',
 
                 # sample from softmax distribution to get the sample
                 last_word_index_vec = next_probs.argmax(1)
-                be_use_dad_last_pos = True
+                be_use_dad_last_pos = 1
 
         return h2, ctx_, alpha.T, last_word_index_vec  # pstate_, preact, preactx, r, u
 
@@ -749,10 +749,10 @@ def gru_cond_layer_dad(tparams, state_below, options, prefix='gru',
                    tparams[_p(prefix, 'bx_nl')]]
 
     last_word_index_vec = tensor.ones((0,0)).astype('int64')
-    be_use_dad_last_pos = False
+    be_use_dad_last_pos = 0
 
     if one_step:
-        rval = _step(*(seqs + [init_state, None, None, last_word_index_vec, pctx_, context] +
+        rval = _step(*(seqs + [init_state, None, None, last_word_index_vec, 0, pctx_, context] +
                        shared_vars))
     else:
         rval, updates = theano.scan(_step,

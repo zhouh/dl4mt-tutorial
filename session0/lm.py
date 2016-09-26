@@ -436,6 +436,57 @@ def build_sampler(tparams, options, trng):
     return f_next
 
 
+def predictInSentence(tparams, options, trng):
+    opt_ret = dict()
+
+    trng = RandomStreams(1234)
+    use_noise = theano.shared(numpy.float32(0.))
+
+    # description string: #words x #samples
+    x = tensor.matrix('x', dtype='int64')
+    x_mask = tensor.matrix('x_mask', dtype='float32')
+
+    n_timesteps = x.shape[0]
+    n_samples = x.shape[1]
+
+    # input
+    emb = tparams['Wemb'][x.flatten()]
+    emb = emb.reshape([n_timesteps, n_samples, options['dim_word']])
+    emb_shifted = tensor.zeros_like(emb)
+    emb_shifted = tensor.set_subtensor(emb_shifted[1:], emb[:-1])
+    emb = emb_shifted
+    opt_ret['emb'] = emb
+
+    # pass through gru layer, recurrence here
+    proj = get_layer(options['encoder'])[1](tparams, emb, options,
+                                            prefix='encoder',
+                                            mask=x_mask)
+    proj_h = proj[0]
+    opt_ret['proj_h'] = proj_h
+
+    # compute word probabilities
+    logit_lstm = get_layer('ff')[1](tparams, proj_h, options,
+                                    prefix='ff_logit_lstm', activ='linear')
+    logit_prev = get_layer('ff')[1](tparams, emb, options,
+                                    prefix='ff_logit_prev', activ='linear')
+    logit = tensor.tanh(logit_lstm+logit_prev)
+    logit = get_layer('ff')[1](tparams, logit, options, prefix='ff_logit',
+                               activ='linear')
+    logit_shp = logit.shape
+    probs = tensor.nnet.softmax(
+        logit.reshape([logit_shp[0]*logit_shp[1], logit_shp[2]]))
+
+    # cost
+    x_flat = x.flatten()
+    x_flat_idx = tensor.arange(x_flat.shape[0]) * options['n_words'] + x_flat
+    cost = -tensor.log(probs.flatten()[x_flat_idx])
+    cost = cost.reshape([x.shape[0], x.shape[1]])
+    opt_ret['cost_per_sample'] = cost
+    cost = (cost * x_mask).sum(0)
+
+    return trng, use_noise, x, x_mask, opt_ret, cost
+
+
 # generate sample
 def gen_sample(tparams, f_next, options, trng=None, maxlen=30, argmax=False):
 
