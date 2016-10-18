@@ -26,14 +26,15 @@ def translate_model(queue, rqueue, pid, model, options, k, normalize):
     tparams = init_tparams(params)
 
     # word index
-    f_init, f_next = build_sampler(tparams, options, trng, use_noise)
+    f_init, f_next_chunk, f_next_word = build_sampler(tparams, options, trng, use_noise)
 
     def _translate(seq):
         # sample given an input sequence and obtain scores
-        sample, score = gen_sample(tparams, f_init, f_next,
+        sample, score = gen_sample(tparams, f_init, f_next_chunk, f_next_word,
                                    numpy.array(seq).reshape([len(seq), 1]),
-                                   options, trng=trng, k=k, maxlen=200,
-                                   stochastic=False, argmax=False)
+                                   options, trng=trng, maxlen_words=10,
+               maxlen_chunks=10,
+                                   stochastic=True, argmax=True)
 
         # normalize scores according to sequence lengths
         if normalize:
