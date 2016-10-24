@@ -108,11 +108,17 @@ def main():
         for ii, ww in enumerate(sorted_words):
             worddict[ww] = ii+2
 
+        newChunkDict = OrderedDict()
+        newChunkDict['eos'] = 0
+        newChunkDict['UNK'] = 1
+        for ii, ww in enumerate(chunk_tag_dict):
+            newChunkDict[ww] = ii + 1
+
         with open('%s.pkl'%filename, 'wb') as f:
             pkl.dump(worddict, f)
 
         with open('%s.chunktag.pkl'%filename, 'wb') as f:
-            pkl.dump(chunk_tag_dict, f)
+            pkl.dump(newChunkDict, f)
 
         print 'word < 5: %f\n <10: %f\n < 15 %f\n <20 %f\n' %(w5/chunk_size, w10/chunk_size, w15/chunk_size, w20/chunk_size)
         print 'chunk < 5: %f\n <10: %f\n < 15 %f\n <20 %f\n < 25: %f\n <30: %f\n < 35 %f\n <40 %f\n < 45 %f\n < 50%f\n' %(c5/sentence_size, c10/sentence_size, c15/sentence_size, c20/sentence_size,c25/sentence_size, c30/sentence_size, c35/sentence_size, c40/sentence_size, c45/sentence_size, c50/sentence_size)

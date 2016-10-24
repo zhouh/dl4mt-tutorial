@@ -4,6 +4,7 @@ Translates a source file using a translation model.
 import argparse
 
 import numpy
+import theano
 import cPickle as pkl
 
 from nmt import (build_sampler, gen_sample, load_params,
@@ -32,8 +33,8 @@ def translate_model(queue, rqueue, pid, model, options, k, normalize):
         # sample given an input sequence and obtain scores
         sample, score = gen_sample(tparams, f_init, f_next_chunk, f_next_word,
                                    numpy.array(seq).reshape([len(seq), 1]),
-                                   options, trng=trng, maxlen_words=10,
-               maxlen_chunks=10,
+                                   options, trng=trng, maxlen_words=3,
+               maxlen_chunks=30,
                                    stochastic=True, argmax=True)
 
         # normalize scores according to sequence lengths

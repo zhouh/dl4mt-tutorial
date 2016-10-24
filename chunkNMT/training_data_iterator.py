@@ -33,6 +33,7 @@ class TrainingTextIterator:
             self.source_dict = pkl.load(f)
         with open(target_dict, 'rb') as f:
             self.target_dict = pkl.load(f)
+
         with open(target_chunk_dict, 'rb') as f:
             self.target_chunk_dict = pkl.load(f)
 
