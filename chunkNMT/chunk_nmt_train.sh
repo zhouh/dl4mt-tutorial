@@ -5,7 +5,8 @@
 #PBS -A course
 #PBS -q GpuQ
 
-export THEANO_FLAGS=device=gpu0,optimizer=None,floatX=float32,exception_verbosity=high
+#export THEANO_FLAGS=device=gpu0,optimizer=None,floatX=float32,exception_verbosity=high
+export THEANO_FLAGS=device=gpu0,floatX=float32
 
 python ./train_nmt_zh2en.py
 

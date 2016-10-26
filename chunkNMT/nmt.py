@@ -217,6 +217,8 @@ def prepare_training_data(seqs_x, seqs_y_c, seqs_y_cw, maxlen_chunk=None, maxlen
             y_cw[ idx_cw, :lengths_y_cw[idx][idx_cw], idx] = s_y_cw_i
             y_mask_cw[ idx_cw, :lengths_y_cw[idx][idx_cw] + 1, idx] = 1
 
+    # print y_cw
+
     return x, x_mask, y_c, y_mask_c, y_cw, y_mask_cw
 
 # batch preparation
@@ -2209,16 +2211,22 @@ def train(dim_word=100,  # word vector dimensionality
                             print 'UNK',
                     print
                     print 'Truth ', jj, ' : ',
-                    for ci, chunk_index in enumerate(y_chunk[:, jj]):
-                        if chunk_index in worddict_chunk:
+                    ci = 0
+                    # print y_chunk[: , jj]
+                    for chunk_index in y_c[:, jj]:
+
+                        if chunk_index == 0:
+                            break
+                        if chunk_index in worddict_r_chunk:
                             print '|', worddict_r_chunk[chunk_index],
                         for wi in y_cw[ci, :, jj]:
                             if wi == 0:
-                                print '#END#'
+                                break
                             if wi in worddicts_r[1]:
-                                print worddicts_r[1][vv],
+                                print worddicts_r[1][wi],
                             else:
                                 print 'UNK',
+                        ci += 1
                     print
                     print 'Sample ', jj, ': ',
                     if stochastic:
@@ -2228,7 +2236,7 @@ def train(dim_word=100,  # word vector dimensionality
                         ss = sample[score.argmin()]
                     for vv in ss:
                         if vv == 0:
-                            print '#END#'
+                            break
                         if vv in worddicts_r[1]:
                             print worddicts_r[1][vv],
                         else:

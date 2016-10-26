@@ -2,6 +2,8 @@ import numpy
 
 import cPickle as pkl
 import gzip
+import sys
+import codecs
 
 
 def fopen(filename, mode='r'):
@@ -99,11 +101,16 @@ class TrainingTextIterator:
             # read k items into the buffer
             for k_ in xrange(self.k):
                 ss = self.source.readline()
+
                 if ss == "":
                     break
+
+                # print ss
                 chunk_tags, chunk_words = self.readNextChunkSent()
                 if chunk_tags is None and chunk_words is None:
                     break
+
+                # print chunk_words
 
                 self.source_buffer.append(ss.strip().split())
                 self.target_chunk_buffer.append(chunk_tags)
@@ -118,8 +125,8 @@ class TrainingTextIterator:
             _tcwbuf = [self.target_chunk_words_buffer[i] for i in tidx]
 
             self.source_buffer = _sbuf
-            self.target_buffer = _tcbuf
-            self.target_buffer = _tcwbuf
+            self.target_chunk_buffer = _tcbuf
+            self.target_chunk_words_buffer = _tcwbuf
 
         if len(self.source_buffer) == 0 or len(self.target_chunk_buffer) == 0:
             self.end_of_data = False
@@ -138,6 +145,8 @@ class TrainingTextIterator:
                     ss = self.source_buffer.pop()
                 except IndexError:
                     break
+
+                # print 'source before', ' '.join(ss)
                 ss = [self.source_dict[w] if w in self.source_dict else 1
                       for w in ss]
                 if self.n_words_source > 0:
@@ -152,6 +161,8 @@ class TrainingTextIterator:
                 # read from target file and map to word index
                 tcw = self.target_chunk_words_buffer.pop()
                 tcw_tmp = []
+
+                # print 'target before', tcw
                 for tcw_i in tcw:
                     tcw_i = [self.target_dict[w] if w in self.target_dict else 1 for w in tcw_i]
                     if self.n_words_target > 0:
@@ -159,11 +170,13 @@ class TrainingTextIterator:
                     tcw_tmp.append(tcw_i)
                 tcw = tcw_tmp
 
+                # print 'target after', tcw
+
 
                 # if the source or target chunk or words in target chunk exceed max len, just skip
                 if len(ss) > self.max_word_len and len(tt) > self.max_chunk_len:
                     continue
-                if numpy.min([len(chunk_words_i) for chunk_words_i in tcw]) > self.max_word_len:
+                if numpy.max([len(chunk_words_i) for chunk_words_i in tcw]) > self.max_word_len:
                     continue
 
                 source.append(ss)

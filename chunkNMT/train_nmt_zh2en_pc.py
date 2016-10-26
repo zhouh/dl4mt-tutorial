@@ -20,12 +20,12 @@ def main(job_id, params):
                      lrate=params['learning-rate'][0],
                      optimizer=params['optimizer'][0],
                      patience=1000,
-                     batch_size=10,
-                     valid_batch_size=10,
-                     validFreq=100,
+                     batch_size=1,
+                     valid_batch_size=2,
+                     validFreq=1,
                      dispFreq=10,
-                     saveFreq=1000,
-                     sampleFreq=100,
+                     saveFreq=5,
+                     sampleFreq=5,
                      maxlen_chunk=30,  # maximum length of the description
                      maxlen_chunk_words=3,  # maximum length of the description
                      datasets=['/home/zhouh/workspace/python/nmtdata/small.ch',
