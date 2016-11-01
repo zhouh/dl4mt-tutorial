@@ -1151,7 +1151,6 @@ def init_params(options):
 
     # readout
 
-    print 'dim word:', options['dim_chunk']
     params = get_layer('ff')[0](options, params, prefix='ff_logit_lstm_chunk',
                                 nin=options['dim'], nout=options['dim_chunk'],
                                 ortho=False)
@@ -1162,7 +1161,6 @@ def init_params(options):
                                 nin=ctxdim, nout=options['dim_chunk'],
                                 ortho=False)
 
-    print 'n_chunk:', options['n_chunks']
     params = get_layer('ff')[0](options, params, prefix='ff_logit_chunk',
                                 nin=options['dim_chunk'],
                                 nout=options['n_chunks'])
@@ -1592,6 +1590,8 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
                 nc = next_chunk[0]
             final_beam_sample_chunk.append(nc)
             final_beam_score -= numpy.log(next_p_chunk[0, nc])
+
+            final_beam_sample_word.append( -1 * nc)
 
             if nc == 0:
                 break
@@ -2237,6 +2237,9 @@ def train(dim_word=100,  # word vector dimensionality
                     for vv in ss:
                         if vv == 0:
                             break
+                        if vv < 0:
+                            vv = vv * -1
+                            print '|', worddict_r_chunk[vv],
                         if vv in worddicts_r[1]:
                             print worddicts_r[1][vv],
                         else:
