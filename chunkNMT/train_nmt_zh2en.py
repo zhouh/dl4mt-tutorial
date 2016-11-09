@@ -12,6 +12,7 @@ def main(job_id, params):
                      reload_=params['reload'][0],
                      dim_word=params['dim_word'][0],
                      dim_chunk=params['dim_chunk'][0],
+                     dim_chunk_hidden=params['dim_chunk_hidden'][0],
                      dim=params['dim'][0],
                      n_words=params['n-words'][0],
                      n_words_src=params['n-words'][0],
@@ -22,12 +23,12 @@ def main(job_id, params):
                      patience=1000,
                      batch_size=32,
                      valid_batch_size=32,
-                     validFreq=100,
+                     validFreq=10000,
                      dispFreq=10,
                      saveFreq=1000,
                      sampleFreq=100,
                      maxlen_chunk=30,  # maximum length of the description
-                     maxlen_chunk_words=3,  # maximum length of the description
+                     maxlen_chunk_words=5,  # maximum length of the description
                      datasets=['/home/Data/nmt/corpus.ch',
                                '/home/Data/nmt/corpus.chunked.en'],
                      valid_datasets=['/home/Data/nmt/devntest/MT02/MT02.src',
@@ -43,8 +44,9 @@ if __name__ == '__main__':
     main(0, {
         'model': ['model_hal.npz'],
         'dim_word': [600],
-        'dim_chunk': [200],
+        'dim_chunk': [1000],
         'dim': [1000],
+        'dim_chunk_hidden': [1000],
         'n-words': [30000],
         'optimizer': ['adadelta'],
         'decay-c': [0.],
