@@ -30,12 +30,17 @@ def translate_model(queue, rqueue, pid, model, options, k, normalize):
     f_init, f_next_chunk, f_next_word = build_sampler(tparams, options, trng, use_noise)
 
     def _translate(seq):
+
+        be_stochastic = True
         # sample given an input sequence and obtain scores
         sample, score = gen_sample(tparams, f_init, f_next_chunk, f_next_word,
                                    numpy.array(seq).reshape([len(seq), 1]),
                                    options, trng=trng, maxlen_words=3,
                maxlen_chunks=30,
-                                   stochastic=True, argmax=True)
+                                   stochastic=be_stochastic, argmax=True)
+
+        if be_stochastic:
+            return sample
 
         # normalize scores according to sequence lengths
         if normalize:
@@ -101,6 +106,8 @@ def main(model, dictionary, dictionary_target, source_file, saveto, k=5,
             for w in cc:
                 if w == 0:
                     break
+                if w < 0:
+                    continue
                 ww.append(word_idict_trg[w])
             capsw.append(' '.join(ww))
         return capsw

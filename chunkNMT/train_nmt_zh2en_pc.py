@@ -44,9 +44,9 @@ if __name__ == '__main__':
     main(0, {
         'model': ['model_hal.npz'],
         'dim_word': [30],
-        'dim_chunk': [30],
-        'dim_chunk_hidden' : [30],
-        'dim': [30],
+        'dim_chunk': [50],
+        'dim_chunk_hidden' : [60],
+        'dim': [40],
         'n-words': [100],
         'optimizer': ['adadelta'],
         'decay-c': [0.],

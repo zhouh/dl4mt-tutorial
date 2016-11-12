@@ -477,7 +477,7 @@ def param_init_gru_cond(options, params, prefix='gru_cond',
     # new the chunking parameters
 
 
-    params[_p(prefix, 'chunk_transform_matrix')] = get_tensor_weight(chunk_label_num, nin_nonlin, nin_chunk)
+    params[_p(prefix, 'chunk_transform_matrix')] = get_tensor_weight(chunk_label_num, dim_nonlin, nin_chunk)
 
 
     W_chunk = numpy.concatenate([norm_weight(nin_chunk, dim_chunk_hidden),
@@ -592,10 +592,13 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
     # the hidden dim
     dim = tparams[_p(prefix, 'Wcx')].shape[1]
 
+    # chunk hidden dim
+    chunk_hidden_dim = tparams[_p(prefix, 'Wcx_chunk')].shape[1]
+
 
     # initial/previous state
     if init_state_chunk is None:
-        init_state_chunk = tensor.alloc(0., n_samples, dim)
+        init_state_chunk = tensor.alloc(0., n_samples, chunk_hidden_dim)
     if init_state_chunk_words is None:
         init_state_chunk_words = tensor.alloc(0., n_samples, dim)
 
@@ -734,8 +737,8 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
         preact1 += chunk_x_
         preact1 = tensor.nnet.sigmoid(preact1)
 
-        r1 = _slice(preact1, 0, dim)
-        u1 = _slice(preact1, 1, dim)
+        r1 = _slice(preact1, 0, chunk_hidden_dim)
+        u1 = _slice(preact1, 1, chunk_hidden_dim)
 
         preactx1 = tensor.dot(h_chunk, Ux_chunk)
         preactx1 *= r1
@@ -767,8 +770,8 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
         preact2 += tensor.dot(ctx_, Wc_chunk)
         preact2 = tensor.nnet.sigmoid(preact2)
 
-        r2 = _slice(preact2, 0, dim)
-        u2 = _slice(preact2, 1, dim)
+        r2 = _slice(preact2, 0, chunk_hidden_dim)
+        u2 = _slice(preact2, 1, chunk_hidden_dim)
 
         preactx2 = tensor.dot(h1, Ux_nl_chunk)+bx_nl_chunk
         preactx2 *= r2
@@ -819,8 +822,8 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
         preact1 += chunk_x_
         preact1 = tensor.nnet.sigmoid(preact1)
 
-        r1 = _slice(preact1, 0, dim)
-        u1 = _slice(preact1, 1, dim)
+        r1 = _slice(preact1, 0, chunk_hidden_dim)
+        u1 = _slice(preact1, 1, chunk_hidden_dim)
 
         preactx1 = tensor.dot(h_chunk, Ux_chunk)
         preactx1 *= r1
@@ -852,8 +855,8 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
         preact2 += tensor.dot(ctx_, Wc_chunk)
         preact2 = tensor.nnet.sigmoid(preact2)
 
-        r2 = _slice(preact2, 0, dim)
-        u2 = _slice(preact2, 1, dim)
+        r2 = _slice(preact2, 0, chunk_hidden_dim)
+        u2 = _slice(preact2, 1, chunk_hidden_dim)
 
         preactx2 = tensor.dot(h1, Ux_nl_chunk)+bx_nl_chunk
         preactx2 *= r2
@@ -1035,6 +1038,7 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
     #                tparams[_p(prefix, 'b_nl_chunk')],
     #                tparams[_p(prefix, 'bx_nl_chunk')]]
 
+    init_word_hidden = tensor.tile(init_state_chunk_words.reshape([1, init_state_chunk_words.shape[0], init_state_chunk_words.shape[1]]), (n_chunk_word_step, 1, 1))
     rval, updates = theano.scan(_step,
                                 sequences=seqs,
                                 outputs_info=[init_state_chunk,
@@ -1043,8 +1047,8 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
                                               tensor.alloc(0., n_samples,
                                                            context.shape[0]),
                                               tensor.alloc(0., n_samples,
-                                                           options['dim_word']), # the true represent of last chunk
-                                              tensor.tile(init_state_chunk_words.reshape([1, init_state_chunk_words.shape[0], init_state_chunk_words.shape[1]]), (n_chunk_word_step, 1, 1)),
+                                                           options['dim']), # the true represent of last chunk
+                                              init_word_hidden,
                                               tensor.alloc(0., n_chunk_word_step, n_samples,
                                                            context.shape[2]),
                                               tensor.alloc(0., n_chunk_word_step, n_samples,
@@ -1096,13 +1100,12 @@ def init_params(options):
 
     # init_state, init_cell
     params = get_layer('ff')[0](options, params, prefix='ff_state_chunk',
-                                nin=ctxdim, nout=options['dim'])
+                                nin=ctxdim, nout=options['dim_chunk_hidden'])
 
 
     # init_state, init_cell
-    print options['dim_chunk_hidden']
     params = get_layer('ff')[0](options, params, prefix='ff_state_chunk_words',
-                                nin=ctxdim, nout=options['dim_chunk_hidden'])
+                                nin=ctxdim, nout=options['dim'])
 
 
 
@@ -1141,7 +1144,7 @@ def init_params(options):
 
     # we should note here, we use word dim
     params = get_layer('ff')[0](options, params, prefix='ff_logit_prev_chunk',
-                                nin=options['dim_word'],
+                                nin=options['dim'],
                                 nout=options['dim_chunk'], ortho=False)
     params = get_layer('ff')[0](options, params, prefix='ff_logit_ctx_chunk',
                                 nin=ctxdim, nout=options['dim_chunk'],
@@ -1528,39 +1531,36 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
     word_dead_k = 0
 
 
-
-    # chunk_hyp_samples = [[]] * chunk_live_k
-    # chunk_hyp_scores = numpy.zeros(chunk_live_k).astype('float32')
-    # chunk_hyp_states = []
-
     # get initial state of chunk and word decoder rnn
     ret = f_init(x)
     next_state_chunk, next_state_word, ctx0 = ret[0], ret[1], ret[2]
 
 
+    # TODO we have to note that our code only support one dimention generate now.!
+    # we have to modify the code
+
     next_word = -1 * numpy.ones((1,)).astype('int64')  # bos indicator
     next_chunk = -1 * numpy.ones((1,)).astype('int64')  # bos indicator
 
-    next_chunk_emb = numpy.zeros((1, options['dim_word'])).astype('float32')
+    next_chunk_emb = numpy.zeros((1, options['dim'])).astype('float32')
 
 
     # sample container for beam search
 
     final_beam_sample_word = []
     final_beam_sample_chunk = []
-    final_beam_word_score = []
-    final_beam_chunk_score= []
     final_beam_score = []
 
-    beam_sample_chunk = [[]] * chunk_live_k #TODO make sure the shape of the sample
-    beam_sample_word = [[[]]] * chunk_live_k
+    # containers for mulitple beam search
 
-    beam_sample_chunk_score = numpy.zeros(chunk_live_k).astype('float32')
-    beam_sample_word_score = [numpy.zeros(chunk_live_k).astype('float32')]
+    chunk_beam_word_sample = [[]] * chunk_live_k
+    chunk_beam_chunk_sample = [[]] * chunk_live_k
 
-    # beam_state_chunk=next_state_chunk
-    beam_word_state=[next_state_word] * chunk_live_k
-    beam_next_word = [next_word] * chunk_live_k
+    chunk_beam_scores = numpy.zeros(chunk_live_k).astype('float32')
+    chunk_beam_chunk_hiddens = [] # next_state_chunk
+    chunk_beam_chunk_trues = [] # next_chunk_emb
+    chunk_beam_word_hiddens = [next_state_word] * chunk_live_k# next_state_word
+
 
 
     #
@@ -1573,7 +1573,7 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
 
         # get the next chunk configuration
         ctx = numpy.tile(ctx0, [chunk_live_k, 1])
-        inps = [next_chunk, ctx, next_state_chunk, next_chunk_emb]
+        inps = [next_chunk, ctx, next_state_chunk, next_chunk_emb] # the next chunk here is really the last chunk label index
 
         # print next_chunk_emb
         ret = f_next_chunk(*inps)
@@ -1616,198 +1616,210 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
             next_chunk_emb = next_state_word - next_chunk_emb
         #
         # # beam search decoding
-        # else:
-        #
-        #
-        #     # get the best k candidates, by 0~vob, vob+1 ~ 2vob ...
-        #
-        #     chunk_cand_scores = beam_sample_chunk_score[:, None] - numpy.log(next_p_chunk)
-        #     chunk_cand_flat = chunk_cand_scores.flatten()
-        #     chunk_ranks_flat = chunk_cand_flat.argsort()[:(k_chunk-chunk_dead_k)]
-        #
-        #     chunk_voc_size = next_p_chunk.shape[1]
-        #     chunk_trans_indices = chunk_ranks_flat / chunk_voc_size # index in the sample
-        #     chunk_indices = chunk_ranks_flat % chunk_voc_size
-        #     chunk_costs = chunk_cand_flat[chunk_ranks_flat] # get all the probability
-        #
-        #     new_chunk_hyp_samples = []
-        #     new_chunk_hyp_scores = numpy.zeros(k_chunk-chunk_dead_k).astype('float32')
-        #     new_chunk_hyp_states = []
-        #
-        #
-        #
-        #     # stores the newly generated results
-        #     new_beam_sample_word = [] * chunk_live_k
-        #     new_beam_sample_word_score = []
-        #     new_beam_state_word=[]
-        #
-        #     # idx is the order of the executed chunk sequence,
-        #     # and ti is the index of the parant sequence it is generated from
-        #     for idx, [ti, wi] in enumerate(zip(chunk_trans_indices, chunk_indices)):
-        #
-        #         new_chunk_hyp_samples.append(beam_sample_chunk[ti]+[wi])
-        #         new_chunk_hyp_scores[idx] = copy.copy(chunk_costs[idx])
-        #         new_chunk_hyp_states.append(copy.copy(next_state_chunk[ti]))
-        #
-        #
-        #         #============
-        #         # begin to sample the possible words for each chunk
-        #         # for each chunk, we predict the corresponding words
-        #         #============
-        #
-        #         if wi == 0:
-        #             final_beam_sample_chunk.append(new_chunk_hyp_samples[idx])
-        #             final_beam_chunk_score.append(new_chunk_hyp_scores[idx])
-        #
-        #             # we don't add the chunk score into the word score here.
-        #             final_beam_sample_word.extend(beam_sample_word[ti])
-        #             final_beam_word_score.extend(beam_sample_word_score[ti].tolist())
-        #
-        #             final_beam_score.extend( (beam_sample_word_score[ti] + new_chunk_hyp_scores[idx]).tolist)
-        #
-        #             chunk_dead_k += 1
-        #
-        #             continue
-        #
-        #         word_live_k = 1
-        #         word_dead_k = 0
-        #
-        #         #
-        #         # # to store the word sample configurations for the chunks in the beam
-        #         # word_hyp_samples = [[[]]] * word_live_k
-        #         # word_hyp_scores = [numpy.zeros(word_live_k).astype('float32')]
-        #         # word_hyp_states = [[]]
-        #
-        #         complete_word_sample = []
-        #         complete_word_sample_score = []
-        #         complete_word_sample_state = []
-        #
-        #         for ii_word in xrange(maxlen_words):
-        #
-        #             ctx = numpy.tile(ctx0, [word_live_k, 1])
-        #             inps = [beam_next_word[ti], ctx, beam_word_state[ti]]
-        #             ret = f_next_word(*inps)
-        #             new_next_p_word_i, new_next_word_i, new_next_state_word_i \
-        #                 = ret[0], ret[1], ret[2]
-        #
-        #
-        #             word_cand_scores = beam_sample_word_score[idx][:, None] - numpy.log(new_next_p_word_i)
-        #             word_cand_flat = word_cand_scores.flatten()
-        #             word_ranks_flat = word_cand_flat.argsort()[:(k_word-word_dead_k)]
-        #
-        #             word_voc_size = new_next_p_word_i.shape[1]
-        #             word_trans_indices = word_ranks_flat / word_voc_size # index in the sample
-        #             word_indices = word_ranks_flat % word_voc_size
-        #             word_costs = word_cand_flat[word_ranks_flat] # get all the probability
-        #
-        #             new_word_hyp_samples = []
-        #             new_word_hyp_scores = numpy.zeros(k_word-word_dead_k).astype('float32')
-        #             new_word_hyp_states = []
-        #
-        #             for idx_word, [ti_word, wi_word] in enumerate(zip(word_trans_indices, word_indices)):
-        #                 new_word_hyp_samples.append(beam_sample_word[ti][ti_word]+[wi_word])
-        #                 new_word_hyp_scores[idx_word] = copy.copy(word_costs[idx_word])
-        #                 new_word_hyp_states.append(copy.copy(beam_word_state[ti][ti_word]))
-        #
-        #             # append the new config into the temp beam container
-        #             new_beam_sample_word.append(new_beam_sample_word)
-        #             new_beam_sample_word_score.append(new_word_hyp_scores)
-        #             new_beam_state_word.append(new_word_hyp_states)
-        #
-        #             # check the finished samples
-        #             new_word_live_k = 0
-        #             beam_sample_word[ti] = []
-        #             beam_sample_word_score[ti] = []
-        #             beam_word_state[ti] = []
-        #
-        #
-        #             for idx_word in xrange(len(new_word_hyp_samples)):
-        #                 if new_word_hyp_samples[idx][-1] == 0:
-        #                     complete_word_sample.append(new_word_hyp_samples[idx_word])
-        #                     complete_word_sample_score.append(new_word_hyp_scores[idx_word])
-        #                     complete_word_sample_state.append(new_word_hyp_states[idx_word])
-        #                     word_dead_k += 1
-        #                 else:
-        #                     new_word_live_k += 1
-        #                     beam_sample_word[ti].append(new_word_hyp_samples[idx])
-        #                     beam_sample_word_score[ti].append(new_word_hyp_scores[idx])
-        #                     beam_word_state[ti].append(new_word_hyp_states[idx])
-        #
-        #
-        #
-        #             beam_sample_word_score[ti] = numpy.array(beam_sample_word_score[ti])
-        #             word_live_k = new_word_live_k
-        #
-        #             if word_live_k < 1:
-        #                 break
-        #             if word_dead_k >= k_word:
-        #                 break
-        #
-        #
-        #             next_word = numpy.array([w[-1] for w in beam_sample_word_score[ti]])
-        #             beam_word_state = numpy.array(beam_word_state[ti])
-        #
-        #         # end max word iteration
-        #
-        #         for widx in xrange(beam_sample_word[ti]):
-        #             complete_word_sample.append(beam_sample_word[ti][widx])
-        #             complete_word_sample_score.append(beam_sample_word_score[ti][widx])
-        #             complete_word_sample_state.append(beam_word_state[widx])
-        #
-        #         new_beam_state_word.append(complete_word_sample)
-        #         new_beam_sample_word_score.append(complete_word_sample_score)
-        #         new_beam_state_word.append(complete_word_sample_state)
-        #
-        #
-        #         #============
-        #         # end to sample max words
-        #         #============
-        #
-        #     # end to sample possible chunks
-        #
-        #     beam_sample_word = new_beam_state_word
-        #     beam_sample_word_score = new_beam_sample_word_score
-        #     beam_word_state = new_beam_state_word
-        #
-        #
-        #     # check the finished samples
-        #     new_chunk_live_k = 0
-        #     beam_sample_chunk = []
-        #     beam_sample_chunk_score = []
-        #     beam_chunk_states = []
-        #
-        #     for idx in xrange(len(new_chunk_hyp_samples)):
-        #
-        #         # chunk sequence ends ?
-        #         if new_chunk_hyp_samples[idx][-1] == 0:
-        #             continue
-        #         else:
-        #             new_chunk_live_k += 1
-        #             beam_sample_chunk.append(new_chunk_hyp_samples[idx])
-        #             beam_sample_chunk_score.append(new_chunk_hyp_scores[idx])
-        #             beam_chunk_states.append(new_chunk_hyp_states[idx])
-        #     beam_sample_chunk_score = numpy.array(beam_sample_chunk_score)
-        #     chunk_live_k = new_chunk_live_k
-        #
-        #     if chunk_live_k < 1:
-        #         break
-        #     if chunk_dead_k >= k_chunk:
-        #         break
-        #
-        #     next_chunk = numpy.array([w[-1] for w in beam_sample_chunk])
-        #     next_state_chunk = numpy.array(beam_chunk_states)
-        #
+        else:
 
-        # end chunk iteration
+            # get the best k candidates, by 0~vob, vob+1 ~ 2vob ...
+            chunk_cand_scores = chunk_beam_scores[:, None] - numpy.log(next_p_chunk)
+            chunk_cand_flat = chunk_cand_scores.flatten()
+            chunk_ranks_flat = chunk_cand_flat.argsort()[:(k_chunk-chunk_dead_k)]
+
+            chunk_voc_size = next_p_chunk.shape[1] # next_p_chunk    shape0: sample size   shape1: chunk vocab size
+            chunk_trans_indices = chunk_ranks_flat / chunk_voc_size # index in the sample
+            chunk_indices = chunk_ranks_flat % chunk_voc_size
+            chunk_costs = chunk_cand_flat[chunk_ranks_flat] # get all the probability
+
+            new_chunk_hyp_samples = []
+            new_chunk_hyp_scores = []
+            new_chunk_hyp_states = []
+
+
+
+
+            # container for word beam search
+            complete_word_sample = []
+            complete_word_sample_score = []
+            complete_word_sample_state = []
+            complete_word_sample_chunk_index = []
+
+
+
+            # idx is the order of the executed chunk sequence,
+            # and ti is the index of the parant sequence it is generated from
+            for idx, [ti, wi] in enumerate(zip(chunk_trans_indices, chunk_indices)):
+
+
+                #============
+                # begin to sample the possible words for each chunk
+                # for each chunk, we predict the corresponding words
+                #============
+
+                if wi == 0:
+                    final_beam_sample_chunk.append(chunk_beam_chunk_sample[ti]+[wi])
+
+                    # we don't add the chunk score into the word score here.
+                    final_beam_sample_word.append(chunk_beam_chunk_sample[ti])
+
+                    final_beam_score.append( copy.copy(chunk_costs[idx]))
+
+                    chunk_dead_k += 1
+
+                    continue
+
+                else:
+
+                    new_chunk_hyp_samples.append(chunk_beam_chunk_sample[ti]+[wi])
+                    new_chunk_hyp_scores.append( copy.copy(chunk_costs[idx]) )
+                    new_chunk_hyp_states.append(copy.copy(next_state_chunk[ti]))
+
+
+
+
+                word_live_k = 1
+                word_dead_k = 0
+
+                hyp_word_sample = [chunk_beam_word_sample[ti]]
+                hyp_word_sample_score = numpy.asscalar(new_chunk_hyp_scores[idx]).astype('float32')
+                hyp_word_sample_state = []
+                hyp_word_sample_chunk_index = []
+
+
+                ii_word_state = chunk_beam_word_hiddens[ti]
+                current_next_word = numpy.asscalar(chunk_beam_word_sample[ti][-1]).astype('int64')
+
+                for ii_word in xrange(maxlen_words):
+
+
+                    ctx = numpy.tile(ctx0, [word_live_k, 1])
+
+                    chunk_hidden = numpy.tile(new_chunk_hyp_states[idx], [word_live_k, 1])
+
+                    inps = [current_next_word, ctx, ii_word_state, chunk_hidden]
+
+                    ret = f_next_word(*inps)
+                    new_next_p_word_i, current_next_word, ii_word_state \
+                        = ret[0], ret[1], ret[2]
+
+
+                    word_cand_scores = hyp_word_sample_score[:, None] - numpy.log(new_next_p_word_i)
+                    word_cand_flat = word_cand_scores.flatten()
+                    word_ranks_flat = word_cand_flat.argsort()[:(k_word-word_dead_k)]
+
+                    word_voc_size = new_next_p_word_i.shape[1]
+                    word_trans_indices = word_ranks_flat / word_voc_size # index in the sample
+                    word_indices = word_ranks_flat % word_voc_size
+                    word_costs = word_cand_flat[word_ranks_flat] # get all the probability
+
+
+
+                    new_word_hyp_samples = []
+                    new_word_hyp_scores = numpy.zeros(k_word-word_dead_k).astype('float32')
+                    new_word_hyp_states = []
+                    new_word_hyp_chunk_index = []
+
+                    for idx_word, [ti_word, wi_word] in enumerate(zip(word_trans_indices, word_indices)):
+
+                        if wi_word == 0:
+                            complete_word_sample.append(hyp_word_sample[ti_word]+[wi_word])
+                            complete_word_sample_score.append(copy.copy(word_costs[idx_word]))
+                            complete_word_sample_state.append(copy.copy(ii_word_state[ti_word]))
+                            complete_word_sample_chunk_index.append(ti)
+
+                            word_dead_k += 1
+
+                            continue
+
+                        else:
+                            new_word_hyp_samples.append(hyp_word_sample[ti_word]+[wi_word])
+                            new_word_hyp_scores.append( copy.copy(word_costs[idx_word]))
+                            new_word_hyp_states.append(copy.copy(ii_word_state[ti_word]))
+                            new_word_hyp_chunk_index.append(ti)
+
+
+                    # add all the new generated hyposis into the hyposis container, which will be used for next word prediction
+                    hyp_word_sample = []
+                    hyp_word_sample_score = []
+                    hyp_word_sample_state = []
+                    hyp_word_sample_chunk_index = []
+
+                    hyp_word_sample.extend(new_word_hyp_samples)
+                    hyp_word_sample_score.extend(new_word_hyp_scores)
+                    hyp_word_sample_state.extend(new_word_hyp_states)
+                    hyp_word_sample_chunk_index.extend(new_word_hyp_chunk_index)
+
+
+                    word_live_k = k_word - word_dead_k
+
+                    if word_live_k < 1:
+                        break
+                    if word_dead_k >= k_word:
+                        break
+
+                    # prepare the next phrase configuration for next word computation
+                    current_next_word = numpy.array([w[-1] for w in hyp_word_sample])
+                    ii_word_state = numpy.array(hyp_word_sample_state)
+                    hyp_word_sample_score = numpy.array(hyp_word_sample_score)
+
+
+
+                # end max word iteration
+
+                # collect all the un_funished hypthesis
+
+                if word_dead_k < k_word:
+
+                    for remain_i in xrange(len(hyp_word_sample)):
+
+                        complete_word_sample.append(hyp_word_sample[remain_i])
+                        complete_word_sample_score.append(hyp_word_sample_score[remain_i])
+                        complete_word_sample_state.append(hyp_word_sample_state[remain_i])
+                        complete_word_sample_chunk_index.append(hyp_word_sample_chunk_index[remain_i])
+
+
+                #============
+                # end to sample max words
+                #============
+
+
+            # end sample all chunks
+
+            # get the k best candidates in the chunk beam
+            best_k_index_chunk_beam =numpy.array(complete_word_sample_score).argsort()[:(k_chunk-chunk_dead_k)]
+
+            chunk_beam_chunk_sample = [chunk_beam_chunk_sample[i] for i in best_k_index_chunk_beam]
+            chunk_beam_word_sample = [complete_word_sample[i] for i in best_k_index_chunk_beam]
+            chunk_beam_scores = [complete_word_sample_score[i] for i in best_k_index_chunk_beam]
+            chunk_beam_chunk_hiddens = [chunk_beam_chunk_hiddens[i] for i in best_k_index_chunk_beam]
+            chunk_beam_chunk_trues = [ (complete_word_sample_state[i] - chunk_beam_word_hiddens[k]) for k, i in enumerate(best_k_index_chunk_beam)]
+
+
+            chunk_live_k = k_chunk - chunk_dead_k
+
+
+            if chunk_live_k < 1:
+                break
+            if chunk_dead_k >= k_chunk:
+                break
+
+
+            chunk_beam_scores = numpy.array(chunk_beam_scores)
+            next_chunk = numpy.array([w[-1] for w in chunk_beam_chunk_sample])
+            next_state_chunk = numpy.array(chunk_beam_chunk_hiddens)
+            next_chunk_emb = numpy.array(chunk_beam_chunk_trues)
+
+
+
+        # end if stochastic
+
+    # end chunk iteration for max chunk len
 
     if not stochastic:
         # dump every remaining one
-        if chunk_live_k > 0:
-            for idx in xrange(chunk_live_k):
-                final_beam_sample_word.extend(beam_sample_word[idx])
-                final_beam_sample_chunk.append(beam_sample_chunk[idx])
-                final_beam_score.append((beam_sample_word_score[idx] +
-                                         beam_sample_chunk_score[idx]).tolist)
+        if chunk_dead_k < k_chunk:
+
+            for remain_i in xrange(len()):
+                final_beam_sample_word.append(chunk_beam_word_sample[remain_i])
+                final_beam_sample_chunk.append(chunk_beam_chunk_sample[remain_i])
+                final_beam_score.append(chunk_beam_scores[remain_i])
 
     return final_beam_sample_word, final_beam_score
 
@@ -2026,33 +2038,36 @@ def train(dim_word=100,  # word vector dimensionality
 
     # begin to read by iterators
     train = TrainingTextIterator(datasets[0], datasets[1],
-                         dictionaries[0], dictionaries[1], dictionary_chunk,
-                         n_words_source=n_words_src, n_words_target=n_words,
-                         batch_size=batch_size,
-                         max_chunk_len=maxlen_chunk, max_word_len=maxlen_chunk_words)
+                                 dictionaries[0], dictionaries[1], dictionary_chunk,
+                                 n_words_source=n_words_src, n_words_target=n_words,
+                                 batch_size=batch_size,
+                                 max_chunk_len=maxlen_chunk, max_word_len=maxlen_chunk_words)
     valid = TrainingTextIterator(valid_datasets[0], valid_datasets[1],
-                         dictionaries[0], dictionaries[1], dictionary_chunk,
-                         n_words_source=n_words_src, n_words_target=n_words,
-                         batch_size=valid_batch_size,
-                         max_chunk_len=maxlen_chunk, max_word_len=maxlen_chunk_words)
+                                 dictionaries[0], dictionaries[1], dictionary_chunk,
+                                 n_words_source=n_words_src, n_words_target=n_words,
+                                 batch_size=valid_batch_size,
+                                 max_chunk_len=maxlen_chunk, max_word_len=maxlen_chunk_words)
 
     print 'Building model'
 
+
     # init all the parameters for model
     params = init_params(model_options)
+
+
     # reload parameters
     if reload_ and os.path.exists(saveto):
         print 'Reloading model parameters'
         params = load_params(saveto, params)
 
-    tparams = init_tparams(params)
 
+    tparams = init_tparams(params)
     # modify the module of build model!
     # especially the inputs and outputs
     trng, use_noise, \
-        x, x_mask, y_chunk, y_chunk_mask, y_cw, y_cw_mask,\
-        opt_ret, \
-        cost= \
+    x, x_mask, y_chunk, y_chunk_mask, y_cw, y_cw_mask, \
+    opt_ret, \
+    cost= \
         build_model(tparams, model_options)
 
     inps = [x, x_mask, y_chunk, y_chunk_mask, y_cw, y_cw_mask]
@@ -2144,8 +2159,8 @@ def train(dim_word=100,  # word vector dimensionality
             use_noise.set_value(1.)
 
             x, x_mask, y_c, y_mask_c, y_cw, y_mask_cw = prepare_training_data(x, y_chunk, y_cw, maxlen_chunk=maxlen_chunk, maxlen_cw=maxlen_chunk_words,
-                                                n_words_src=n_words_src,
-                                                n_words=n_words)
+                                                                              n_words_src=n_words_src,
+                                                                              n_words=n_words)
 
             if x is None:
                 print 'Minibatch with zero sample under chunk length ', maxlen_chunk, 'word length: ', maxlen_chunk_words
@@ -2205,7 +2220,7 @@ def train(dim_word=100,  # word vector dimensionality
                                                x[:, jj][:, None],
                                                model_options, trng=trng, k_chunk=1, k_word=1,
                                                maxlen_words=10,
-               maxlen_chunks=10,
+                                               maxlen_chunks=10,
                                                stochastic=stochastic,
                                                argmax=False)
                     print 'Source ', jj, ': ',
