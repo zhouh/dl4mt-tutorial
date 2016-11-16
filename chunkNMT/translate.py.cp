@@ -4,8 +4,8 @@ Translates a source file using a translation model.
 import argparse
 
 import numpy
-import theano
 import cPickle as pkl
+import theano
 
 from nmt import (build_sampler, gen_sample, load_params,
                  init_params, init_tparams)
@@ -19,6 +19,7 @@ def translate_model(queue, rqueue, pid, model, options, k, normalize):
     trng = RandomStreams(1234)
     use_noise = theano.shared(numpy.float32(0.))
 
+
     # allocate model parameters
     params = init_params(options)
 
@@ -27,27 +28,16 @@ def translate_model(queue, rqueue, pid, model, options, k, normalize):
     tparams = init_tparams(params)
 
     # word index
-    f_init, f_next_chunk, f_next_word = build_sampler(tparams, options, trng, use_noise)
+    f_init, f_next = build_sampler(tparams, options, trng, use_noise)
 
     def _translate(seq):
-
-        be_stochastic = False
         # sample given an input sequence and obtain scores
-        sample, score = gen_sample(tparams, f_init, f_next_chunk, f_next_word,
+        sample, score = gen_sample(tparams, f_init, f_next,
                                    numpy.array(seq).reshape([len(seq), 1]),
-                                   options, trng=trng, maxlen_words=10, k_chunk=3, k_word=5,
-               maxlen_chunks=50,
-                                   stochastic=be_stochastic, argmax=True)
+                                   options, trng=trng, k=k, maxlen=200,
+                                   stochastic=True, argmax=True)
 
-        if be_stochastic:
-            return sample
-
-        # normalize scores according to sequence lengths
-        if normalize:
-            lengths = numpy.array([len(s) for s in sample])
-            score = score / lengths
-        sidx = numpy.argmin(score)
-        return sample[sidx]
+        return sample
 
     while True:
         req = queue.get()
@@ -105,9 +95,7 @@ def main(model, dictionary, dictionary_target, source_file, saveto, k=5,
             ww = []
             for w in cc:
                 if w == 0:
-                    continue
-                if w < 0:
-                    print '|', -1 * w
+                    break
                 ww.append(word_idict_trg[w])
             capsw.append(' '.join(ww))
         return capsw
@@ -149,7 +137,7 @@ def main(model, dictionary, dictionary_target, source_file, saveto, k=5,
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-k', type=int, default=5)
+    parser.add_argument('-k', type=int, default=1)
     parser.add_argument('-p', type=int, default=5)
     parser.add_argument('-n', action="store_true", default=False)
     parser.add_argument('-c', action="store_true", default=False)

@@ -83,6 +83,48 @@ class TrainingTextIterator:
 
         return chunk_tag, chunk_words
 
+    def readBuffer(self):
+
+        # print 'read the buffer'
+
+        # read k items into the buffer
+        for k_ in xrange(self.k):
+            ss = self.source.readline()
+
+            if ss == "":
+                break
+
+            # print ss
+            chunk_tags, chunk_words = self.readNextChunkSent()
+            if chunk_tags is None and chunk_words is None:
+                break
+
+            # print chunk_words
+
+            self.source_buffer.append(ss.strip().split())
+            self.target_chunk_buffer.append(chunk_tags)
+            self.target_chunk_words_buffer.append(chunk_words)
+
+        # sort by target buffer
+        tlen = numpy.array([len(t) for t in self.target_chunk_buffer])
+        tidx = tlen.argsort()
+
+        _sbuf = [self.source_buffer[i] for i in tidx]
+        _tcbuf = [self.target_chunk_buffer[i] for i in tidx]
+        _tcwbuf = [self.target_chunk_words_buffer[i] for i in tidx]
+
+        self.source_buffer = _sbuf
+        self.target_chunk_buffer = _tcbuf
+        self.target_chunk_words_buffer = _tcwbuf
+
+        if len(self.source_buffer) == 0 or len(self.target_chunk_buffer) == 0:
+
+            print len(self.source_buffer),  len(self.target_chunk_buffer)
+            self.end_of_data = False
+            self.reset()
+            raise StopIteration
+
+
     def next(self):
         if self.end_of_data:
             self.end_of_data = False
@@ -93,52 +135,26 @@ class TrainingTextIterator:
         target_chunk = []
         target_chunk_words = []
 
+        get_none_items = False
+
         # fill buffer, if it's empty
         assert len(self.source_buffer) == len(self.target_chunk_buffer), 'Buffer size mismatch!'
 
         if len(self.source_buffer) == 0:
 
-            # read k items into the buffer
-            for k_ in xrange(self.k):
-                ss = self.source.readline()
-
-                if ss == "":
-                    break
-
-                # print ss
-                chunk_tags, chunk_words = self.readNextChunkSent()
-                if chunk_tags is None and chunk_words is None:
-                    break
-
-                # print chunk_words
-
-                self.source_buffer.append(ss.strip().split())
-                self.target_chunk_buffer.append(chunk_tags)
-                self.target_chunk_words_buffer.append(chunk_words)
-
-            # sort by target buffer
-            tlen = numpy.array([len(t) for t in self.target_chunk_buffer])
-            tidx = tlen.argsort()
-
-            _sbuf = [self.source_buffer[i] for i in tidx]
-            _tcbuf = [self.target_chunk_buffer[i] for i in tidx]
-            _tcwbuf = [self.target_chunk_words_buffer[i] for i in tidx]
-
-            self.source_buffer = _sbuf
-            self.target_chunk_buffer = _tcbuf
-            self.target_chunk_words_buffer = _tcwbuf
-
-        if len(self.source_buffer) == 0 or len(self.target_chunk_buffer) == 0:
-            self.end_of_data = False
-            self.reset()
-            raise StopIteration
+            self.readBuffer()
 
 
         # retrieval index for each string token
         try:
 
+            # print 'get next'
+
             # actual work here
             while True:
+
+                if len(self.source_buffer) == 0 and len(source) == 0:
+                    self.readBuffer()
 
                 # read from source file and map to word index
                 try:
@@ -186,10 +202,16 @@ class TrainingTextIterator:
                 if len(source) >= self.batch_size or \
                         len(target_chunk) >= self.batch_size:
                     break
+
+
         except IOError:
+            print 'IOError'
             self.end_of_data = True
 
         if len(source) <= 0 or len(target_chunk) <= 0 or len(target_chunk_words) <= 0:
+
+            print len(source) ,len(target_chunk) , len(target_chunk_words)
+            print 'StopIteration'
             self.end_of_data = False
             self.reset()
             raise StopIteration

@@ -672,6 +672,8 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
 
         preact2 = tensor.dot(h1, U_nl)+b_nl
 
+
+
         #
         # # x = tensor.matrix('temp_x', dtype='int64')
         # x_printed = theano.printing.Print('this is a very important value')(context_mask)
@@ -1557,9 +1559,11 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
     chunk_beam_chunk_sample = [[]] * chunk_live_k
 
     chunk_beam_scores = numpy.zeros(chunk_live_k).astype('float32')
-    chunk_beam_chunk_hiddens = [] # next_state_chunk
-    chunk_beam_chunk_trues = [] # next_chunk_emb
-    chunk_beam_word_hiddens = [next_state_word] * chunk_live_k# next_state_word
+    chunk_beam_chunk_hiddens = [next_state_chunk] # next_state_chunk
+    chunk_beam_chunk_trues = [next_chunk_emb] # next_chunk_emb
+
+
+    chunk_beam_word_hiddens = [next_state_word[0]] * chunk_live_k# next_state_word
 
 
 
@@ -1598,6 +1602,9 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
 
 
             next_chunk_emb = next_state_word
+
+            next_word = -1 * numpy.ones((1,)).astype('int64')  # bos indicator
+
             for ii_chunk in xrange(maxlen_words):
                 ctx = numpy.tile(ctx0, [word_live_k, 1])
                 inps = [next_word, ctx, next_state_word, next_state_chunk]
@@ -1645,6 +1652,8 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
 
             # idx is the order of the executed chunk sequence,
             # and ti is the index of the parant sequence it is generated from
+
+            new_chunk_hyp_index = -1
             for idx, [ti, wi] in enumerate(zip(chunk_trans_indices, chunk_indices)):
 
 
@@ -1653,7 +1662,7 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
                 # for each chunk, we predict the corresponding words
                 #============
 
-                if wi == 0:
+                if wi == -1:
                     final_beam_sample_chunk.append(chunk_beam_chunk_sample[ti]+[wi])
 
                     # we don't add the chunk score into the word score here.
@@ -1670,6 +1679,7 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
                     new_chunk_hyp_samples.append(chunk_beam_chunk_sample[ti]+[wi])
                     new_chunk_hyp_scores.append( copy.copy(chunk_costs[idx]) )
                     new_chunk_hyp_states.append(copy.copy(next_state_chunk[ti]))
+                    new_chunk_hyp_index += 1
 
 
 
@@ -1678,20 +1688,24 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
                 word_dead_k = 0
 
                 hyp_word_sample = [chunk_beam_word_sample[ti]]
-                hyp_word_sample_score = numpy.asscalar(new_chunk_hyp_scores[idx]).astype('float32')
+                hyp_word_sample_score = numpy.array([new_chunk_hyp_scores[-1]])
                 hyp_word_sample_state = []
                 hyp_word_sample_chunk_index = []
 
 
-                ii_word_state = chunk_beam_word_hiddens[ti]
-                current_next_word = numpy.asscalar(chunk_beam_word_sample[ti][-1]).astype('int64')
+                ii_word_state = chunk_beam_word_hiddens[ti].reshape((1, options['dim']))
+
+                if len(chunk_beam_word_sample[ti]) == 0:
+                    current_next_word = -1 * numpy.ones((1,)).astype('int64')
+                else:
+                    current_next_word = copy.copy(chunk_beam_word_sample[ti][-1]) * numpy.ones((1,)).astype('int64')
 
                 for ii_word in xrange(maxlen_words):
 
 
                     ctx = numpy.tile(ctx0, [word_live_k, 1])
 
-                    chunk_hidden = numpy.tile(new_chunk_hyp_states[idx], [word_live_k, 1])
+                    chunk_hidden = numpy.tile(new_chunk_hyp_states[-1], [word_live_k, 1])
 
                     inps = [current_next_word, ctx, ii_word_state, chunk_hidden]
 
@@ -1712,7 +1726,7 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
 
 
                     new_word_hyp_samples = []
-                    new_word_hyp_scores = numpy.zeros(k_word-word_dead_k).astype('float32')
+                    new_word_hyp_scores = []
                     new_word_hyp_states = []
                     new_word_hyp_chunk_index = []
 
@@ -1722,7 +1736,7 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
                             complete_word_sample.append(hyp_word_sample[ti_word]+[wi_word])
                             complete_word_sample_score.append(copy.copy(word_costs[idx_word]))
                             complete_word_sample_state.append(copy.copy(ii_word_state[ti_word]))
-                            complete_word_sample_chunk_index.append(ti)
+                            complete_word_sample_chunk_index.append([new_chunk_hyp_index, ti])
 
                             word_dead_k += 1
 
@@ -1732,7 +1746,7 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
                             new_word_hyp_samples.append(hyp_word_sample[ti_word]+[wi_word])
                             new_word_hyp_scores.append( copy.copy(word_costs[idx_word]))
                             new_word_hyp_states.append(copy.copy(ii_word_state[ti_word]))
-                            new_word_hyp_chunk_index.append(ti)
+                            new_word_hyp_chunk_index.append([new_chunk_hyp_index, ti])
 
 
                     # add all the new generated hyposis into the hyposis container, which will be used for next word prediction
@@ -1783,13 +1797,32 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
             # end sample all chunks
 
             # get the k best candidates in the chunk beam
-            best_k_index_chunk_beam =numpy.array(complete_word_sample_score).argsort()[:(k_chunk-chunk_dead_k)]
+            best_k_index_chunk_beam = numpy.array(complete_word_sample_score).argsort()[:(k_chunk-chunk_dead_k)]
 
-            chunk_beam_chunk_sample = [chunk_beam_chunk_sample[i] for i in best_k_index_chunk_beam]
+            # index for each item corresponds to the original bean chunk item
+
+            # one index for the newly generated chunk beam
+            # another index is used to track the original chunk beam index
+            best_k_index_new_chunk_beam_index = [complete_word_sample_chunk_index[i][0] for i in best_k_index_chunk_beam]
+            best_k_index_chunk_beam_index = [complete_word_sample_chunk_index[i][1] for i in best_k_index_chunk_beam]
+
+            chunk_beam_chunk_sample = [new_chunk_hyp_samples[i] for i in best_k_index_new_chunk_beam_index]
             chunk_beam_word_sample = [complete_word_sample[i] for i in best_k_index_chunk_beam]
             chunk_beam_scores = [complete_word_sample_score[i] for i in best_k_index_chunk_beam]
-            chunk_beam_chunk_hiddens = [chunk_beam_chunk_hiddens[i] for i in best_k_index_chunk_beam]
-            chunk_beam_chunk_trues = [ (complete_word_sample_state[i] - chunk_beam_word_hiddens[k]) for k, i in enumerate(best_k_index_chunk_beam)]
+            chunk_beam_chunk_hiddens = [new_chunk_hyp_states[i] for i in best_k_index_new_chunk_beam_index]
+
+            # print 'complete_word_sample_state',complete_word_sample_state
+            #
+            # print 'complete_word_sample_state[0]',complete_word_sample_state[0]
+            #
+            # print 'chunk_beam_word_hiddens',chunk_beam_word_hiddens
+            #
+            # print 'chunk_beam_word_hiddens[0]',chunk_beam_word_hiddens[0]
+
+            chunk_beam_chunk_trues = [ complete_word_sample_state[i] - chunk_beam_word_hiddens[k] for i, k in zip(best_k_index_chunk_beam, best_k_index_chunk_beam_index)]
+            chunk_beam_word_hiddens = [complete_word_sample_state[i] for i in best_k_index_chunk_beam]
+
+            # print 'chunk_beam_word_hiddens',chunk_beam_word_hiddens
 
 
             chunk_live_k = k_chunk - chunk_dead_k
@@ -1802,9 +1835,15 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
 
 
             chunk_beam_scores = numpy.array(chunk_beam_scores)
+
+            # print [w for w in chunk_beam_chunk_sample]
             next_chunk = numpy.array([w[-1] for w in chunk_beam_chunk_sample])
             next_state_chunk = numpy.array(chunk_beam_chunk_hiddens)
             next_chunk_emb = numpy.array(chunk_beam_chunk_trues)
+
+            # print 'chunk_beam_chunk_trues',chunk_beam_chunk_trues
+            #
+            # print 'next_chunk_emb',next_chunk_emb
 
 
 
@@ -1816,7 +1855,7 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
         # dump every remaining one
         if chunk_dead_k < k_chunk:
 
-            for remain_i in xrange(len()):
+            for remain_i in xrange(len(chunk_beam_word_sample)):
                 final_beam_sample_word.append(chunk_beam_word_sample[remain_i])
                 final_beam_sample_chunk.append(chunk_beam_chunk_sample[remain_i])
                 final_beam_score.append(chunk_beam_scores[remain_i])
@@ -1948,21 +1987,6 @@ def rmsprop(lr, tparams, grads, inp, cost):
     return f_grad_shared, f_update
 
 
-def sgd(lr, tparams, grads, x, mask, y, cost):
-    gshared = [theano.shared(p.get_value() * 0.,
-                             name='%s_grad' % k)
-               for k, p in tparams.iteritems()]
-    gsup = [(gs, g) for gs, g in zip(gshared, grads)]
-
-    f_grad_shared = theano.function([x, mask, y], cost, updates=gsup,
-                                    profile=profile)
-
-    pup = [(p, p - lr * g) for p, g in zip(itemlist(tparams), gshared)]
-    f_update = theano.function([lr], [], updates=pup, profile=profile)
-
-    return f_grad_shared, f_update
-
-
 def train(dim_word=100,  # word vector dimensionality
           dim_chunk=50,
           dim=1000,  # the number of LSTM units
@@ -2029,7 +2053,7 @@ def train(dim_word=100,  # word vector dimensionality
     print worddict_chunk
 
     # reload options
-    if reload_ and os.path.exists(saveto):
+    if reload_ and os.path.exists(saveto) and os.path.exists(saveto + '.pkl'):
         print 'Reloading model options'
         with open('%s.pkl' % saveto, 'rb') as f:
             model_options = pkl.load(f)
@@ -2150,6 +2174,8 @@ def train(dim_word=100,  # word vector dimensionality
     if sampleFreq == -1:
         sampleFreq = len(train[0])/batch_size
 
+    # print 'train length', len(train)
+
     for eidx in xrange(max_epochs):
         n_samples = 0
 
@@ -2172,7 +2198,7 @@ def train(dim_word=100,  # word vector dimensionality
             # compute cost, grads and copy grads to sh            self.target_buffer = _tcbufared variables
             cost = f_grad_shared(x, x_mask, y_c, y_mask_c, y_cw, y_mask_cw)
 
-            print 'processed one batch'
+            print 'Epoch ', eidx, 'processed one batch'
 
             # do the update on parameters
             f_update(lrate)
@@ -2321,6 +2347,21 @@ def train(dim_word=100,  # word vector dimensionality
                 **params)
 
     return valid_err
+
+
+def sgd(lr, tparams, grads, x, mask, y, cost):
+    gshared = [theano.shared(p.get_value() * 0.,
+                             name='%s_grad' % k)
+               for k, p in tparams.iteritems()]
+    gsup = [(gs, g) for gs, g in zip(gshared, grads)]
+
+    f_grad_shared = theano.function([x, mask, y], cost, updates=gsup,
+                                    profile=profile)
+
+    pup = [(p, p - lr * g) for p, g in zip(itemlist(tparams), gshared)]
+    f_update = theano.function([lr], [], updates=pup, profile=profile)
+
+    return f_grad_shared, f_update
 
 
 if __name__ == '__main__':
