@@ -49,7 +49,7 @@ class TrainingTextIterator:
         self.source_buffer = []
         self.target_chunk_buffer = []
         self.target_chunk_words_buffer = []
-        self.k = batch_size * 20
+        self.k = batch_size * 50
 
         self.end_of_data = False
 
@@ -119,7 +119,7 @@ class TrainingTextIterator:
 
         if len(self.source_buffer) == 0 or len(self.target_chunk_buffer) == 0:
 
-            print len(self.source_buffer),  len(self.target_chunk_buffer)
+            # print len(self.source_buffer),  len(self.target_chunk_buffer)
             self.end_of_data = False
             self.reset()
             raise StopIteration
@@ -170,8 +170,13 @@ class TrainingTextIterator:
 
                 # read from target file and map to word index
                 tt = self.target_chunk_buffer.pop()
+
+                # print 'target chunk before', tt
+
                 tt = [self.target_chunk_dict[w] if w in self.target_chunk_dict else 1
                       for w in tt]
+
+                # print 'target chunk after', tt
                 # tt = [w if w < self.n_words_target else 1 for w in tt]
 
                 # read from target file and map to word index
@@ -190,7 +195,9 @@ class TrainingTextIterator:
 
 
                 # if the source or target chunk or words in target chunk exceed max len, just skip
-                if len(ss) > self.max_word_len and len(tt) > self.max_chunk_len:
+                # if len(ss) > self.max_word_len and len(tt) > self.max_chunk_len:
+                #     continue
+                if len(tt) > self.max_chunk_len:
                     continue
                 if numpy.max([len(chunk_words_i) for chunk_words_i in tcw]) > self.max_word_len:
                     continue
@@ -210,7 +217,7 @@ class TrainingTextIterator:
 
         if len(source) <= 0 or len(target_chunk) <= 0 or len(target_chunk_words) <= 0:
 
-            print len(source) ,len(target_chunk) , len(target_chunk_words)
+            # print len(source) ,len(target_chunk) , len(target_chunk_words)
             print 'StopIteration'
             self.end_of_data = False
             self.reset()

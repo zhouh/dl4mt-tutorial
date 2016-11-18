@@ -35,8 +35,8 @@ def translate_model(queue, rqueue, pid, model, options, k, normalize):
         # sample given an input sequence and obtain scores
         sample, score = gen_sample(tparams, f_init, f_next_chunk, f_next_word,
                                    numpy.array(seq).reshape([len(seq), 1]),
-                                   options, trng=trng, maxlen_words=10, k_chunk=3, k_word=5,
-               maxlen_chunks=50,
+                                   options, trng=trng, maxlen_words=10, k_chunk=2, k_word=3,
+               maxlen_chunks=10,
                                    stochastic=be_stochastic, argmax=True)
 
         if be_stochastic:

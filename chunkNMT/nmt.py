@@ -713,7 +713,7 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
                           h_chunk, ctx_chunk, alpha_chunk, # output_info
                           pctx_chunk, cc,
                           chunk_transform_matrix, U_chunk, Wc_chunk, W_comb_att_chunk, U_att_chunk, c_tt_chunk,
-                          Ux_chunk, Wcx_chunk, U_nl_chunk, Ux_nl_chunk, b_nl_chunk, bx_nl_chunk,  Wx_chunk, bx_chunk, W_chunk, b_chunk,):
+                          Ux_chunk, Wcx_chunk, U_nl_chunk, Ux_nl_chunk, b_nl_chunk, bx_nl_chunk,  Wx_chunk, bx_chunk, W_chunk, b_chunk):
 
         # projected x
         #
@@ -1573,7 +1573,7 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
 
     for ii_chunk in xrange(maxlen_chunks):
 
-        # print ii_chunk
+        print 'chunk beam', ii_chunk
 
         # get the next chunk configuration
         ctx = numpy.tile(ctx0, [chunk_live_k, 1])
@@ -1638,8 +1638,6 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
             new_chunk_hyp_samples = []
             new_chunk_hyp_scores = []
             new_chunk_hyp_states = []
-
-
 
 
             # container for word beam search
@@ -2194,6 +2192,8 @@ def train(dim_word=100,  # word vector dimensionality
                 continue
 
             ud_start = time.time()
+
+
 
             # compute cost, grads and copy grads to sh            self.target_buffer = _tcbufared variables
             cost = f_grad_shared(x, x_mask, y_c, y_mask_c, y_cw, y_mask_cw)
