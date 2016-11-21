@@ -1567,6 +1567,8 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
 
 
 
+
+
     #
     # for max chunk iteration
     #
@@ -1574,6 +1576,9 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
     for ii_chunk in xrange(maxlen_chunks):
 
         print 'chunk beam', ii_chunk
+
+        print chunk_beam_word_sample
+
 
         # get the next chunk configuration
         ctx = numpy.tile(ctx0, [chunk_live_k, 1])
@@ -1700,6 +1705,10 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
 
                 for ii_word in xrange(maxlen_words):
 
+                    print 'word i:',ii_word
+
+                    print 'word sample', hyp_word_sample
+
 
                     ctx = numpy.tile(ctx0, [word_live_k, 1])
 
@@ -1731,7 +1740,7 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
                     for idx_word, [ti_word, wi_word] in enumerate(zip(word_trans_indices, word_indices)):
 
                         if wi_word == 0:
-                            complete_word_sample.append(hyp_word_sample[ti_word]+[wi_word])
+                            complete_word_sample.append( hyp_word_sample[ti_word]+[wi_word] +  [-1 * wi] )
                             complete_word_sample_score.append(copy.copy(word_costs[idx_word]))
                             complete_word_sample_state.append(copy.copy(ii_word_state[ti_word]))
                             complete_word_sample_chunk_index.append([new_chunk_hyp_index, ti])
@@ -1781,7 +1790,7 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
 
                     for remain_i in xrange(len(hyp_word_sample)):
 
-                        complete_word_sample.append(hyp_word_sample[remain_i])
+                        complete_word_sample.append([-10000] + hyp_word_sample[remain_i])
                         complete_word_sample_score.append(hyp_word_sample_score[remain_i])
                         complete_word_sample_state.append(hyp_word_sample_state[remain_i])
                         complete_word_sample_chunk_index.append(hyp_word_sample_chunk_index[remain_i])
