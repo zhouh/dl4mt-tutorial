@@ -46,6 +46,10 @@ def translate_model(queue, rqueue, pid, model, options, k, normalize):
         if normalize:
             lengths = numpy.array([len(s) for s in sample])
             score = score / lengths
+
+        print 'score', score
+        print 'candidates', sample
+        
         sidx = numpy.argmin(score)
         return sample[sidx]
 
