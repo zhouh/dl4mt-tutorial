@@ -1575,9 +1575,9 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
 
     for ii_chunk in xrange(maxlen_chunks):
 
-        print 'chunk beam', ii_chunk
-
-        print chunk_beam_word_sample
+        # print '================================= chunk beam', ii_chunk
+        #
+        # print chunk_beam_word_sample
 
 
         # get the next chunk configuration
@@ -1665,16 +1665,20 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
                 # for each chunk, we predict the corresponding words
                 #============
 
-                if wi == -1:
+                if wi == 0:
+
                     final_beam_sample_chunk.append(chunk_beam_chunk_sample[ti]+[wi])
 
                     # we don't add the chunk score into the word score here.
-                    final_beam_sample_word.append(chunk_beam_chunk_sample[ti])
+                    final_beam_sample_word.append(chunk_beam_word_sample[ti])
 
                     final_beam_score.append( copy.copy(chunk_costs[idx]))
 
                     chunk_dead_k += 1
 
+                    # print '$$END ONE CHUNK$$',
+                    # print 'chunks', final_beam_sample_chunk[-1]
+                    # print 'words', final_beam_sample_word[-1]
                     continue
 
                 else:
@@ -1698,16 +1702,19 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
 
                 ii_word_state = chunk_beam_word_hiddens[ti].reshape((1, options['dim']))
 
-                if len(chunk_beam_word_sample[ti]) == 0:
-                    current_next_word = -1 * numpy.ones((1,)).astype('int64')
-                else:
-                    current_next_word = copy.copy(chunk_beam_word_sample[ti][-1]) * numpy.ones((1,)).astype('int64')
+
+                # TODO we modify the code here to make it consistent with the training case
+                # the initial word of one chunk is always -1
+                # if len(chunk_beam_word_sample[ti]) == 0:
+                current_next_word = -1 * numpy.ones((1,)).astype('int64')
+                # else:
+                #     current_next_word = copy.copy(chunk_beam_word_sample[ti][-1]) * numpy.ones((1,)).astype('int64')
 
                 for ii_word in xrange(maxlen_words):
 
-                    print 'word i:',ii_word
-
-                    print 'word sample', hyp_word_sample
+                    # print '###### word i:',ii_word
+                    #
+                    # print 'word sample', hyp_word_sample
 
 
                     ctx = numpy.tile(ctx0, [word_live_k, 1])
@@ -1745,6 +1752,10 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
                             complete_word_sample_state.append(copy.copy(ii_word_state[ti_word]))
                             complete_word_sample_chunk_index.append([new_chunk_hyp_index, ti])
 
+                            # new_chunk_hyp_index is the index in the current performned beam
+                            # ti is the index in last beam, expand from the ti chunk beam
+                            # print '(END ONE WORDS)',
+                            # print 'word sample', complete_word_sample[-1]
                             word_dead_k += 1
 
                             continue
@@ -1766,6 +1777,8 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
                     hyp_word_sample_score.extend(new_word_hyp_scores)
                     hyp_word_sample_state.extend(new_word_hyp_states)
                     hyp_word_sample_chunk_index.extend(new_word_hyp_chunk_index)
+
+                    # print '%% APPEND WORD SAMPLE', hyp_word_sample
 
 
                     word_live_k = k_word - word_dead_k
@@ -1810,6 +1823,8 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
 
             # one index for the newly generated chunk beam
             # another index is used to track the original chunk beam index
+
+            # actually I can copy everything here to avoid the complex copy by index
             best_k_index_new_chunk_beam_index = [complete_word_sample_chunk_index[i][0] for i in best_k_index_chunk_beam]
             best_k_index_chunk_beam_index = [complete_word_sample_chunk_index[i][1] for i in best_k_index_chunk_beam]
 

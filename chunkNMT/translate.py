@@ -13,7 +13,7 @@ from nmt import (build_sampler, gen_sample, load_params,
 from multiprocessing import Process, Queue
 
 
-def translate_model(queue, rqueue, pid, model, options, k, normalize):
+def translate_model(queue, rqueue, pid, model, options, ck, wk, normalize):
 
     from theano.sandbox.rng_mrg import MRG_RandomStreams as RandomStreams
     trng = RandomStreams(1234)
@@ -35,8 +35,8 @@ def translate_model(queue, rqueue, pid, model, options, k, normalize):
         # sample given an input sequence and obtain scores
         sample, score = gen_sample(tparams, f_init, f_next_chunk, f_next_word,
                                    numpy.array(seq).reshape([len(seq), 1]),
-                                   options, trng=trng, maxlen_words=5, k_chunk=2, k_word=3,
-               maxlen_chunks=10,
+                                   options, trng=trng, maxlen_words=5, k_chunk=ck, k_word=wk,
+               maxlen_chunks=50,
                                    stochastic=be_stochastic, argmax=True)
 
         if be_stochastic:
@@ -47,8 +47,8 @@ def translate_model(queue, rqueue, pid, model, options, k, normalize):
             lengths = numpy.array([len(s) for s in sample])
             score = score / lengths
 
-        print 'score', score
-        print 'candidates', sample
+        # print 'score', score
+        # print 'candidates', sample
         
         sidx = numpy.argmin(score)
         return sample[sidx]
@@ -67,11 +67,11 @@ def translate_model(queue, rqueue, pid, model, options, k, normalize):
     return
 
 
-def main(model, dictionary, dictionary_target, source_file, saveto, k=5,
+def main(model, pklmodel, dictionary, dictionary_target, source_file, saveto, ck=5, wk=5,
          normalize=False, n_process=5, chr_level=False):
 
     # load model model_options
-    with open('%s.pkl' % model, 'rb') as f:
+    with open('%s' % pklmodel, 'rb') as f:
         options = pkl.load(f)
 
     # load source dictionary and invert
@@ -99,7 +99,7 @@ def main(model, dictionary, dictionary_target, source_file, saveto, k=5,
     for midx in xrange(n_process):
         processes[midx] = Process(
             target=translate_model,
-            args=(queue, rqueue, midx, model, options, k, normalize))
+            args=(queue, rqueue, midx, model, options, ck, wk, normalize))
         processes[midx].start()
 
     # utility function
@@ -110,11 +110,11 @@ def main(model, dictionary, dictionary_target, source_file, saveto, k=5,
             for w in cc:
                 if w == 0:
                     continue
-                if w == -10000:
-                    ww.append('| NOTEND')
-                    continue
+                # if w == -10000:
+                #     ww.append('| NOTEND')
+                #     continue
                 elif w < 0:
-                    ww.append('|' +  str(w))
+                    # ww.append('|' +  str(w))
                     continue
                 ww.append(word_idict_trg[w])
             capsw.append(' '.join(ww))
@@ -157,11 +157,13 @@ def main(model, dictionary, dictionary_target, source_file, saveto, k=5,
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-k', type=int, default=5)
+    parser.add_argument('-ck', type=int, default=3)
+    parser.add_argument('-wk', type=int, default=5)
     parser.add_argument('-p', type=int, default=5)
     parser.add_argument('-n', action="store_true", default=False)
     parser.add_argument('-c', action="store_true", default=False)
     parser.add_argument('model', type=str)
+    parser.add_argument('pklmodel', type=str)
     parser.add_argument('dictionary', type=str)
     parser.add_argument('dictionary_target', type=str)
     parser.add_argument('source', type=str)
@@ -169,6 +171,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    main(args.model, args.dictionary, args.dictionary_target, args.source,
-         args.saveto, k=args.k, normalize=args.n, n_process=args.p,
+    main(args.model, args.pklmodel, args.dictionary, args.dictionary_target, args.source,
+         args.saveto, ck=args.ck, wk=args.wk, normalize=args.n, n_process=args.p,
          chr_level=args.c)
