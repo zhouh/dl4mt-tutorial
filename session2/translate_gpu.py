@@ -13,11 +13,11 @@ from nmt import (build_sampler, gen_sample, load_params,
 from multiprocessing import Process, Queue
 
 
-def main(model, pklmodel, dictionary, dictionary_target, source_file, saveto, ck=5, wk=5,k=8,
+def main(model, modelpkl, dictionary, dictionary_target, source_file, saveto, k=8,
          normalize=False, n_process=5, chr_level=False):
 
     print 'load model model_options'
-    with open('%s' % pklmodel, 'rb') as f:
+    with open('%s' % modelpkl, 'rb') as f:
         options = pkl.load(f)
 
     print 'load source dictionary and invert'
@@ -88,31 +88,22 @@ def main(model, pklmodel, dictionary, dictionary_target, source_file, saveto, ck
     tparams = init_tparams(params)
 
     # word index
-    f_init, f_next_chunk, f_next_word = build_sampler(tparams, options, trng, use_noise)
+    f_init, f_next = build_sampler(tparams, options, trng, use_noise)
 
 
 
     def _translate(seq):
 
-        be_stochastic = False
         # sample given an input sequence and obtain scores
-        sample, score = gen_sample(tparams, f_init, f_next_chunk, f_next_word,
+        sample, score = gen_sample(tparams, f_init, f_next,
                                    numpy.array(seq).reshape([len(seq), 1]),
-                                   options, trng=trng, maxlen_words=5, k_chunk=ck, k_word=wk, k=k,
-               maxlen_chunks=50,
-                                   stochastic=be_stochastic, argmax=True)
-
-        if be_stochastic:
-            return sample
+                                   options, trng=trng, k=k, maxlen=200,
+                                   stochastic=False, argmax=False)
 
         # normalize scores according to sequence lengths
         if normalize:
             lengths = numpy.array([len(s) for s in sample])
             score = score / lengths
-
-        # print 'score', score
-        # print 'candidates', sample
-
         sidx = numpy.argmin(score)
         return sample[sidx]
 
@@ -135,14 +126,12 @@ def main(model, pklmodel, dictionary, dictionary_target, source_file, saveto, ck
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-ck', type=int, default=3)
-    parser.add_argument('-wk', type=int, default=5)
-    parser.add_argument('-k', type=int, default=8)
+    parser.add_argument('-k', type=int, default=5)
     parser.add_argument('-p', type=int, default=5)
     parser.add_argument('-n', action="store_true", default=False)
     parser.add_argument('-c', action="store_true", default=False)
     parser.add_argument('model', type=str)
-    parser.add_argument('pklmodel', type=str)
+    parser.add_argument('modelpkl', type=str)
     parser.add_argument('dictionary', type=str)
     parser.add_argument('dictionary_target', type=str)
     parser.add_argument('source', type=str)
@@ -150,6 +139,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    main(args.model, args.pklmodel, args.dictionary, args.dictionary_target, args.source,
-         args.saveto, ck=args.ck, wk=args.wk, normalize=args.n, n_process=args.p,
+    main(args.model, args.modelpkl, args.dictionary, args.dictionary_target, args.source,
+         args.saveto, normalize=args.n, n_process=args.p,
          chr_level=args.c)

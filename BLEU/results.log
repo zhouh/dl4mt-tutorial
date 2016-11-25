@@ -1,0 +1,96 @@
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+f
+BLEU = 0.00, 28.3/2.6/0.0/0.0 (BP=1.000, ratio=1.019, hyp_len=27274, ref_len=26765)
+f
+BLEU = 0.00, 26.6/1.6/0.0/0.0 (BP=0.998, ratio=0.998, hyp_len=25821, ref_len=25863)
+f
+BLEU = 0.00, 27.2/1.8/0.0/0.0 (BP=0.991, ratio=0.991, hyp_len=25641, ref_len=25865)
+f
+BLEU = 0.00, 27.5/2.5/0.0/0.0 (BP=0.986, ratio=0.986, hyp_len=25808, ref_len=26170)
+f
+BLEU = 0.00, 27.4/2.6/0.0/0.0 (BP=1.000, ratio=1.011, hyp_len=26747, ref_len=26460)
+f
+BLEU = 0.00, 29.3/2.5/0.0/0.0 (BP=0.968, ratio=0.968, hyp_len=25201, ref_len=26025)
+f
+BLEU = 0.00, 29.3/2.3/0.0/0.0 (BP=0.984, ratio=0.984, hyp_len=25878, ref_len=26286)
+f
+BLEU = 0.00, 27.2/1.6/0.0/0.0 (BP=0.995, ratio=0.995, hyp_len=25975, ref_len=26103)
+f
+BLEU = 0.00, 27.0/1.7/0.0/0.0 (BP=1.000, ratio=1.012, hyp_len=26583, ref_len=26265)
+f
+BLEU = 0.00, 28.3/2.1/0.0/0.0 (BP=0.930, ratio=0.932, hyp_len=23937, ref_len=25671)
+f
+BLEU = 0.00, 27.7/2.2/0.0/0.0 (BP=0.953, ratio=0.954, hyp_len=24551, ref_len=25735)
+f
+BLEU = 0.00, 26.5/1.8/0.0/0.0 (BP=1.000, ratio=1.074, hyp_len=29052, ref_len=27054)
+f
+BLEU = 0.00, 26.5/1.9/0.0/0.0 (BP=1.000, ratio=1.087, hyp_len=29508, ref_len=27142)
+f
+BLEU = 0.00, 27.3/2.1/0.0/0.0 (BP=1.000, ratio=1.077, hyp_len=29144, ref_len=27050)
+f
+BLEU = 0.00, 27.1/2.3/0.0/0.0 (BP=1.000, ratio=1.096, hyp_len=29890, ref_len=27264)
+f
+BLEU = 0.00, 28.3/2.6/0.0/0.0 (BP=1.000, ratio=1.019, hyp_len=27274, ref_len=26765)

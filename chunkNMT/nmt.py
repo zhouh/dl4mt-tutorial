@@ -1515,7 +1515,7 @@ def build_sampler(tparams, options, trng, use_noise):
 # generate sample, either with stochastic sampling or beam search. Note that,
 # this function iteratively calls f_init and f_next functions.
 def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
-               options, trng=None, k_chunk=1, k_word=1, maxlen_words=10,
+               options, trng=None, k_chunk=1, k_word=1, k=8, maxlen_words=10,
                maxlen_chunks=10,
                stochastic=True, argmax=False):
 

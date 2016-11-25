@@ -57,11 +57,11 @@ def translate_model(queue, rqueue, pid, model, options, k, normalize):
     return
 
 
-def main(model, dictionary, dictionary_target, source_file, saveto, k=5,
+def main(model, modelpkl, dictionary, dictionary_target, source_file, saveto, k=5,
          normalize=False, n_process=5, chr_level=False):
 
     # load model model_options
-    with open('%s.pkl' % model, 'rb') as f:
+    with open('%s' % modelpkl, 'rb') as f:
         options = pkl.load(f)
 
     # load source dictionary and invert
@@ -146,6 +146,7 @@ if __name__ == "__main__":
     parser.add_argument('-n', action="store_true", default=False)
     parser.add_argument('-c', action="store_true", default=False)
     parser.add_argument('model', type=str)
+    parser.add_argument('modelpkl', type=str)
     parser.add_argument('dictionary', type=str)
     parser.add_argument('dictionary_target', type=str)
     parser.add_argument('source', type=str)
@@ -153,6 +154,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    main(args.model, args.dictionary, args.dictionary_target, args.source,
+    main(args.model,args.modelpkl, args.dictionary, args.dictionary_target, args.source,
          args.saveto, k=args.k, normalize=args.n, n_process=args.p,
          chr_level=args.c)
