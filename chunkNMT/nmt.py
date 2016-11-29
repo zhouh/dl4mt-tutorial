@@ -1624,6 +1624,7 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
     # containers for mulitple beam search
 
     chunk_beam_word_sample = [[]] * chunk_live_k
+    chunk_beam_last_chunk_last_word = [[-1]] * chunk_live_k
     chunk_beam_chunk_sample = [[]] * chunk_live_k
 
     chunk_beam_scores = numpy.zeros(chunk_live_k).astype('float32')
@@ -1694,7 +1695,8 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
                     if nw == 0:
                         break
 
-            last_word_in_chunk = next_word
+                    last_word_in_chunk = next_word
+
             next_chunk_emb = next_state_word - next_chunk_emb
         #
         # # beam search decoding
@@ -1779,9 +1781,16 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
                 current_next_word = -1 * numpy.ones((1,)).astype('int64')
 
                 last_chunk_last_word = -1
-                if chunk_beam_word_sample[ti][-1] < 0:
-                    last_chunk_last_word = chunk_beam_word_sample[ti][-3] # [-1] chunk index, [-2] 0, eos, [-3] last word in last chunk
-                last_word_in_chunk = chunk_beam_word_sample[ti][-1] * numpy.ones((1,)).astype('int64')
+                if len(chunk_beam_word_sample[ti]) < 3:
+                    last_chunk_last_word = -1
+                elif chunk_beam_word_sample[ti][-1] < 0:
+                    a = -1
+                    if chunk_beam_word_sample[ti][-2] > 0:
+                        a = chunk_beam_word_sample[ti][-2]
+                    last_chunk_last_word =  a# [-1] chunk index, [-2] 0, eos, [-3] last word in last chunk
+                elif chunk_beam_word_sample[ti][-1] >= 0:
+                    raise Exception("Invalid word sample")
+                last_word_in_chunk = last_chunk_last_word * numpy.ones((1,)).astype('int64')
                 # else:
                 #     current_next_word = copy.copy(chunk_beam_word_sample[ti][-1]) * numpy.ones((1,)).astype('int64')
 
@@ -1878,7 +1887,7 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
 
                     for remain_i in xrange(len(hyp_word_sample)):
 
-                        complete_word_sample.append([-10000] + hyp_word_sample[remain_i])
+                        complete_word_sample.append(hyp_word_sample[remain_i] + [0, -10000])
                         complete_word_sample_score.append(hyp_word_sample_score[remain_i])
                         complete_word_sample_state.append(hyp_word_sample_state[remain_i])
                         complete_word_sample_chunk_index.append(hyp_word_sample_chunk_index[remain_i])

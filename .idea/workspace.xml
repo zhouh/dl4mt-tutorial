@@ -5,10 +5,11 @@
     <bookmark url="file://$PROJECT_DIR$/chunkNMT/nmt.py" line="1051" mnemonic="8" />
     <bookmark url="file://$PROJECT_DIR$/chunkNMT/nmt.py" line="1499" mnemonic="7" />
     <bookmark url="file://$PROJECT_DIR$/chunkNMT/nmt.py" line="1625" mnemonic="9" />
-    <bookmark url="file://$PROJECT_DIR$/chunkNMT/nmt.py" line="1767" mnemonic="0" />
+    <bookmark url="file://$PROJECT_DIR$/chunkNMT/nmt.py" line="1769" mnemonic="0" />
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1344b957-e1f7-4ece-9849-5b0fe816b362" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/chunkNMT/beam_decode.sh" afterPath="$PROJECT_DIR$/chunkNMT/beam_decode.sh" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/chunkNMT/nmt.py" afterPath="$PROJECT_DIR$/chunkNMT/nmt.py" />
     </list>
     <ignored path="dl4mt-tutorial.iws" />
@@ -34,8 +35,8 @@
       <file leaf-file-name="nmt.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/chunkNMT/nmt.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.6967294">
-              <caret line="1782" column="72" selection-start-line="1782" selection-start-column="72" selection-end-line="1782" selection-end-column="72" />
+            <state vertical-scroll-proportion="0.47076312">
+              <caret line="1791" column="58" selection-start-line="1791" selection-start-column="58" selection-end-line="1791" selection-end-column="58" />
               <folding />
             </state>
           </provider>
@@ -950,8 +951,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/chunkNMT/nmt.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.6967294">
-          <caret line="1782" column="72" selection-start-line="1782" selection-start-column="72" selection-end-line="1782" selection-end-column="72" />
+        <state vertical-scroll-proportion="0.47076312">
+          <caret line="1791" column="58" selection-start-line="1791" selection-start-column="58" selection-end-line="1791" selection-end-column="58" />
           <folding />
         </state>
       </provider>

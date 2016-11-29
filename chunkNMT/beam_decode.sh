@@ -8,8 +8,9 @@
 export THEANO_FLAGS=device=cpu,floatX=float32
 
 #cd $PBS_O_WORKDIR
-python ./translate.py -n -p 3 \
+python ./translate.py -n -p 3 -ck 2 -wk 2\
         ./model_hal.npz  \
+        ./model_hal.npz.pkl  \
 	././../../nmtdata/small.ch.pkl \
 	././../../nmtdata/small.en.chunked.chunktag.pkl \
 	././../../nmtdata/small.test \
