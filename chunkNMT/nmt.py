@@ -1136,6 +1136,9 @@ def init_params(options):
     params = get_layer('ff')[0](options, params, prefix='ff_logit_ctx',
                                 nin=ctxdim, nout=options['dim_word'],
                                 ortho=False)
+    params = get_layer('ff')[0](options, params, prefix='ff_logit_using_chunk_hidden',
+                                nin=options['dim_chunk_hidden'], nout=options['dim_word'],
+                                ortho=False)
     # params = get_layer('ff')[0](options, params, prefix='ff_logit_chunk_hidden',
     #                             nin=ctxdim, nout=options['dim_word'],
     #                             ortho=False)
@@ -1378,7 +1381,15 @@ def build_model(tparams, options):
                                     prefix='ff_logit_prev', activ='linear')
     logit_ctx_cw = get_layer('ff')[1](tparams, ctxs_cw, options,
                                    prefix='ff_logit_ctx', activ='linear')
-    logit_cw = tensor.tanh(logit_lstm_cw+logit_prev_cw+logit_ctx_cw)
+    logit_ctx_using_chunk_hidden = get_layer('ff')[1](tparams, proj_h, options,
+                                   prefix='ff_logit_using_chunk_hidden', activ='linear')
+
+    # reshape the chunk hidden outputs, which will be broadcasted in the following add operates
+    logit_ctx_using_chunk_hidden = logit_ctx_using_chunk_hidden.reshape([logit_ctx_using_chunk_hidden.shape[0],
+                                                                         1, logit_ctx_using_chunk_hidden.shape[1],
+                                                                         logit_ctx_using_chunk_hidden.shape[2]])
+
+    logit_cw = tensor.tanh(logit_lstm_cw+logit_prev_cw+logit_ctx_cw+logit_ctx_using_chunk_hidden)
 
     if options['use_dropout']:
         logit_cw = dropout_layer(logit_cw, use_noise, trng)
@@ -1541,7 +1552,11 @@ def build_sampler(tparams, options, trng, use_noise):
                                     prefix='ff_logit_prev', activ='linear')
     logit_ctx_cw = get_layer('ff')[1](tparams, ctxs_cw, options,
                                    prefix='ff_logit_ctx', activ='linear')
-    logit_cw = tensor.tanh(logit_lstm_cw+logit_prev_cw+logit_ctx_cw)
+    logit_ctx_using_chunk_hidden = get_layer('ff')[1](tparams, current_chunk_hidden, options,
+                                   prefix='ff_logit_using_chunk_hidden', activ='linear')
+
+    logit_cw = tensor.tanh(logit_lstm_cw+logit_prev_cw+logit_ctx_cw+logit_ctx_using_chunk_hidden)
+
     if options['use_dropout']:
         logit_cw = dropout_layer(logit_cw, use_noise, trng)
     logit_cw = get_layer('ff')[1](tparams, logit_cw, options,
@@ -1762,6 +1777,7 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
                 # the initial word of one chunk is always -1
                 # if len(chunk_beam_word_sample[ti]) == 0:
                 current_next_word = -1 * numpy.ones((1,)).astype('int64')
+                last_word_in_chunk = chunk_beam_word_sample[ti][-1] * numpy.ones((1,)).astype('int64')
                 # else:
                 #     current_next_word = copy.copy(chunk_beam_word_sample[ti][-1]) * numpy.ones((1,)).astype('int64')
 
@@ -1900,9 +1916,6 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
             chunk_beam_word_hiddens = [complete_word_sample_state[i] for i in best_k_index_chunk_beam]
 
 
-            last_word_in_chunk = [complete_word_sample[i][-1] for i in best_k_index_chunk_beam]
-
-            last_word_in_chunk = numpy.array(last_word_in_chunk)
             # print 'chunk_beam_word_hiddens',chunk_beam_word_hiddens
 
 
