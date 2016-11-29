@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="BookmarkManager">
-    <bookmark url="file://$PROJECT_DIR$/chunkNMT/nmt.py" line="797" mnemonic="1" />
-    <bookmark url="file://$PROJECT_DIR$/chunkNMT/nmt.py" line="1046" mnemonic="8" />
-    <bookmark url="file://$PROJECT_DIR$/chunkNMT/nmt.py" line="1438" mnemonic="7" />
-    <bookmark url="file://$PROJECT_DIR$/chunkNMT/nmt.py" line="1557" mnemonic="9" />
-    <bookmark url="file://$PROJECT_DIR$/chunkNMT/nmt.py" line="1697" mnemonic="0" />
+    <bookmark url="file://$PROJECT_DIR$/chunkNMT/nmt.py" line="802" mnemonic="1" />
+    <bookmark url="file://$PROJECT_DIR$/chunkNMT/nmt.py" line="1051" mnemonic="8" />
+    <bookmark url="file://$PROJECT_DIR$/chunkNMT/nmt.py" line="1488" mnemonic="7" />
+    <bookmark url="file://$PROJECT_DIR$/chunkNMT/nmt.py" line="1610" mnemonic="9" />
+    <bookmark url="file://$PROJECT_DIR$/chunkNMT/nmt.py" line="1752" mnemonic="0" />
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1344b957-e1f7-4ece-9849-5b0fe816b362" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/chunkNMT/nmt.py" afterPath="$PROJECT_DIR$/chunkNMT/nmt.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/session2/translate.py" afterPath="$PROJECT_DIR$/session2/translate.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/chunkNMT/translate_gpu.py" afterPath="$PROJECT_DIR$/chunkNMT/translate_gpu.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/chunkNMT/train_nmt_zh2en_pc.py" afterPath="$PROJECT_DIR$/chunkNMT/train_nmt_zh2en_pc.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="dl4mt-tutorial.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -33,11 +33,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="translate.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/session2/translate.py">
+      <file leaf-file-name="nmt.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/chunkNMT/nmt.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.7631318">
-              <caret line="147" column="42" selection-start-line="147" selection-start-column="42" selection-end-line="147" selection-end-column="42" />
+            <state vertical-scroll-proportion="-1.813677">
+              <caret line="541" column="4" selection-start-line="541" selection-start-column="4" selection-end-line="541" selection-end-column="4" />
               <folding />
             </state>
           </provider>
@@ -78,7 +78,6 @@
         <option value="$PROJECT_DIR$/chunkNMT/cpu_train_chunk_nmt.sh" />
         <option value="$PROJECT_DIR$/chunkNMT/chunk_nmt_train.sh" />
         <option value="$PROJECT_DIR$/chunkNMT/train_nmt_zh2en.py" />
-        <option value="$PROJECT_DIR$/chunkNMT/train_nmt_zh2en_pc.py" />
         <option value="$PROJECT_DIR$/chunkNMT/test_zh2en.pc.sh" />
         <option value="$PROJECT_DIR$/chunkNMT/translate.py.cp" />
         <option value="$PROJECT_DIR$/chunkNMT/test.sh" />
@@ -87,9 +86,12 @@
         <option value="$PROJECT_DIR$/chunkNMT/lookup.py" />
         <option value="$PROJECT_DIR$/chunkNMT/translate.py" />
         <option value="$PROJECT_DIR$/chunkNMT/translate_gpu.py" />
-        <option value="$PROJECT_DIR$/chunkNMT/nmt.py" />
         <option value="$PROJECT_DIR$/session2/translate.py" />
         <option value="$PROJECT_DIR$/session2/translate_gpu.py" />
+        <option value="$PROJECT_DIR$/HMS-chunk/training_data_iterator.py" />
+        <option value="$PROJECT_DIR$/HMS-chunk/nmt.py" />
+        <option value="$PROJECT_DIR$/chunkNMT/nmt.py" />
+        <option value="$PROJECT_DIR$/chunkNMT/train_nmt_zh2en_pc.py" />
       </list>
     </option>
   </component>
@@ -195,6 +197,20 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="dl4mt-tutorial" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="dl4mt-tutorial" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="HMS-chunk" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
         </subPane>
       </pane>
       <pane id="Scratches" />
@@ -202,7 +218,7 @@
     </panes>
   </component>
   <component name="PropertiesComponent">
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/chunkNMT/translate.py" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="settings.editor.selected.configurable" value="preferences.keymap" />
     <property name="settings.editor.splitter.proportion" value="0.2" />
@@ -448,7 +464,7 @@
     <frame x="0" y="-4" width="1920" height="1084" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.17708333" sideWeight="0.5" order="4" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.15104167" sideWeight="0.5" order="4" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32847425" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="11" side_tool="false" content_ui="tabs" />
@@ -528,20 +544,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file:///usr/lib/python2.7/gzip.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="438" column="8" selection-start-line="438" selection-start-column="8" selection-end-line="438" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/do/data_iterator.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="56" column="90" selection-start-line="56" selection-start-column="90" selection-end-line="56" selection-end-column="90" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/do/nmt.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
@@ -732,13 +734,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/session2/data_iterator.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.017958412">
-          <caret line="14" column="8" selection-start-line="14" selection-start-column="8" selection-end-line="14" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file:///usr/lib/python2.7/copy.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.3327032">
@@ -809,20 +804,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/chunkNMT/cpu_train_chunk_nmt.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.12570888">
-          <caret line="7" column="78" selection-start-line="7" selection-start-column="60" selection-end-line="7" selection-end-column="85" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/chunkNMT/train_nmt_zh2en_pc.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.2816635">
-          <caret line="36" column="89" selection-start-line="36" selection-start-column="89" selection-end-line="36" selection-end-column="89" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/chunkNMT/train_nmt_zh2en.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.5143707">
@@ -849,7 +830,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.32011893">
           <caret line="30" column="69" selection-start-line="30" selection-start-column="69" selection-end-line="30" selection-end-column="69" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -857,17 +837,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.2259663">
           <caret line="42" column="24" selection-start-line="42" selection-start-column="24" selection-end-line="42" selection-end-column="24" />
-          <folding>
-            <marker date="1479809730116" expanded="true" signature="-1:-1" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-            <marker date="1479809730116" expanded="false" signature="-1:-1" placeholder="import ..." />
-            <marker date="1479809730116" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479809730116" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479809730116" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479809730116" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479809730116" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479809730116" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479809730116" expanded="true" signature="-1:-1" placeholder="..." />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -875,114 +844,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.9623389">
           <caret line="220" column="33" selection-start-line="220" selection-start-column="33" selection-end-line="220" selection-end-column="33" />
-          <folding>
-            <marker date="1479455688145" expanded="false" signature="-1:-1" placeholder="import ..." />
-            <marker date="1479455688145" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479455688145" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479455688145" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479455688145" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479455688145" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479455688145" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479455688145" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479455688145" expanded="true" signature="-1:-1" placeholder="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/session2/nmt.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-1.6298422">
-          <caret line="981" column="4" selection-start-line="981" selection-start-column="4" selection-end-line="981" selection-end-column="4" />
-          <folding>
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-            <marker date="1474879302551" expanded="false" signature="-1:-1" placeholder="import ..." />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1474879302551" expanded="true" signature="-1:-1" placeholder="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/chunkNMT/nmt.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.2011893">
-          <caret line="1602" column="23" selection-start-line="1602" selection-start-column="23" selection-end-line="1602" selection-end-column="23" />
-          <folding>
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-            <marker date="1479958753946" expanded="false" signature="-1:-1" placeholder="import ..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958753946" expanded="true" signature="-1:-1" placeholder="..." />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -990,14 +851,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.4519326">
           <caret line="138" column="35" selection-start-line="138" selection-start-column="35" selection-end-line="138" selection-end-column="35" />
-          <folding>
-            <marker date="1479958705514" expanded="true" signature="-1:-1" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-            <marker date="1479958705514" expanded="false" signature="-1:-1" placeholder="import ..." />
-            <marker date="1479958705514" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958705514" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958705514" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1479958705514" expanded="true" signature="-1:-1" placeholder="..." />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -1005,21 +859,111 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.18830526">
           <caret line="19" column="29" selection-start-line="19" selection-start-column="29" selection-end-line="19" selection-end-column="29" />
-          <folding>
-            <marker date="1480057746066" expanded="true" signature="-1:-1" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-            <marker date="1480057746066" expanded="false" signature="-1:-1" placeholder="import ..." />
-            <marker date="1480057746066" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1480057746066" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1480057746066" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1480057746066" expanded="true" signature="-1:-1" placeholder="..." />
-          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/session2/translate.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.7631318">
-          <caret line="147" column="42" selection-start-line="147" selection-start-column="42" selection-end-line="147" selection-end-column="42" />
+        <state vertical-scroll-proportion="0.48067394">
+          <caret line="132" column="44" selection-start-line="132" selection-start-column="44" selection-end-line="132" selection-end-column="44" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/HMS-chunk/training_data_iterator.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="4.9410186">
+          <caret line="199" column="16" selection-start-line="199" selection-start-column="16" selection-end-line="199" selection-end-column="16" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/session2/data_iterator.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.312769">
+          <caret line="94" column="25" selection-start-line="94" selection-start-column="25" selection-end-line="94" selection-end-column="25" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/session2/nmt.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-1.0573888">
+          <caret line="563" column="4" selection-start-line="563" selection-start-column="4" selection-end-line="563" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/HMS-chunk/nmt.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.50842416">
+          <caret line="749" column="68" selection-start-line="749" selection-start-column="68" selection-end-line="749" selection-end-column="68" />
+          <folding>
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
+            <marker date="1480237698650" expanded="false" signature="-1:-1" placeholder="import ..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1480237698650" expanded="true" signature="-1:-1" placeholder="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/chunkNMT/cpu_train_chunk_nmt.sh">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.13181368">
+          <caret line="7" column="78" selection-start-line="7" selection-start-column="60" selection-end-line="7" selection-end-column="85" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/chunkNMT/train_nmt_zh2en_pc.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.5272547">
+          <caret line="34" column="66" selection-start-line="34" selection-start-column="66" selection-end-line="34" selection-end-column="66" />
+          <folding>
+            <marker date="1480388756578" expanded="false" signature="-1:-1" placeholder="import ..." />
+            <marker date="1480388756578" expanded="true" signature="-1:-1" placeholder="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/chunkNMT/nmt.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-1.813677">
+          <caret line="541" column="4" selection-start-line="541" selection-start-column="4" selection-end-line="541" selection-end-column="4" />
           <folding />
         </state>
       </provider>

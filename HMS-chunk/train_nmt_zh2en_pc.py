@@ -26,7 +26,7 @@ def main(job_id, params):
                      validFreq=100,
                      dispFreq=10,
                      saveFreq=10,
-                     sampleFreq=3,
+                     sampleFreq=10,
                      maxlen_chunk=30,  # maximum length of the description
                      maxlen_chunk_words=5,  # maximum length of the description
                      datasets=['/home/zhouh/workspace/python/nmtdata/small.ch',

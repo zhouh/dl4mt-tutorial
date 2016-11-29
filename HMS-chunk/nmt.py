@@ -171,66 +171,36 @@ def prepare_training_data(seqs_x, seqs_y_c, seqs_y_cw, maxlen_chunk=None, maxlen
                  n_words=30000):
     # x: a list of sentences
     lengths_x = [len(s) for s in seqs_x]
-    lengths_y_c = [len(s) for s in seqs_y_c]
-    lengths_y_cw = [ [len(s) for s in ss] for ss in seqs_y_cw]
-
-
-    #
-    # becasuse we have filtered the out of max size sentence in the iterator, so we do not need it here!
-    #
-    # if maxlen_chunk is not None or maxlen_cw is not None:
-    #     new_seqs_x = []
-    #     new_seqs_y_c = []
-    #     new_seqs_y_cw = []
-    #     new_lengths_x = []
-    #     new_lengths_y_c = []
-    #     new_lengths_y_cw = []
-    #     for l_x, s_x, l_y, s_y in zip(lengths_x, seqs_x, lengths_y_c, seqs_y):
-    #         if l_x < maxlen and l_y < maxlen:
-    #             new_seqs_x.append(s_x)
-    #             new_lengths_x.append(l_x)
-    #             new_seqs_y.append(s_y)
-    #             new_lengths_y.append(l_y)
-    #     lengths_x = new_lengths_x
-    #     seqs_x = new_seqs_x
-    #     lengths_y = new_lengths_y
-    #     seqs_y = new_seqs_y
-    #
-    #     if len(lengths_x) < 1 or len(lengths_y) < 1:
-    #         return None, None, None, None
+    lengths_y = [ len(s) for s in seqs_y_cw]
 
     n_samples = len(seqs_x)
     maxlen_x = numpy.max(lengths_x) + 1
-    maxlen_y_c = numpy.max(lengths_y_c) + 1
-    maxlen_y_cw = numpy.max([ numpy.max(a) for a in lengths_y_cw]) + 1
-
+    maxlen_y = numpy.max(lengths_y) + 1
 
     x = numpy.zeros((maxlen_x, n_samples)).astype('int64')
-    y_c = numpy.zeros((maxlen_y_c, n_samples)).astype('int64')
-    y_cw = numpy.zeros((maxlen_y_c, maxlen_y_cw, n_samples)).astype('int64')
+    y_c = numpy.zeros((maxlen_y, n_samples)).astype('int64')
+    y_cw = numpy.zeros((maxlen_y, n_samples)).astype('int64')
     x_mask = numpy.zeros((maxlen_x, n_samples)).astype('float32')
-    y_mask_c = numpy.zeros((maxlen_y_c, n_samples)).astype('float32')
-    y_mask_cw = numpy.zeros((maxlen_y_c, maxlen_y_cw, n_samples)).astype('float32')
-
-
-    last_word_in_last_chunk = numpy.zeros((maxlen_y_c, n_samples)).astype('int64')
+    y_mask = numpy.zeros((maxlen_y, n_samples)).astype('float32')
+    chunk_indicator = numpy.zeros((maxlen_y, n_samples)).astype('float32')
 
     for idx, [s_x, s_y_c, s_y_cw] in enumerate(zip(seqs_x, seqs_y_c, seqs_y_cw)):
         x[:lengths_x[idx], idx] = s_x
         x_mask[:lengths_x[idx]+1, idx] = 1.
-        y_c[:lengths_y_c[idx], idx] = s_y_c
-        y_mask_c[:lengths_y_c[idx]+1, idx] = 1.
+        y_c[:maxlen_y[idx], idx] = s_y_c
+        y_cw[:maxlen_y[idx], idx] = s_y_cw
+        y_mask[:maxlen_y[idx]+1, idx] = 1.
 
-        # y_cw[ lengths_y_c[idx], lengths_y_cw[idx][idx_cw], idx] = s_y_cw
+        s_y_c = [ cc if cc > 1 else 0 for cc in s_y_c]
 
-        for idx_cw, s_y_cw_i in enumerate(s_y_cw):
-            y_cw[ idx_cw, :lengths_y_cw[idx][idx_cw], idx] = s_y_cw_i
-            y_mask_cw[ idx_cw, :lengths_y_cw[idx][idx_cw] + 1, idx] = 1
-            last_word_in_last_chunk[idx_cw + 1, idx] = s_y_cw_i[-1] # just store the last word of current chunk words, we have shift it here
+        # indicator here is a chunk begin or not (1 if True )
+        chunk_indicator[:maxlen_y[idx], idx] = s_y_c
+
+
 
     # print y_cw
 
-    return x, x_mask, y_c, y_mask_c, y_cw, y_mask_cw, last_word_in_last_chunk
+    return x, x_mask, y_c, y_cw, chunk_indicator, y_mask
 
 # batch preparation
 def prepare_data(seqs_x, seqs_y, maxlen=None, n_words_src=30000,
@@ -540,9 +510,8 @@ def param_init_gru_cond(options, params, prefix='gru_cond',
 
 
 def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
-                   chunk_mask=None,chunk_word_mask=None,
-                   context=None, one_step_chunk=False,
-                   one_step_word=False,
+                   chunk_mask=None, chunk_indicator=None,
+                   context=None, one_step=False,
                    init_memory=None, init_state=None,
                    init_state_chunk=None,init_state_chunk_words=None,
                    current_chunk_hidden=None,last_chunk_emb=None,
@@ -558,29 +527,18 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
 
     assert context, 'Context must be provided'
 
-    if one_step_word:
-        assert init_state_chunk_words, 'previous state must be provided'
-
-    if one_step_chunk:
-        assert init_state_chunk, 'previous state must be provided'
-
-    if  one_step_chunk == False and one_step_word == False:
+    if one_step:
         assert init_state_chunk_words, 'previous state must be provided'
         assert init_state_chunk, 'previous state must be provided'
-
-    #
-    # n_chunk_step = chunk_emb.shape[0]
-    # n_chunk_words_step = emb.shape[1]
-
 
     # if this is a sample or decode process, we may use a sample = 1 predict
     if emb is not None:
-        if emb.ndim == 4:
+        if emb.ndim == 3:
             n_samples = emb.shape[2]
         else:
             n_samples = 1
     else:
-            n_samples = 1
+        n_samples = 1
 
 
     # mask
@@ -591,8 +549,6 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
     # not the training process.
     if chunk_mask is None and chunk_index is not None:
         chunk_mask = tensor.alloc(1., chunk_index.shape[0], 1)
-    if chunk_word_mask is None and emb is not None:
-        chunk_word_mask = tensor.alloc(1., emb.shape[0], 1)
 
     # the hidden dim
     dim = tparams[_p(prefix, 'Wcx')].shape[1]
@@ -715,10 +671,10 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
     # chunking slice
     #
     def _chunk_step_decode(chunk_m_, chunk_index, last_chunk_emb ,  # seq
-                          h_chunk, ctx_chunk, alpha_chunk, # output_info
-                          pctx_chunk, cc,
-                          chunk_transform_matrix, U_chunk, Wc_chunk, W_comb_att_chunk, U_att_chunk, c_tt_chunk,
-                          Ux_chunk, Wcx_chunk, U_nl_chunk, Ux_nl_chunk, b_nl_chunk, bx_nl_chunk,  Wx_chunk, bx_chunk, W_chunk, b_chunk):
+                           h_chunk, ctx_chunk, alpha_chunk, # output_info
+                           pctx_chunk, cc,
+                           chunk_transform_matrix, U_chunk, Wc_chunk, W_comb_att_chunk, U_att_chunk, c_tt_chunk,
+                           Ux_chunk, Wcx_chunk, U_nl_chunk, Ux_nl_chunk, b_nl_chunk, bx_nl_chunk,  Wx_chunk, bx_chunk, W_chunk, b_chunk):
 
         # projected x
         #
@@ -734,10 +690,10 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
         last_chunk_emb =  tensor.dot(last_chunk_emb, transform) # TODO, make sure that here the chunkindex is last chunk index
 
 
-        chunk_xx_ = tensor.dot(last_chunk_emb, Wx_chunk) +\
-            bx_chunk
-        chunk_x_ = tensor.dot(last_chunk_emb, W_chunk) +\
-            b_chunk
+        chunk_xx_ = tensor.dot(last_chunk_emb, Wx_chunk) + \
+                    bx_chunk
+        chunk_x_ = tensor.dot(last_chunk_emb, W_chunk) + \
+                   b_chunk
 
 
         preact1 = tensor.dot(h_chunk, U_chunk)
@@ -803,15 +759,6 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
                           Ux_chunk, Wcx_chunk, U_nl_chunk, Ux_nl_chunk, b_nl_chunk, bx_nl_chunk, Wx_chunk, bx_chunk, W_chunk, b_chunk,
                           W_current_chunk_hidden, W_current_chunk_c, U, Wc, W_comb_att, U_att, c_tt, Ux, Wcx, U_nl, Ux_nl, b_nl, bx_nl):
 
-        # projected x
-
-        # shape0 = last_chunk_emb.shape[0]
-        # shape1 = last_chunk_emb.shape[1]
-        # last_chunk_emb = last_chunk_emb.reshape([1, shape0 * shape1])
-        # transform = chunk_transform_matrix[chunk_index]
-        #
-        # shape2 = transform.shape[2]
-        # transform = transform.reshape([transform.shape[0] * transform.shape[1], transform.shape[2]])
 
         transform = chunk_transform_matrix[0]
 
@@ -819,10 +766,10 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
         # last_chunk_emb = last_chunk_emb.reshape([shape0, shape2])
 
 
-        chunk_xx_ = tensor.dot(last_chunk_emb, Wx_chunk) +\
-            bx_chunk
-        chunk_x_ = tensor.dot(last_chunk_emb, W_chunk) +\
-            b_chunk
+        chunk_xx_ = tensor.dot(last_chunk_emb, Wx_chunk) + \
+                    bx_chunk
+        chunk_x_ = tensor.dot(last_chunk_emb, W_chunk) + \
+                   b_chunk
 
 
         preact1 = tensor.dot(h_chunk, U_chunk)
@@ -881,15 +828,15 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
 
 
         rval_chunk_words, updates = theano.scan(_step,
-                                    sequences=seqs,
-                                    outputs_info=[h_cw[-1],
-                                                  ctx_cw[-1],
-                                                  alpha_cw[-1]],
-                                    non_sequences=[pctx_cw, cc]+[W_current_chunk_hidden, W_current_chunk_c, U, Wc, W_comb_att, U_att, c_tt, Ux, Wcx, U_nl, Ux_nl, b_nl, bx_nl, h2], # hidden of chunk should help word disambiguation
-                                    name=_p(prefix, '_layers'),
-                                    n_steps=n_chunk_word_step,
-                                    profile=profile,
-                                    strict=True)
+                                                sequences=seqs,
+                                                outputs_info=[h_cw[-1],
+                                                              ctx_cw[-1],
+                                                              alpha_cw[-1]],
+                                                non_sequences=[pctx_cw, cc]+[W_current_chunk_hidden, W_current_chunk_c, U, Wc, W_comb_att, U_att, c_tt, Ux, Wcx, U_nl, Ux_nl, b_nl, bx_nl, h2], # hidden of chunk should help word disambiguation
+                                                name=_p(prefix, '_layers'),
+                                                n_steps=n_chunk_word_step,
+                                                profile=profile,
+                                                strict=True)
 
         y_chunk_emb = rval_chunk_words[0][-1] - h_cw[-1] # the chunk representation is the difference of chunk word hiddens
 
@@ -906,34 +853,34 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
 
     word_shared_vars = [tparams[_p(prefix, 'W_use_current_chunk')],
                         tparams[_p(prefix, 'W_current_chunk_c')],
-           tparams[_p(prefix, 'U')],
-           tparams[_p(prefix, 'Wc')],
-           tparams[_p(prefix, 'W_comb_att')],
-           tparams[_p(prefix, 'U_att')],
-           tparams[_p(prefix, 'c_tt')],
-           tparams[_p(prefix, 'Ux')],
-           tparams[_p(prefix, 'Wcx')],
-           tparams[_p(prefix, 'U_nl')],
-           tparams[_p(prefix, 'Ux_nl')],
-           tparams[_p(prefix, 'b_nl')],
-           tparams[_p(prefix, 'bx_nl')]]
+                        tparams[_p(prefix, 'U')],
+                        tparams[_p(prefix, 'Wc')],
+                        tparams[_p(prefix, 'W_comb_att')],
+                        tparams[_p(prefix, 'U_att')],
+                        tparams[_p(prefix, 'c_tt')],
+                        tparams[_p(prefix, 'Ux')],
+                        tparams[_p(prefix, 'Wcx')],
+                        tparams[_p(prefix, 'U_nl')],
+                        tparams[_p(prefix, 'Ux_nl')],
+                        tparams[_p(prefix, 'b_nl')],
+                        tparams[_p(prefix, 'bx_nl')]]
 
     chunk_shared_vars = [tparams[_p(prefix, 'chunk_transform_matrix')],
                          tparams[_p(prefix, 'U_chunk')],
-                   tparams[_p(prefix, 'Wc_chunk')],
-                   tparams[_p(prefix, 'W_comb_att_chunk')],
-                   tparams[_p(prefix, 'U_att_chunk')],
-                   tparams[_p(prefix, 'c_tt_chunk')],
-                   tparams[_p(prefix, 'Ux_chunk')],
-                   tparams[_p(prefix, 'Wcx_chunk')],
-                   tparams[_p(prefix, 'U_nl_chunk')],
-                   tparams[_p(prefix, 'Ux_nl_chunk')],
-                   tparams[_p(prefix, 'b_nl_chunk')],
-                   tparams[_p(prefix, 'bx_nl_chunk')],
-                   tparams[_p(prefix, 'Wx_chunk')],
-                   tparams[_p(prefix, 'bx_chunk')],
-                   tparams[_p(prefix, 'W_chunk')],
-                   tparams[_p(prefix, 'b_chunk')]]
+                         tparams[_p(prefix, 'Wc_chunk')],
+                         tparams[_p(prefix, 'W_comb_att_chunk')],
+                         tparams[_p(prefix, 'U_att_chunk')],
+                         tparams[_p(prefix, 'c_tt_chunk')],
+                         tparams[_p(prefix, 'Ux_chunk')],
+                         tparams[_p(prefix, 'Wcx_chunk')],
+                         tparams[_p(prefix, 'U_nl_chunk')],
+                         tparams[_p(prefix, 'Ux_nl_chunk')],
+                         tparams[_p(prefix, 'b_nl_chunk')],
+                         tparams[_p(prefix, 'bx_nl_chunk')],
+                         tparams[_p(prefix, 'Wx_chunk')],
+                         tparams[_p(prefix, 'bx_chunk')],
+                         tparams[_p(prefix, 'W_chunk')],
+                         tparams[_p(prefix, 'b_chunk')]]
 
     if one_step_chunk:
 
@@ -952,7 +899,7 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
 
         # chunk pctx
         chunk_pctx_ = tensor.dot(context, tparams[_p(prefix, 'Wc_att_chunk')]) + \
-                  tparams[_p(prefix, 'b_att_chunk')]
+                      tparams[_p(prefix, 'b_att_chunk')]
         #
         # # projected x
         # chunk_state_belowx = tensor.dot(chunk_emb, tparams[_p(prefix, 'Wx_chunk')]) +\
@@ -964,21 +911,21 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
 
         seqs = [chunk_mask, chunk_index, last_chunk_emb]
         rval = _chunk_step_decode(*(seqs + [init_state_chunk, None, None, chunk_pctx_, context] +
-                       chunk_shared_vars ))
+                                    chunk_shared_vars ))
         return rval[0], rval[1], rval[2], None, None, None
 
     elif one_step_word:
 
-         # word pctx
+        # word pctx
         pctx_ = tensor.dot(context, tparams[_p(prefix, 'Wc_att')]) + \
-            tparams[_p(prefix, 'b_att')]
+                tparams[_p(prefix, 'b_att')]
 
         # projected x
         # TODO make sure that the tensor multiplication with matrix ?
-        state_belowx = tensor.dot(emb, tparams[_p(prefix, 'Wx')]) +\
-            tparams[_p(prefix, 'bx')]
-        state_below_ = tensor.dot(emb, tparams[_p(prefix, 'W')]) +\
-            tparams[_p(prefix, 'b')]
+        state_belowx = tensor.dot(emb, tparams[_p(prefix, 'Wx')]) + \
+                       tparams[_p(prefix, 'bx')]
+        state_below_ = tensor.dot(emb, tparams[_p(prefix, 'W')]) + \
+                       tparams[_p(prefix, 'b')]
 
 
         seqs = [chunk_word_mask, state_below_, state_belowx]
@@ -995,25 +942,25 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
         #            tparams[_p(prefix, 'bx_nl')]]
 
         rval = _step_slice(*(seqs + [init_state_chunk_words, None, None, pctx_, context] +
-                       word_shared_vars + [current_chunk_hidden] ))
+                             word_shared_vars + [current_chunk_hidden] ))
         return rval[0], rval[1], rval[2], None, None, None
 
 
     # word pctx
     pctx_ = tensor.dot(context, tparams[_p(prefix, 'Wc_att')]) + \
-        tparams[_p(prefix, 'b_att')]
+            tparams[_p(prefix, 'b_att')]
 
     # chunk pctx
     chunk_pctx_ = tensor.dot(context, tparams[_p(prefix, 'Wc_att_chunk')]) + \
-              tparams[_p(prefix, 'b_att_chunk')]
+                  tparams[_p(prefix, 'b_att_chunk')]
 
 
 
     # projected x
-    state_belowx = tensor.dot(emb, tparams[_p(prefix, 'Wx')]) +\
-        tparams[_p(prefix, 'bx')]
-    state_below_ = tensor.dot(emb, tparams[_p(prefix, 'W')]) +\
-        tparams[_p(prefix, 'b')]
+    state_belowx = tensor.dot(emb, tparams[_p(prefix, 'Wx')]) + \
+                   tparams[_p(prefix, 'bx')]
+    state_below_ = tensor.dot(emb, tparams[_p(prefix, 'W')]) + \
+                   tparams[_p(prefix, 'b')]
 
     #
     # # projected x
@@ -1023,9 +970,9 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
     #     tparams[_p(prefix, 'b_chunk')]
 
 
-    seqs = [chunk_mask, chunk_word_mask, chunk_index,
+    seqs = [chunk_mask, chunk_indicator, chunk_index,
             state_below_, state_belowx]
-    #
+
     #
     # # x = tensor.matrix('temp_x', dtype='int64')
     # x_printed = theano.printing.Print('this is a very important value')(init_state_chunk_words.shape)
@@ -1176,20 +1123,17 @@ def build_model(tparams, options):
     x_mask = tensor.matrix('x_mask', dtype='float32')
 
     y_chunk = tensor.matrix('y_chunk', dtype='int64')
-    last_word_in_chunk = tensor.matrix('last_word_in_chunk', dtype='int64')
-    y_chunk_words = tensor.tensor3('y_chunk_words', dtype='int64')
-    y_chunk_mask = tensor.matrix('y_chunk_mask', dtype='float32')
-    y_chunk_words_mask = tensor.tensor3('y_chunk_words_mask', dtype='float32')
+    y_chunk_words = tensor.matrix('y_chunk_words', dtype='int64')
+    y_mask = tensor.matrix('y_mask', dtype='float32')
+    chunk_indicator = tensor.matrix('chunk_indicator', dtype='int64')
 
     # for the backward rnn, we just need to invert x and x_mask
     xr = x[::-1]
     xr_mask = x_mask[::-1]
 
     n_timesteps = x.shape[0]
-    n_timesteps_chunk = y_chunk.shape[0]
-    n_timesteps_chunk_words = y_chunk_words.shape[1]
+    n_timesteps_y = y_chunk.shape[0]
     n_samples = x.shape[1]
-
 
     # word embedding for forward rnn (source)
     emb = tparams['Wemb'][x.flatten()]
@@ -1225,42 +1169,13 @@ def build_model(tparams, options):
     # not condition on the last output.
 
 
-
-
-    last_word_emb = tparams['Wemb'][last_word_in_chunk.flatten()]
-    last_word_emb = last_word_emb.reshape([n_timesteps_chunk, n_samples, options['dim_word']])
-
-
     # shift the word embeddings in the chunk
     emb = tparams['Wemb_dec'][y_chunk_words.flatten()]
-    emb = emb.reshape([n_timesteps_chunk, n_timesteps_chunk_words, n_samples, options['dim_word']])
+    emb = emb.reshape([n_timesteps_y, n_samples, options['dim_word']])
 
-    # shift the word embeddings
-    def _step_shift(emb_i, e):
-
-        emb_shifted_i = tensor.zeros_like(emb_i)
-        emb_shifted_i = tensor.set_subtensor(emb_shifted_i[1:], emb_i[:-1])
-        return emb_shifted_i
-
-
-
-    # prepare scan arguments
-    seqs = [emb]
-    init_states = [ tensor.zeros_like(emb[0])]
-    _step = _step_shift
-    nsteps = emb.shape[0]
-
-    emb_shifted, updates = theano.scan(_step,
-                                sequences=seqs,
-                                outputs_info=init_states,
-                                n_steps=nsteps,
-                                profile=profile,
-                                strict=True)
-
+    emb_shifted = tensor.zeros_like(emb)
+    emb_shifted = tensor.set_subtensor(emb_shifted[1:], emb[:-1])
     emb = emb_shifted
-
-
-
 
     y_chunk_shift = tensor.zeros_like(y_chunk)
     y_chunk_shift = tensor.set_subtensor(y_chunk_shift[1:], y_chunk[:-1])
@@ -1269,14 +1184,13 @@ def build_model(tparams, options):
 
     proj = get_layer(options['decoder'])[1](tparams, emb, y_chunk_shift, options,
                                             prefix='decoder',
-                                            chunk_mask=y_chunk_mask,
-                                            chunk_word_mask=y_chunk_words_mask,
+                                            chunk_mask=y_mask,
+                                            chunk_indicator=chunk_indicator,
                                             context=ctx,
                                             context_mask=x_mask,
                                             init_state_chunk=init_state_chunk,
                                             init_state_chunk_words=init_state_chunk_words,
-                                            n_chunk_step=n_timesteps_chunk,
-                                            n_chunk_word_step=n_timesteps_chunk_words)
+                                            n_chunk_step=n_timesteps_y)
 
     # predict the chunk
 
@@ -1305,33 +1219,7 @@ def build_model(tparams, options):
     # # x = tensor.matrix('temp_x', dtype='int64')
     # x_printed = theano.printing.Print('proj_h ')(proj_h.shape)
     # f_with_print = theano.function([proj_h], x_printed)
-    # assert numpy.all( f_with_print([[[1,2]],[[2,4]]]))No such file or directory
-
-
-
-    # shift the word embeddings
-    def _step_get_predict_word_embedding(emb_i, last_word_e, e):
-
-        emb_i = tensor.set_subtensor(emb_i[0], last_word_e)
-        return emb_i
-
-
-    # prepare scan arguments
-    seqs = [emb, last_word_emb]
-    init_states = [ tensor.zeros_like(emb[0]) ]
-    _step = _step_get_predict_word_embedding
-    nsteps = emb.shape[0]
-
-
-    emb_shifted, updates = theano.scan(_step,
-                                sequences=seqs,
-                                outputs_info=init_states,
-                                n_steps=nsteps,
-                                profile=profile,
-                                strict=True)
-
-    emb = emb_shifted
-
+    # assert numpy.all( f_with_print([[[1,2]],[[2,4]]]))
 
 
     # compute word probabilities
@@ -1400,7 +1288,7 @@ def build_model(tparams, options):
     cost = (cost * y_chunk_mask).sum(0)
 
     return trng, use_noise, x, x_mask, y_chunk, y_chunk_mask, y_chunk_words, \
-           y_chunk_words_mask, last_word_in_chunk, opt_ret, cost
+           y_chunk_words_mask, opt_ret, cost
 
 # build a sampler
 def build_sampler(tparams, options, trng, use_noise):
@@ -1454,8 +1342,6 @@ def build_sampler(tparams, options, trng, use_noise):
     y_chunk = tensor.vector('y_sample_chunk', dtype='int64')
     y_chunk_words = tensor.vector('y_sample_chunk_words', dtype='int64')
 
-    last_word_in_chunk = tensor.vector('last_word_in_chunk', dtype='int64')
-
     init_state_chunk = tensor.matrix('init_state', dtype='float32')
     init_state_chunk_words = tensor.matrix('init_state', dtype='float32')
 
@@ -1467,10 +1353,6 @@ def build_sampler(tparams, options, trng, use_noise):
     emb_chunk_word = tensor.switch(y_chunk_words[:, None] < 0,
                         tensor.alloc(0., 1, tparams['Wemb_dec'].shape[1]),
                         tparams['Wemb_dec'][y_chunk_words])
-
-    emb_last_word_in_chunk = tensor.switch(last_word_in_chunk[:, None] < 0,
-                        tensor.alloc(0., 1, tparams['Wemb_dec'].shape[1]),
-                        tparams['Wemb_dec'][last_word_in_chunk])
 
     # apply one step of conditional gru with attention
     proj_chunk = get_layer(options['decoder'])[1](tparams, None, y_chunk,  options,
@@ -1497,9 +1379,7 @@ def build_sampler(tparams, options, trng, use_noise):
                                             current_chunk_hidden=current_chunk_hidden)
 
 
-    emb_chunk_word = tensor.switch(y_chunk_words[:, None] < 0,
-                        emb_last_word_in_chunk,
-                        emb_chunk_word)
+
 
 
     # begin to get the probability vectors
@@ -1557,7 +1437,7 @@ def build_sampler(tparams, options, trng, use_noise):
     inps = [y_chunk, ctx, init_state_chunk, last_chunk_true]
     outs = [probs_chunk, next_sample_chunk, proj_h]
     f_next_chunk = theano.function(inps, outs, name='f_next_chunk', profile=profile)
-    inps = [last_word_in_chunk, y_chunk_words, ctx, init_state_chunk_words, current_chunk_hidden]
+    inps = [y_chunk_words, ctx, init_state_chunk_words, current_chunk_hidden]
     outs = [probs_cw, next_sample_cw, proj_h_cw]
     f_next_chunk_word = theano.function(inps, outs, name='f_next_chunk_word', profile=profile)
     print 'Done'
@@ -1594,7 +1474,6 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
     # we have to modify the code
 
     next_word = -1 * numpy.ones((1,)).astype('int64')  # bos indicator
-    last_word_in_chunk = -1 * numpy.ones((1,)).astype('int64')  # bos indicator
     next_chunk = -1 * numpy.ones((1,)).astype('int64')  # bos indicator
 
     next_chunk_emb = numpy.zeros((1, options['dim'])).astype('float32')
@@ -1665,7 +1544,7 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
 
             for ii_chunk in xrange(maxlen_words):
                 ctx = numpy.tile(ctx0, [word_live_k, 1])
-                inps = [last_word_in_chunk, next_word, ctx, next_state_word, next_state_chunk]
+                inps = [next_word, ctx, next_state_word, next_state_chunk]
                 ret = f_next_word(*inps)
                 next_p_word, next_word, next_state_word = ret[0], ret[1], ret[2]
 
@@ -1678,8 +1557,6 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
                     final_beam_score -= numpy.log(next_p_word[0, nc])
                     if nw == 0:
                         break
-
-            last_word_in_chunk = next_word
             next_chunk_emb = next_state_word - next_chunk_emb
         #
         # # beam search decoding
@@ -1776,7 +1653,7 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
 
                     chunk_hidden = numpy.tile(new_chunk_hyp_states[-1], [word_live_k, 1])
 
-                    inps = [last_word_in_chunk, current_next_word, ctx, ii_word_state, chunk_hidden]
+                    inps = [current_next_word, ctx, ii_word_state, chunk_hidden]
 
                     ret = f_next_word(*inps)
                     new_next_p_word_i, current_next_word, ii_word_state \
@@ -1899,10 +1776,6 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
             chunk_beam_chunk_trues = [ complete_word_sample_state[i] - chunk_beam_word_hiddens[k] for i, k in zip(best_k_index_chunk_beam, best_k_index_chunk_beam_index)]
             chunk_beam_word_hiddens = [complete_word_sample_state[i] for i in best_k_index_chunk_beam]
 
-
-            last_word_in_chunk = [complete_word_sample[i][-1] for i in best_k_index_chunk_beam]
-
-            last_word_in_chunk = numpy.array(last_word_in_chunk)
             # print 'chunk_beam_word_hiddens',chunk_beam_word_hiddens
 
 
@@ -1953,11 +1826,11 @@ def pred_probs(f_log_probs, prepare_data, options, iterator, verbose=True):
     for x, y_chunk, y_cw in iterator:
         n_done += len(x)
 
-        x, x_mask, y_c, y_mask_c, y_cw, y_mask_cw, last_word_in_chunk = prepare_data(x, y_chunk, y_cw,
+        x, x_mask, y_c, y_mask_c, y_cw, y_mask_cw = prepare_data(x, y_chunk, y_cw,
                                             n_words_src=options['n_words_src'],
                                             n_words=options['n_words'])
 
-        pprobs = f_log_probs(x, x_mask, y_c, y_mask_c, y_cw, y_mask_cw, last_word_in_chunk)
+        pprobs = f_log_probs(x, x_mask, y_c, y_mask_c, y_cw, y_mask_cw)
         for pp in pprobs:
             probs.append(pp)
 
@@ -2170,12 +2043,12 @@ def train(dim_word=100,  # word vector dimensionality
     # modify the module of build model!
     # especially the inputs and outputs
     trng, use_noise, \
-    x, x_mask, y_chunk, y_chunk_mask, y_cw, y_cw_mask, lw_in_chunk, \
+    x, x_mask, y_chunk, y_chunk_mask, y_cw, y_cw_mask, \
     opt_ret, \
     cost= \
         build_model(tparams, model_options)
 
-    inps = [x, x_mask, y_chunk, y_chunk_mask, y_cw, y_cw_mask, lw_in_chunk]
+    inps = [x, x_mask, y_chunk, y_chunk_mask, y_cw, y_cw_mask]
 
     print 'Building sampler'
     f_init, f_next_chunk, f_next_word = build_sampler(tparams, model_options, trng, use_noise)
@@ -2265,7 +2138,7 @@ def train(dim_word=100,  # word vector dimensionality
             uidx += 1
             use_noise.set_value(1.)
 
-            x, x_mask, y_c, y_mask_c, y_cw, y_mask_cw, last_word_in_chunk = prepare_training_data(x, y_chunk, y_cw, maxlen_chunk=maxlen_chunk, maxlen_cw=maxlen_chunk_words,
+            x, x_mask, y_c, y_mask_c, y_cw, y_mask_cw = prepare_training_data(x, y_chunk, y_cw, maxlen_chunk=maxlen_chunk, maxlen_cw=maxlen_chunk_words,
                                                                               n_words_src=n_words_src,
                                                                               n_words=n_words)
 
@@ -2279,7 +2152,7 @@ def train(dim_word=100,  # word vector dimensionality
 
 
             # compute cost, grads and copy grads to sh            self.target_buffer = _tcbufared variables
-            cost = f_grad_shared(x, x_mask, y_c, y_mask_c, y_cw, y_mask_cw, last_word_in_chunk)
+            cost = f_grad_shared(x, x_mask, y_c, y_mask_c, y_cw, y_mask_cw)
 
             print 'Epoch ', eidx, 'processed one batch'
 

@@ -1,0 +1,118 @@
+./outputs/MT02.trans10000.scratch.en.6.3
+BLEU = 0.77, 33.9/4.3/0.3/0.0 (BP=0.651, ratio=0.700, hyp_len=16659, ref_len=23803)
+./outputs/MT02.trans100000.scratch.en.6.3
+BLEU = 15.72, 53.3/22.3/10.2/5.0 (BP=1.000, ratio=1.036, hyp_len=28087, ref_len=27106)
+./outputs/MT02.trans110000.scratch.en.6.3
+BLEU = 17.70, 57.5/25.3/12.1/6.1 (BP=0.979, ratio=0.980, hyp_len=25473, ref_len=26001)
+./outputs/MT02.trans120000.scratch.en.6.3
+BLEU = 18.41, 59.0/26.5/13.1/6.7 (BP=0.956, ratio=0.957, hyp_len=24765, ref_len=25881)
+./outputs/MT02.trans130000.scratch.en.6.3
+BLEU = 18.83, 58.4/26.8/12.8/6.3 (BP=1.000, ratio=1.041, hyp_len=28256, ref_len=27143)
+./outputs/MT02.trans140000.scratch.en.6.3
+BLEU = 18.91, 58.3/26.7/12.8/6.4 (BP=1.000, ratio=1.042, hyp_len=28001, ref_len=26871)
+./outputs/MT02.trans150000.scratch.en.6.3
+BLEU = 10.20, 58.5/25.3/12.5/6.3 (BP=0.553, ratio=0.628, hyp_len=14731, ref_len=23467)
+./outputs/MT02.trans160000.scratch.en.6.3
+BLEU = 22.10, 62.9/30.5/15.4/8.1 (BP=1.000, ratio=1.010, hyp_len=26812, ref_len=26542)
+./outputs/MT02.trans170000.scratch.en.6.3
+BLEU = 21.51, 61.9/29.8/14.9/7.8 (BP=0.997, ratio=0.997, hyp_len=26307, ref_len=26376)
+./outputs/MT02.trans180000.scratch.en.6.3
+BLEU = 19.95, 58.0/28.1/13.8/7.0 (BP=1.000, ratio=1.075, hyp_len=29640, ref_len=27580)
+./outputs/MT02.trans190000.scratch.en.6.3
+BLEU = 25.82, 66.9/36.1/19.9/11.3 (BP=0.951, ratio=0.952, hyp_len=25047, ref_len=26311)
+./outputs/MT02.trans20000.scratch.en.6.3
+BLEU = 2.73, 39.9/7.0/1.7/0.5 (BP=0.692, ratio=0.731, hyp_len=17322, ref_len=23711)
+./outputs/MT02.trans200000.scratch.en.6.3
+BLEU = 22.88, 63.4/31.2/16.1/8.6 (BP=1.000, ratio=1.022, hyp_len=27164, ref_len=26574)
+./outputs/MT02.trans210000.scratch.en.6.3
+BLEU = 22.29, 60.5/30.6/15.8/8.5 (BP=1.000, ratio=1.044, hyp_len=28332, ref_len=27133)
+./outputs/MT02.trans220000.scratch.en.6.3
+BLEU = 22.52, 62.2/30.8/15.9/8.4 (BP=1.000, ratio=1.000, hyp_len=26206, ref_len=26196)
+./outputs/MT02.trans230000.scratch.en.6.3
+BLEU = 26.45, 68.0/36.6/20.2/11.2 (BP=0.966, ratio=0.967, hyp_len=24873, ref_len=25734)
+./outputs/MT02.trans240000.scratch.en.6.3
+BLEU = 23.46, 63.7/32.1/16.6/8.9 (BP=1.000, ratio=1.014, hyp_len=27099, ref_len=26718)
+./outputs/MT02.trans250000.scratch.en.6.3
+BLEU = 22.74, 62.4/31.2/16.0/8.6 (BP=1.000, ratio=1.022, hyp_len=27362, ref_len=26775)
+./outputs/MT02.trans260000.scratch.en.6.3
+BLEU = 22.39, 64.4/31.9/16.2/8.6 (BP=0.969, ratio=0.969, hyp_len=25141, ref_len=25935)
+./outputs/MT02.trans270000.scratch.en.6.3
+BLEU = 24.00, 65.1/32.9/17.3/9.5 (BP=0.986, ratio=0.986, hyp_len=25511, ref_len=25868)
+./outputs/MT02.trans280000.scratch.en.6.3
+BLEU = 24.39, 67.3/35.1/18.5/10.0 (BP=0.948, ratio=0.950, hyp_len=24078, ref_len=25357)
+./outputs/MT02.trans290000.scratch.en.6.3
+BLEU = 24.51, 64.6/33.3/17.6/9.6 (BP=1.000, ratio=1.013, hyp_len=26932, ref_len=26584)
+./outputs/MT02.trans30000.scratch.en.6.3
+BLEU = 6.01, 42.5/10.8/3.3/1.1 (BP=0.932, ratio=0.934, hyp_len=23396, ref_len=25049)
+./outputs/MT02.trans300000.scratch.en.6.3
+BLEU = 29.51, 70.0/39.7/22.7/13.2 (BP=0.977, ratio=0.978, hyp_len=25674, ref_len=26260)
+./outputs/MT02.trans305000.scratch.en.6.3
+BLEU = 25.84, 69.3/37.1/20.7/11.6 (BP=0.921, ratio=0.924, hyp_len=23245, ref_len=25162)
+./outputs/MT02.trans310000.scratch.en.6.3
+BLEU = 24.21, 67.6/34.5/18.3/9.9 (BP=0.950, ratio=0.951, hyp_len=24242, ref_len=25494)
+./outputs/MT02.trans315000.scratch.en.6.3
+BLEU = 24.07, 64.7/32.8/17.2/9.2 (BP=0.998, ratio=0.998, hyp_len=26297, ref_len=26347)
+./outputs/MT02.trans320000.scratch.en.6.3
+BLEU = 24.53, 68.1/35.2/18.8/10.3 (BP=0.941, ratio=0.942, hyp_len=23969, ref_len=25433)
+./outputs/MT02.trans325000.scratch.en.6.3
+BLEU = 23.26, 63.0/31.9/16.4/8.9 (BP=1.000, ratio=1.025, hyp_len=27495, ref_len=26832)
+./outputs/MT02.trans330000.scratch.en.6.3
+BLEU = 24.29, 64.5/33.5/17.4/9.3 (BP=1.000, ratio=1.027, hyp_len=27685, ref_len=26948)
+./outputs/MT02.trans335000.scratch.en.6.3
+BLEU = 26.40, 66.4/35.9/19.9/11.2 (BP=0.978, ratio=0.978, hyp_len=24942, ref_len=25503)
+./outputs/MT02.trans340000.scratch.en.6.3
+BLEU = 29.22, 70.4/39.9/22.9/13.1 (BP=0.965, ratio=0.966, hyp_len=25155, ref_len=26052)
+./outputs/MT02.trans345000.scratch.en.6.3
+BLEU = 25.41, 65.9/34.5/18.4/10.0 (BP=1.000, ratio=1.015, hyp_len=26812, ref_len=26406)
+./outputs/MT02.trans350000.scratch.en.6.3
+BLEU = 23.61, 64.4/32.8/17.0/9.1 (BP=0.987, ratio=0.987, hyp_len=25952, ref_len=26291)
+./outputs/MT02.trans355000.scratch.en.6.3
+BLEU = 25.60, 66.8/35.3/18.8/10.4 (BP=0.982, ratio=0.982, hyp_len=25709, ref_len=26186)
+./outputs/MT02.trans360000.scratch.en.6.3
+BLEU = 24.60, 64.9/33.5/17.6/9.6 (BP=1.000, ratio=1.023, hyp_len=27214, ref_len=26611)
+./outputs/MT02.trans365000.scratch.en.6.3
+BLEU = 25.49, 66.3/35.0/18.6/10.2 (BP=0.990, ratio=0.990, hyp_len=25957, ref_len=26228)
+./outputs/MT02.trans370000.scratch.en.6.3
+BLEU = 25.06, 65.7/34.3/18.0/9.7 (BP=1.000, ratio=1.004, hyp_len=26533, ref_len=26440)
+./outputs/MT02.trans375000.scratch.en.6.3
+BLEU = 29.92, 68.9/39.6/23.0/13.4 (BP=0.988, ratio=0.988, hyp_len=26402, ref_len=26715)
+./outputs/MT02.trans380000.scratch.en.6.3
+BLEU = 24.98, 67.4/35.1/18.6/10.2 (BP=0.966, ratio=0.966, hyp_len=24964, ref_len=25835)
+./outputs/MT02.trans385000.scratch.en.6.3
+BLEU = 25.19, 65.0/34.1/18.1/10.0 (BP=1.000, ratio=1.032, hyp_len=27937, ref_len=27075)
+./outputs/MT02.trans390000.scratch.en.6.3
+BLEU = 26.35, 67.5/36.0/19.5/10.8 (BP=0.986, ratio=0.987, hyp_len=26070, ref_len=26425)
+./outputs/MT02.trans395000.scratch.en.6.3
+BLEU = 26.12, 67.9/36.2/19.3/10.6 (BP=0.980, ratio=0.980, hyp_len=25630, ref_len=26144)
+./outputs/MT02.trans40000.scratch.en.6.3
+BLEU = 12.88, 51.5/19.8/8.7/4.1 (BP=0.930, ratio=0.933, hyp_len=23432, ref_len=25124)
+./outputs/MT02.trans400000.scratch.en.6.3
+BLEU = 26.33, 66.5/35.2/19.1/10.7 (BP=1.000, ratio=1.013, hyp_len=26864, ref_len=26516)
+./outputs/MT02.trans405000.scratch.en.6.3
+BLEU = 25.27, 67.2/35.4/18.7/10.1 (BP=0.975, ratio=0.975, hyp_len=25353, ref_len=25994)
+./outputs/MT02.trans410000.scratch.en.6.3
+BLEU = 20.26, 66.1/34.3/18.6/9.8 (BP=0.799, ratio=0.816, hyp_len=19703, ref_len=24135)
+./outputs/MT02.trans415000.scratch.en.6.3
+BLEU = 30.27, 72.3/42.2/24.8/14.6 (BP=0.934, ratio=0.937, hyp_len=24054, ref_len=25684)
+./outputs/MT02.trans420000.scratch.en.6.3
+BLEU = 26.19, 66.5/35.1/19.0/10.7 (BP=0.998, ratio=0.998, hyp_len=26335, ref_len=26399)
+./outputs/MT02.trans421000.scratch.en.6.3
+BLEU = 27.21, 67.9/36.4/19.9/11.1 (BP=1.000, ratio=1.004, hyp_len=26392, ref_len=26278)
+./outputs/MT02.trans422000.scratch.en.6.3
+BLEU = 25.45, 65.9/34.5/18.5/9.9 (BP=1.000, ratio=1.027, hyp_len=27475, ref_len=26757)
+./outputs/MT02.trans423000.scratch.en.6.3
+BLEU = 25.79, 66.3/34.9/18.7/10.2 (BP=1.000, ratio=1.004, hyp_len=26601, ref_len=26484)
+./outputs/MT02.trans424000.scratch.en.6.3
+BLEU = 25.17, 66.2/34.5/18.5/10.0 (BP=0.988, ratio=0.988, hyp_len=26259, ref_len=26566)
+./outputs/MT02.trans425000.scratch.en.6.3
+BLEU = 25.45, 65.8/34.4/18.6/10.3 (BP=0.992, ratio=0.992, hyp_len=26065, ref_len=26281)
+./outputs/MT02.trans50000.scratch.en.6.3
+BLEU = 10.65, 47.7/15.8/6.1/2.8 (BP=1.000, ratio=1.021, hyp_len=26952, ref_len=26408)
+./outputs/MT02.trans60000.scratch.en.6.3
+BLEU = 10.88, 45.3/16.2/6.4/3.0 (BP=1.000, ratio=1.099, hyp_len=30066, ref_len=27358)
+./outputs/MT02.trans70000.scratch.en.6.3
+BLEU = 13.17, 54.8/21.0/9.1/4.4 (BP=0.896, ratio=0.901, hyp_len=22627, ref_len=25111)
+./outputs/MT02.trans80000.scratch.en.6.3
+BLEU = 20.91, 59.1/28.6/14.6/7.8 (BP=1.000, ratio=1.033, hyp_len=27610, ref_len=26716)
+./outputs/MT02.trans90000.scratch.en.6.3
+BLEU = 16.46, 59.2/25.3/11.8/5.9 (BP=0.915, ratio=0.919, hyp_len=22818, ref_len=24837)
