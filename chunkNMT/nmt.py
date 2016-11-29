@@ -1777,6 +1777,10 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
                 # the initial word of one chunk is always -1
                 # if len(chunk_beam_word_sample[ti]) == 0:
                 current_next_word = -1 * numpy.ones((1,)).astype('int64')
+
+                last_chunk_last_word = -1
+                if chunk_beam_word_sample[ti][-1] < 0:
+                    last_chunk_last_word = chunk_beam_word_sample[ti][-3] # [-1] chunk index, [-2] 0, eos, [-3] last word in last chunk
                 last_word_in_chunk = chunk_beam_word_sample[ti][-1] * numpy.ones((1,)).astype('int64')
                 # else:
                 #     current_next_word = copy.copy(chunk_beam_word_sample[ti][-1]) * numpy.ones((1,)).astype('int64')

@@ -34,8 +34,8 @@
       <file leaf-file-name="nmt.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/chunkNMT/nmt.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.50842416">
-              <caret line="1784" column="0" selection-start-line="1784" selection-start-column="0" selection-end-line="1784" selection-end-column="0" />
+            <state vertical-scroll-proportion="0.6967294">
+              <caret line="1782" column="72" selection-start-line="1782" selection-start-column="72" selection-end-line="1782" selection-end-column="72" />
               <folding />
             </state>
           </provider>
@@ -950,8 +950,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/chunkNMT/nmt.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.50842416">
-          <caret line="1784" column="0" selection-start-line="1784" selection-start-column="0" selection-end-line="1784" selection-end-column="0" />
+        <state vertical-scroll-proportion="0.6967294">
+          <caret line="1782" column="72" selection-start-line="1782" selection-start-column="72" selection-end-line="1782" selection-end-column="72" />
           <folding />
         </state>
       </provider>
