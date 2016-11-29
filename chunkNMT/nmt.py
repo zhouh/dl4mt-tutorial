@@ -1880,6 +1880,7 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
 
                     # prepare the next phrase configuration for next word computation
                     current_next_word = numpy.array([w[-1] for w in hyp_word_sample])
+                    last_word_in_chunk = numpy.array([w[-1] for w in hyp_word_sample])
                     ii_word_state = numpy.array(hyp_word_sample_state)
                     hyp_word_sample_score = numpy.array(hyp_word_sample_score)
 
