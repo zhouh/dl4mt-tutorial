@@ -1,20 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="BookmarkManager">
-    <bookmark url="file://$PROJECT_DIR$/chunkNMT/nmt.py" line="807" mnemonic="1" />
-    <bookmark url="file://$PROJECT_DIR$/chunkNMT/nmt.py" line="1057" mnemonic="8" />
-    <bookmark url="file://$PROJECT_DIR$/chunkNMT/nmt.py" line="1505" mnemonic="7" />
-    <bookmark url="file://$PROJECT_DIR$/chunkNMT/nmt.py" line="1631" mnemonic="9" />
-    <bookmark url="file://$PROJECT_DIR$/chunkNMT/nmt.py" line="1775" mnemonic="0" />
+    <bookmark url="file://$PROJECT_DIR$/HMS-chunk/nmt.py" line="1326" mnemonic="0" />
+    <bookmark url="file://$PROJECT_DIR$/HMS-chunk/nmt.py" line="897" mnemonic="9" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1344b957-e1f7-4ece-9849-5b0fe816b362" name="Default" comment="">
+    <list default="true" id="c9d0d8be-ffe4-4cfa-9c71-411b5c586e10" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/scripts/build_chunked_dict.py" afterPath="$PROJECT_DIR$/scripts/build_chunked_dict.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/scripts/filter.py" afterPath="$PROJECT_DIR$/scripts/filter.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/HMS-chunk/nmt.py" afterPath="$PROJECT_DIR$/HMS-chunk/nmt.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/chunkNMT/nmt.py" afterPath="$PROJECT_DIR$/chunkNMT/nmt.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/session2/nmt.py" afterPath="$PROJECT_DIR$/session2/nmt.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/HMS-chunk/train_nmt_zh2en.py" afterPath="$PROJECT_DIR$/HMS-chunk/train_nmt_zh2en.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/HMS-chunk/train_nmt_zh2en_pc.py" afterPath="$PROJECT_DIR$/HMS-chunk/train_nmt_zh2en_pc.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/HMS-chunk/training_data_iterator.py" afterPath="$PROJECT_DIR$/HMS-chunk/training_data_iterator.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="dl4mt-tutorial.iws" />
     <ignored path=".idea/workspace.xml" />
-    <ignored path=".idea/dataSources.local.xml" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -26,17 +29,16 @@
   <component name="CreatePatchCommitExecutor">
     <option name="PATCH_PATH" value="" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
   <component name="FavoritesManager">
     <favorites_list name="dl4mt-tutorial" />
   </component>
   <component name="FileEditorManager">
     <leaf>
       <file leaf-file-name="nmt.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/chunkNMT/nmt.py">
+        <entry file="file://$PROJECT_DIR$/session2/nmt.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.48364717">
-              <caret line="1882" column="59" selection-start-line="1882" selection-start-column="59" selection-end-line="1882" selection-end-column="59" />
+            <state vertical-scroll-proportion="-3.903865">
+              <caret line="982" column="4" selection-start-line="982" selection-start-column="4" selection-end-line="982" selection-end-column="4" />
               <folding />
             </state>
           </provider>
@@ -44,88 +46,28 @@
       </file>
     </leaf>
   </component>
-  <component name="FileTemplateManagerImpl">
-    <option name="RECENT_TEMPLATES">
-      <list>
-        <option value="Python Script" />
-      </list>
-    </option>
-  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
-  </component>
-  <component name="HighlightingSettingsPerFile">
-    <setting file="file://$PROJECT_DIR$/chunkNMT/nmt.py" root0="SKIP_INSPECTION" />
   </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/README.md" />
-        <option value="$PROJECT_DIR$/do/nmt.py" />
-        <option value="$PROJECT_DIR$/do/trainLM.py" />
-        <option value="$PROJECT_DIR$/do/utils.py" />
-        <option value="$PROJECT_DIR$/do/gru_theano.py" />
-        <option value="$PROJECT_DIR$/dad/nmt.py" />
-        <option value="$PROJECT_DIR$/session0/lm.py" />
-        <option value="$PROJECT_DIR$/session2/nmt.py" />
-        <option value="$PROJECT_DIR$/chunkNMT/data_iterator.py" />
-        <option value="$PROJECT_DIR$/session2/test_zh2en.sh" />
-        <option value="$PROJECT_DIR$/session2/train_nmt_zh2en.py" />
-        <option value="$PROJECT_DIR$/scripts/process_chunked_data/batch_extractChunkTarget.py" />
-        <option value="$PROJECT_DIR$/chunkNMT/train_baseline.sh" />
-        <option value="$PROJECT_DIR$/chunkNMT/train_chunknmt.sh" />
-        <option value="$PROJECT_DIR$/chunkNMT/cpu_train_chunk_nmt.sh" />
-        <option value="$PROJECT_DIR$/chunkNMT/chunk_nmt_train.sh" />
-        <option value="$PROJECT_DIR$/chunkNMT/train_nmt_zh2en.py" />
-        <option value="$PROJECT_DIR$/chunkNMT/test_zh2en.pc.sh" />
-        <option value="$PROJECT_DIR$/chunkNMT/translate.py.cp" />
-        <option value="$PROJECT_DIR$/chunkNMT/test.sh" />
-        <option value="$PROJECT_DIR$/chunkNMT/codetest.py" />
-        <option value="$PROJECT_DIR$/chunkNMT/training_data_iterator.py" />
-        <option value="$PROJECT_DIR$/chunkNMT/lookup.py" />
-        <option value="$PROJECT_DIR$/chunkNMT/translate.py" />
-        <option value="$PROJECT_DIR$/chunkNMT/translate_gpu.py" />
-        <option value="$PROJECT_DIR$/session2/translate.py" />
-        <option value="$PROJECT_DIR$/session2/translate_gpu.py" />
+        <option value="$PROJECT_DIR$/chunkNMT/nmt.py" />
+        <option value="$PROJECT_DIR$/HMS-chunk/train_nmt_zh2en.py" />
+        <option value="$PROJECT_DIR$/HMS-chunk/train_nmt_zh2en_pc.py" />
         <option value="$PROJECT_DIR$/HMS-chunk/training_data_iterator.py" />
         <option value="$PROJECT_DIR$/HMS-chunk/nmt.py" />
-        <option value="$PROJECT_DIR$/chunkNMT/train_nmt_zh2en_pc.py" />
-        <option value="$PROJECT_DIR$/chunkNMT/nmt.py" />
       </list>
     </option>
-  </component>
-  <component name="JsBuildToolGruntFileManager" detection-done="true" sorting="DEFINITION_ORDER" />
-  <component name="JsBuildToolPackageJson" detection-done="true" sorting="DEFINITION_ORDER" />
-  <component name="JsGulpfileManager">
-    <detection-done>true</detection-done>
-    <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="NamedScopeManager">
     <order />
   </component>
   <component name="ProjectFrameBounds">
+    <option name="x" value="3286" />
     <option name="y" value="24" />
     <option name="width" value="1920" />
     <option name="height" value="1056" />
-  </component>
-  <component name="ProjectInspectionProfilesVisibleTreeState">
-    <entry key="Project Default">
-      <profile-state>
-        <expanded-state>
-          <State>
-            <id />
-          </State>
-          <State>
-            <id>Python</id>
-          </State>
-        </expanded-state>
-        <selected-state>
-          <State>
-            <id>BashSupport</id>
-          </State>
-        </selected-state>
-      </profile-state>
-    </entry>
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="false">
     <OptionsSetting value="true" id="Add" />
@@ -151,6 +93,7 @@
     </navigator>
     <panes>
       <pane id="Scope" />
+      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -197,80 +140,28 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="dl4mt-tutorial" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="dl4mt-tutorial" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="HMS-chunk" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
         </subPane>
       </pane>
-      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
-    <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="settings.editor.selected.configurable" value="preferences.keymap" />
-    <property name="settings.editor.splitter.proportion" value="0.2" />
-    <property name="FullScreen" value="false" />
-    <property name="SearchEverywhereHistoryKey" value="&#9;FILE&#9;file:///home/zhouh/workspace/python/dl4mt-tutorial/chunkNMT/nmt.py&#10;nm&#9;FILE&#9;file:///home/zhouh/workspace/python/dl4mt-tutorial/chunkNMT/nmt.py&#10;data&#9;FILE&#9;file:///home/zhouh/workspace/python/dl4mt-tutorial/chunkNMT/data_iterator.py&#10;nmt&#9;FILE&#9;file:///home/zhouh/workspace/python/dl4mt-tutorial/chunkNMT/nmt.py" />
-    <property name="full.screen.before.presentation.mode" value="true" />
-    <property name="two.files.diff.last.used.file" value="$PROJECT_DIR$/chunkNMT/translate.py" />
-    <property name="recentsLimit" value="5" />
-    <property name="restartRequiresConfirmation" value="true" />
   </component>
-  <component name="RunManager" selected="Python.codetest">
-    <configuration default="false" name="Doctests in nmt" type="tests" factoryName="Doctests" temporary="true" nameIsGenerated="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs />
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/chunkNMT" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="dl4mt-tutorial" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/chunkNMT/nmt.py" />
-      <option name="CLASS_NAME" value="" />
-      <option name="METHOD_NAME" value="" />
-      <option name="FOLDER_NAME" value="" />
-      <option name="TEST_TYPE" value="TEST_SCRIPT" />
-      <option name="PATTERN" value="" />
-      <option name="USE_PATTERN" value="false" />
-      <method />
-    </configuration>
-    <configuration default="false" name="translate" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="/usr/bin/python2.7" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/chunkNMT" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="dl4mt-tutorial" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/chunkNMT/translate.py" />
-      <option name="PARAMETERS" value="-n -p 4 ./model_hal.npz $PROJECT_DIR$/../../../../Data/nmt/corpus.ch.pkl $PROJECT_DIR$/../../../../Data/nmt/corpus.en.pkl $PROJECT_DIR$/../../../../Data/nmt/devntest/MT02/MT02.src ./test.result" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <method />
-    </configuration>
-    <configuration default="false" name="codetest" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="/usr/bin/python2.7" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/chunkNMT" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="dl4mt-tutorial" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/chunkNMT/codetest.py" />
-      <option name="PARAMETERS" value="-n -p 4 ./model_hal.npz $PROJECT_DIR$/../../../../Data/nmt/corpus.ch.pkl $PROJECT_DIR$/../../../../Data/nmt/corpus.en.pkl $PROJECT_DIR$/../../../../Data/nmt/devntest/MT02/MT02.src ./test.result" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <method />
-    </configuration>
+  <component name="RunManager">
     <configuration default="true" type="BashConfigurationType" factoryName="Bash">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="INTERPRETER_PATH" value="/bin/bash" />
@@ -288,15 +179,14 @@
       <envs>
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
-      <option name="SDK_HOME" value="/usr/bin/python2.7" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/chunkNMT" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="dl4mt-tutorial" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/chunkNMT/translate.py" />
-      <option name="PARAMETERS" value="-n -p 4 ./model_hal.npz $PROJECT_DIR$/../../../../Data/nmt/corpus.ch.pkl $PROJECT_DIR$/../../../../Data/nmt/corpus.en.pkl $PROJECT_DIR$/../../../../Data/nmt/devntest/MT02/MT02.src ./test.result" />
+      <option name="SCRIPT_NAME" value="" />
+      <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <method />
     </configuration>
@@ -310,7 +200,6 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="dl4mt-tutorial" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="" />
       <option name="CLASS_NAME" value="" />
       <option name="METHOD_NAME" value="" />
@@ -330,7 +219,6 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="dl4mt-tutorial" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="" />
       <option name="CLASS_NAME" value="" />
       <option name="METHOD_NAME" value="" />
@@ -350,7 +238,6 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="dl4mt-tutorial" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="" />
       <option name="CLASS_NAME" value="" />
       <option name="METHOD_NAME" value="" />
@@ -372,7 +259,6 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="dl4mt-tutorial" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="" />
       <option name="CLASS_NAME" value="" />
       <option name="METHOD_NAME" value="" />
@@ -395,7 +281,6 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="dl4mt-tutorial" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="" />
       <option name="CLASS_NAME" value="" />
       <option name="METHOD_NAME" value="" />
@@ -410,18 +295,6 @@
       <option name="USE_KEYWORD" value="false" />
       <method />
     </configuration>
-    <list size="3">
-      <item index="0" class="java.lang.String" itemvalue="Python tests.Doctests in nmt" />
-      <item index="1" class="java.lang.String" itemvalue="Python.translate" />
-      <item index="2" class="java.lang.String" itemvalue="Python.codetest" />
-    </list>
-    <recent_temporary>
-      <list size="3">
-        <item index="0" class="java.lang.String" itemvalue="Python.codetest" />
-        <item index="1" class="java.lang.String" itemvalue="Python.translate" />
-        <item index="2" class="java.lang.String" itemvalue="Python tests.Doctests in nmt" />
-      </list>
-    </recent_temporary>
   </component>
   <component name="ShelveChangesManager" show_recycled="false" />
   <component name="SvnConfiguration">
@@ -429,67 +302,36 @@
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="1344b957-e1f7-4ece-9849-5b0fe816b362" name="Default" comment="" />
-      <created>1467703989858</created>
+      <changelist id="c9d0d8be-ffe4-4cfa-9c71-411b5c586e10" name="Default" comment="" />
+      <created>1480473442524</created>
       <option name="number" value="Default" />
-      <updated>1467703989858</updated>
+      <updated>1480473442524</updated>
     </task>
     <servers />
   </component>
-  <component name="TodoView">
-    <todo-panel id="selected-file">
-      <is-autoscroll-to-source value="true" />
-    </todo-panel>
-    <todo-panel id="all">
-      <are-packages-shown value="true" />
-      <is-autoscroll-to-source value="true" />
-    </todo-panel>
-  </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="24" width="1920" height="1056" extended-state="6" />
+    <frame x="3286" y="24" width="1920" height="1056" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.15104167" sideWeight="0.5" order="4" side_tool="false" content_ui="combo" />
-      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32847425" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.14166667" sideWeight="0.4960396" order="3" side_tool="false" content_ui="combo" />
+      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="11" side_tool="false" content_ui="tabs" />
-      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32931727" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
-      <window_info id="Structure" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.16145833" sideWeight="0.4935065" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
-      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24940476" sideWeight="0.5064935" order="0" side_tool="true" content_ui="tabs" />
+      <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5039604" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="3" side_tool="false" content_ui="combo" />
+      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.39877924" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
     </layout>
-    <layout-to-restore>
-      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32847425" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
-      <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="11" side_tool="false" content_ui="tabs" />
-      <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32931727" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.19472913" sideWeight="0.5" order="4" side_tool="false" content_ui="combo" />
-      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="3" side_tool="false" content_ui="combo" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Structure" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.16145833" sideWeight="0.4935065" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24940476" sideWeight="0.5064935" order="0" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.39877924" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-    </layout-to-restore>
   </component>
   <component name="Vcs.Log.UiProperties">
     <option name="RECENTLY_FILTERED_USER_GROUPS">
@@ -503,402 +345,232 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="python-line">
-          <url>file://$PROJECT_DIR$/do/gru_theano.py</url>
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="python-line">
-          <url>file://$PROJECT_DIR$/chunkNMT/nmt.py</url>
-          <line>3</line>
-          <option name="timeStamp" value="5" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="python-line">
-          <url>file://$PROJECT_DIR$/chunkNMT/codetest.py</url>
-          <line>8</line>
-          <option name="timeStamp" value="10" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="python-line">
-          <url>file://$PROJECT_DIR$/chunkNMT/translate_gpu.py</url>
-          <line>3</line>
-          <option name="timeStamp" value="13" />
-        </line-breakpoint>
-      </breakpoints>
-      <option name="time" value="14" />
-    </breakpoint-manager>
+    <breakpoint-manager />
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/do/utils.py">
+    <entry file="file://$PROJECT_DIR$/HMS-chunk/nmt.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="155" column="57" selection-start-line="155" selection-start-column="57" selection-end-line="155" selection-end-column="57" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/do/gru_theano.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="110" column="13" selection-start-line="110" selection-start-column="13" selection-end-line="110" selection-end-column="13" />
+          <caret line="1965" column="37" selection-start-line="1965" selection-start-column="37" selection-end-line="1965" selection-end-column="37" />
           <folding>
-            <element signature="e#0#18#0" expanded="false" />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="import ..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/session0/train.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="9" column="16" selection-start-line="9" selection-start-column="16" selection-end-line="9" selection-end-column="16" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/do/trainLM.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="50" column="11" selection-start-line="50" selection-start-column="11" selection-end-line="50" selection-end-column="11" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/do/train_nmt_zh2en.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="43" column="21" selection-start-line="43" selection-start-column="21" selection-end-line="43" selection-end-column="21" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/session0/train_lm.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="13" column="37" selection-start-line="13" selection-start-column="37" selection-end-line="13" selection-end-column="37" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/session0/data_iterator.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="5" column="8" selection-start-line="5" selection-start-column="8" selection-end-line="5" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/dad/data_iterator.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/session0/lm.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="354" column="41" selection-start-line="354" selection-start-column="41" selection-end-line="354" selection-end-column="41" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/dad/nmt.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="226" column="4" selection-start-line="226" selection-start-column="4" selection-end-line="226" selection-end-column="4" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/session3/nmt.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="1041" column="58" selection-start-line="1041" selection-start-column="58" selection-end-line="1041" selection-end-column="58" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/.PyCharm40/system/python_stubs/-1247972723/__builtin__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="29" column="0" selection-start-line="29" selection-start-column="0" selection-end-line="29" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/chunkNMT/data_iterator.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.07763024">
-          <caret line="7" column="4" selection-start-line="7" selection-start-column="4" selection-end-line="7" selection-end-column="4" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/chunkNMT/train_all.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.27170584">
-          <caret line="14" column="0" selection-start-line="14" selection-start-column="0" selection-end-line="14" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/session2/train_nmt.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.44637385">
-          <caret line="29" column="59" selection-start-line="29" selection-start-column="59" selection-end-line="29" selection-end-column="59" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/session2/test.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.27170584">
-          <caret line="14" column="36" selection-start-line="14" selection-start-column="36" selection-end-line="14" selection-end-column="36" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/scripts/process_chunked_data/batch_extractChunkTarget.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.38815117">
-          <caret line="20" column="23" selection-start-line="20" selection-start-column="23" selection-end-line="20" selection-end-column="23" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/session2/train_nmt_zh2en.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.5763814">
-          <caret line="34" column="58" selection-start-line="34" selection-start-column="58" selection-end-line="34" selection-end-column="58" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/.PyCharm40/system/python_stubs/-1247972723/numpy/__init__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///usr/local/lib/python2.7/dist-packages/theano/__init__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/chunkNMT/train.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.19407558">
-          <caret line="10" column="20" selection-start-line="10" selection-start-column="20" selection-end-line="10" selection-end-column="20" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/session2/test_zh2en.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.5628192">
-          <caret line="29" column="30" selection-start-line="29" selection-start-column="30" selection-end-line="29" selection-end-column="30" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/chunkNMT/train_nmt_all.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.5175097">
-          <caret line="31" column="55" selection-start-line="31" selection-start-column="55" selection-end-line="31" selection-end-column="55" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/chunkNMT/README.md">
-      <provider editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.19081779">
-          <caret line="7" column="0" selection-start-line="7" selection-start-column="0" selection-end-line="7" selection-end-column="0" />
-        </state>
-      </provider>
-      <provider editor-type-id="MarkdownFxPreviewEditor">
-        <state />
-      </provider>
-      <provider selected="true" editor-type-id="split-provider[text-editor;MarkdownPreviewEditor]">
-        <state split_layout="FIRST">
-          <first_editor vertical-scroll-proportion="0.13683127">
-            <caret line="7" column="0" selection-start-line="7" selection-start-column="0" selection-end-line="7" selection-end-column="0" />
-          </first_editor>
-          <second_editor />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///usr/lib/python2.7/copy.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.3327032">
-          <caret line="65" column="4" selection-start-line="65" selection-start-column="4" selection-end-line="65" selection-end-column="4" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/chunkNMT/test.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="14" column="9" selection-start-line="14" selection-start-column="9" selection-end-line="14" selection-end-column="9" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$APPLICATION_HOME_DIR$/helpers/pydev/pydev_monkey_qt.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.94285715">
-          <caret line="70" column="0" selection-start-line="70" selection-start-column="0" selection-end-line="70" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/dad/test_zh2en.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/chunkNMT/clean.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$APPLICATION_HOME_DIR$/helpers/pydev/pydevd.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="1777" column="0" selection-start-line="1777" selection-start-column="0" selection-end-line="1777" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/chunkNMT/train_nmt.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.029641185">
-          <caret line="11" column="28" selection-start-line="11" selection-start-column="28" selection-end-line="11" selection-end-column="28" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/chunkNMT/test_zh2en.pc.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.4149766">
-          <caret line="14" column="34" selection-start-line="14" selection-start-column="34" selection-end-line="14" selection-end-column="34" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/chunkNMT/chunk_nmt_train.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.22028986">
-          <caret line="8" column="0" selection-start-line="8" selection-start-column="0" selection-end-line="8" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/chunkNMT/test_zh2en.sh">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.6884058">
-          <caret line="25" column="33" selection-start-line="25" selection-start-column="33" selection-end-line="25" selection-end-column="33" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/chunkNMT/train_nmt_zh2en.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.5143707">
-          <caret line="35" column="65" selection-start-line="35" selection-start-column="65" selection-end-line="35" selection-end-column="65" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/chunkNMT/codetest.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.6778989">
-          <caret line="37" column="18" selection-start-line="37" selection-start-column="18" selection-end-line="37" selection-end-column="18" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/chunkNMT/lookup.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.018830525">
-          <caret line="1" column="0" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/chunkNMT/translate.py.cp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.32011893">
-          <caret line="30" column="69" selection-start-line="30" selection-start-column="69" selection-end-line="30" selection-end-column="69" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/chunkNMT/translate.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.2259663">
-          <caret line="42" column="24" selection-start-line="42" selection-start-column="24" selection-end-line="42" selection-end-column="24" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/chunkNMT/training_data_iterator.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.9623389">
-          <caret line="220" column="33" selection-start-line="220" selection-start-column="33" selection-end-line="220" selection-end-column="33" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/session2/translate_gpu.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.18830526">
-          <caret line="19" column="29" selection-start-line="19" selection-start-column="29" selection-end-line="19" selection-end-column="29" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/session2/translate.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.48067394">
-          <caret line="132" column="44" selection-start-line="132" selection-start-column="44" selection-end-line="132" selection-end-column="44" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/HMS-chunk/training_data_iterator.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="4.9410186">
-          <caret line="199" column="16" selection-start-line="199" selection-start-column="16" selection-end-line="199" selection-end-column="16" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/session2/data_iterator.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.312769">
-          <caret line="94" column="25" selection-start-line="94" selection-start-column="25" selection-end-line="94" selection-end-column="25" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/session2/nmt.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-1.0573888">
-          <caret line="563" column="4" selection-start-line="563" selection-start-column="4" selection-end-line="563" selection-end-column="4" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/HMS-chunk/nmt.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.50842416">
-          <caret line="749" column="68" selection-start-line="749" selection-start-column="68" selection-end-line="749" selection-end-column="68" />
+        <state vertical-scroll-proportion="0.0">
+          <caret line="1423" column="4" selection-start-line="1423" selection-start-column="4" selection-end-line="1423" selection-end-column="4" />
+          <folding>
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="import ..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+          </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/chunkNMT/cpu_train_chunk_nmt.sh">
+    <entry file="file://$PROJECT_DIR$/HMS-chunk/translate.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.13181368">
-          <caret line="7" column="78" selection-start-line="7" selection-start-column="60" selection-end-line="7" selection-end-column="85" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/chunkNMT/train_nmt_zh2en_pc.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.5272547">
-          <caret line="34" column="66" selection-start-line="34" selection-start-column="66" selection-end-line="34" selection-end-column="66" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/HMS-chunk/train_nmt_zh2en_pc.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.6025768">
-          <caret line="47" column="25" selection-start-line="47" selection-start-column="9" selection-end-line="47" selection-end-column="25" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/chunkNMT/translate_gpu.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.58374625">
-          <caret line="40" column="22" selection-start-line="40" selection-start-column="22" selection-end-line="40" selection-end-column="22" />
+        <state vertical-scroll-proportion="0.0">
+          <caret line="153" column="23" selection-start-line="153" selection-start-column="23" selection-end-line="153" selection-end-column="23" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/HMS-chunk/lookup.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/HMS-chunk/cpu_train_chunk_nmt.sh">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/HMS-chunk/train_nmt_zh2en.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.4489603">
+          <caret line="31" column="54" selection-start-line="31" selection-start-column="54" selection-end-line="31" selection-end-column="54" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/chunkNMT/nmt.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.48364717">
-          <caret line="1882" column="59" selection-start-line="1882" selection-start-column="59" selection-end-line="1882" selection-end-column="59" />
+        <state vertical-scroll-proportion="2.6756032">
+          <caret line="718" column="41" selection-start-line="718" selection-start-column="41" selection-end-line="718" selection-end-column="41" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/HMS-chunk/train_nmt_zh2en_pc.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.4489603">
+          <caret line="31" column="21" selection-start-line="31" selection-start-column="21" selection-end-line="31" selection-end-column="21" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/HMS-chunk/training_data_iterator.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="1.3289225">
+          <caret line="112" column="0" selection-start-line="112" selection-start-column="0" selection-end-line="112" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/HMS-chunk/translate.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.5827552">
+          <caret line="119" column="38" selection-start-line="119" selection-start-column="38" selection-end-line="119" selection-end-column="38" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/HMS-chunk/nmt.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="1965" column="37" selection-start-line="1965" selection-start-column="37" selection-end-line="1965" selection-end-column="37" />
+          <folding>
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="import ..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481004375846" expanded="true" signature="-1:-1" placeholder="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/session2/nmt.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-3.903865">
+          <caret line="982" column="4" selection-start-line="982" selection-start-column="4" selection-end-line="982" selection-end-column="4" />
           <folding />
         </state>
       </provider>

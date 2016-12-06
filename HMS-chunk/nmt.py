@@ -187,14 +187,21 @@ def prepare_training_data(seqs_x, seqs_y_c, seqs_y_cw, maxlen_chunk=None, maxlen
     for idx, [s_x, s_y_c, s_y_cw] in enumerate(zip(seqs_x, seqs_y_c, seqs_y_cw)):
         x[:lengths_x[idx], idx] = s_x
         x_mask[:lengths_x[idx]+1, idx] = 1.
-        y_c[:maxlen_y[idx], idx] = s_y_c
-        y_cw[:maxlen_y[idx], idx] = s_y_cw
-        y_mask[:maxlen_y[idx]+1, idx] = 1.
+        # print 'yc', y_c
+        # print 'shape yc', y_c.shape
+        # print 'idx', idx
+        # print 'max', maxlen_y[idx]
+        # print 'syc', s_y_c
+        # print 'shape syc', s_y_c.shape
+        y_c[:lengths_y[idx], idx] = s_y_c
+        y_cw[:lengths_y[idx], idx] = s_y_cw
+        y_mask[:lengths_y[idx]+1, idx] = 1.
 
-        s_y_c = [ cc if cc > 1 else 0 for cc in s_y_c]
+
+        indicator_mask = [1 if cc != 1 else 0 for cc in s_y_c]
 
         # indicator here is a chunk begin or not (1 if True )
-        chunk_indicator[:maxlen_y[idx], idx] = s_y_c
+        chunk_indicator[:lengths_y[idx], idx] = indicator_mask
 
 
 
@@ -438,6 +445,12 @@ def param_init_gru_cond(options, params, prefix='gru_cond',
     Wc_att = norm_weight(dimctx)
     params[_p(prefix, 'Wc_att')] = Wc_att
 
+
+    # attention: combined -> hidden
+    W_cu_chunk_att = norm_weight(dim_chunk_hidden, dimctx)
+    params[_p(prefix, 'W_cu_chunk_att')] = W_cu_chunk_att
+
+
     # attention: hidden bias
     b_att = numpy.zeros((dimctx,)).astype('float32')
     params[_p(prefix, 'b_att')] = b_att
@@ -510,45 +523,34 @@ def param_init_gru_cond(options, params, prefix='gru_cond',
 
 
 def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
-                   chunk_mask=None, chunk_indicator=None,
-                   context=None, one_step=False,
-                   init_memory=None, init_state=None,
+                   mask=None, chunk_boundary_indicator=None, context=None,
+                   one_step=False, one_step_chunk=False, one_step_word=False,
                    init_state_chunk=None,init_state_chunk_words=None,
-                   current_chunk_hidden=None,last_chunk_emb=None,
-                   context_mask=None,n_chunk_step=1,n_chunk_word_step=1,
-                   **kwargs):
+                   current_chunk_hidden=None,last_chunk_end_word_hidden1=None, current_word_hidden1=None,
+                   context_mask=None, **kwargs):
 
-    #
-    # #
-    # # x = tensor.matrix('temp_x', dtype='int64')
-    # x_printed = theano.printing.Print('this is a very important value')(chunk_word_mask)
-    # f_with_print = theano.function([chunk_word_mask], x_printed)
-    # assert numpy.all( f_with_print([[1,2],[1,2]]))
 
     assert context, 'Context must be provided'
 
-    if one_step:
-        assert init_state_chunk_words, 'previous state must be provided'
+
+    # nsteps = chunk_index.shape[0]
+
+    if chunk_index is not None:
+        nsteps = chunk_index.shape[0]
+
+    if one_step_chunk:
         assert init_state_chunk, 'previous state must be provided'
+        assert init_state_chunk_words, 'previous state must be provided'
 
     # if this is a sample or decode process, we may use a sample = 1 predict
     if emb is not None:
         if emb.ndim == 3:
-            n_samples = emb.shape[2]
+            n_samples = emb.shape[1]
         else:
-            n_samples = 1
+            n_samples = emb.shape[0]
     else:
-        n_samples = 1
+        n_samples = current_word_hidden1.shape[0]
 
-
-    # mask
-    # we have no mask during sample and translate, we have one sample for gen sample,
-    # and for beam search, the sample size are not fixed, we leave out the ended traslate.
-    #
-    # if the mask is None, one_step_chunk and one_step_word are always not both False, that means it's
-    # not the training process.
-    if chunk_mask is None and chunk_index is not None:
-        chunk_mask = tensor.alloc(1., chunk_index.shape[0], 1)
 
     # the hidden dim
     dim = tparams[_p(prefix, 'Wcx')].shape[1]
@@ -556,6 +558,9 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
     # chunk hidden dim
     chunk_hidden_dim = tparams[_p(prefix, 'Wcx_chunk')].shape[1]
 
+    # if mask is None, it is the sample process
+    if mask is None:
+        mask = tensor.alloc(1., n_samples, 1)
 
     # initial/previous state
     if init_state_chunk is None:
@@ -572,49 +577,139 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
             return _x[:, :, n*dim:(n+1)*dim]
         return _x[:, n*dim:(n+1)*dim]
 
-    # word slice in a chunk
-    # I even do not modify the function.
-    def _step_slice(m_, x_, xx_,
-                    h_, ctx_, alpha_,
-                    pctx_, cc_,
-                    W_current_chunk_hidden, W_current_chunk_c, U, Wc, W_comb_att, U_att, c_tt, Ux, Wcx, U_nl, Ux_nl, b_nl, bx_nl, chunk_hidden):
+    #
+    # chunking prediction
+    #
+    # We have to firstly compute the word hidden 1 and then compute the
+    # chunk hidden given the word hidden 1
+    def predict_chunk(  m_, cw_x_, cw_xx_, h_chunk,
+                        h_cw, h1_last_chunk_end_word,
+                        # non sequences
+                        pctx_chunk, cc,
+                        chunk_transform_matrix, U_chunk, Wc_chunk, W_comb_att_chunk, U_att_chunk, c_tt_chunk,
+                        Ux_chunk, Wcx_chunk, U_nl_chunk, Ux_nl_chunk, b_nl_chunk, bx_nl_chunk, Wx_chunk, bx_chunk,
+                        W_chunk, b_chunk,
+                        W_current_chunk_hidden, W_current_chunk_c, U, Wc, W_comb_att, W_cu_chunk_att, U_att, c_tt, Ux, Wcx, U_nl, Ux_nl,
+                        b_nl, bx_nl):
 
 
-        preact1 = tensor.dot(h_, U)
-        preact1 += x_
-        preact1 = tensor.nnet.sigmoid(preact1)
-        preact1 = tensor.dot(h_, U)
-        preact1 += x_
+        #
+        # incorporate the last words into word hidden 1 : h1
+        #
+        preact1 = tensor.dot(h_cw, U)
+        preact1 += cw_x_
         preact1 = tensor.nnet.sigmoid(preact1)
 
         r1 = _slice(preact1, 0, dim)
         u1 = _slice(preact1, 1, dim)
 
-        preactx1 = tensor.dot(h_, Ux)
+        preactx1 = tensor.dot(h_cw, Ux)
         preactx1 *= r1
-
-
-        preactx1 += xx_
+        preactx1 += cw_xx_
 
         h1 = tensor.tanh(preactx1)
 
-        h1 = u1 * h_ + (1. - u1) * h1
+        h1 = u1 * h_cw + (1. - u1) * h1
+        h1 = m_[:, None] * h1 + (1. - m_)[:, None] * h_cw
+
+        ret_word_hidden1 = h1
+
+        ########### end compute word h1
+
+        #
+        # compute the chunk embedding ######################
+        #
+        last_chunk_emb = h1 - h1_last_chunk_end_word
 
 
-        h1 = m_[:, None] * h1 + (1. - m_)[:, None] * h_
+        transform = chunk_transform_matrix[0]
+        last_chunk_emb =  tensor.dot(last_chunk_emb, transform) # TODO, make sure that here the chunkindex is last chunk index
 
 
         #
-        # # x = tensor.matrix('temp_x', dtype='int64')
-        # x_printed = theano.printing.Print('this is a very important value')(context_mask)
-        # f_with_print = theano.function([context_mask], x_printed)
-        # assert numpy.all( f_with_print([[1,1],[1,1]]))
+        # compute the current chunk hidden
+        #
+        chunk_xx_ = tensor.dot(last_chunk_emb, Wx_chunk) + \
+                    bx_chunk
+        chunk_x_ = tensor.dot(last_chunk_emb, W_chunk) + \
+                   b_chunk
 
 
+        preact1 = tensor.dot(h_chunk, U_chunk)
+        preact1 += chunk_x_
+        preact1 = tensor.nnet.sigmoid(preact1)
+
+        r1 = _slice(preact1, 0, chunk_hidden_dim)
+        u1 = _slice(preact1, 1, chunk_hidden_dim)
+
+        preactx1 = tensor.dot(h_chunk, Ux_chunk)
+        preactx1 *= r1
+        preactx1 += chunk_xx_
+
+        h1 = tensor.tanh(preactx1)
+
+
+        h1 = u1 * h_chunk + (1. - u1) * h1
+
+
+        h1 = m_[:, None] * h1 + (1. - m_)[:, None] * h_chunk
+
+        #
         # attention
-        pstate_ = tensor.dot(h1, W_comb_att)
-        pctx__ = pctx_ + pstate_[None, :, :]
+        #
+        pstate_ = tensor.dot(h1, W_comb_att_chunk)
+        pctx__ = pctx_chunk + pstate_[None, :, :]
         #pctx__ += xc_
+        pctx__ = tensor.tanh(pctx__)
+        alpha = tensor.dot(pctx__, U_att_chunk)+c_tt_chunk
+        alpha = alpha.reshape([alpha.shape[0], alpha.shape[1]])
+        alpha = tensor.exp(alpha)
+        if context_mask:
+            alpha = alpha * context_mask
+        alpha = alpha / alpha.sum(0, keepdims=True)
+        ctx_ = (cc * alpha[:, :, None]).sum(0)  # current context
+
+
+        preact2 = tensor.dot(h1, U_nl_chunk)+b_nl_chunk
+        preact2 += tensor.dot(ctx_, Wc_chunk)
+        preact2 = tensor.nnet.sigmoid(preact2)
+
+        r2 = _slice(preact2, 0, chunk_hidden_dim)
+        u2 = _slice(preact2, 1, chunk_hidden_dim)
+
+        preactx2 = tensor.dot(h1, Ux_nl_chunk)+bx_nl_chunk
+        preactx2 *= r2
+        preactx2 += tensor.dot(ctx_, Wcx_chunk)
+
+        h2 = tensor.tanh(preactx2)
+
+        h2 = u2 * h1 + (1. - u2) * h2
+        h2 = m_[:, None] * h2 + (1. - m_)[:, None] * h1
+
+        chunk_hidden2 = h2
+        chunk_ctx = ctx_
+        chunk_alpha = alpha.T
+
+
+
+        return ret_word_hidden1, last_chunk_emb, chunk_hidden2, chunk_ctx, chunk_alpha
+
+
+    #
+    # given word hidden1, chunk hidden, compute the
+    # word hidden2
+    #
+    def predict_word_hidden2(m_, word_hidden1, chunk_hidden,
+                             pctx_, cc_,
+                             W_current_chunk_hidden, W_current_chunk_c, U, Wc, W_comb_att,
+                             W_cu_chunk_att, U_att, c_tt, Ux, Wcx, U_nl, Ux_nl, b_nl, bx_nl):
+
+        #
+        # given the word hidden1 and chunk hidden , compute
+        # word attention
+        pstate_ = tensor.dot(word_hidden1, W_comb_att)
+        pstate_chunk = tensor.dot(chunk_hidden, W_cu_chunk_att)
+        pctx__ = pctx_ + pstate_[None, :, :] + pstate_chunk[None, :, :]
         pctx__ = tensor.tanh(pctx__)
         alpha = tensor.dot(pctx__, U_att)+c_tt
         alpha = alpha.reshape([alpha.shape[0], alpha.shape[1]])
@@ -624,238 +719,91 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
         alpha = alpha / alpha.sum(0, keepdims=True)
         ctx_ = (cc_ * alpha[:, :, None]).sum(0)  # current context
 
-        #
-        # # x = tensor.matrix('temp_x', dtype='int64')
-        # x_printed = theano.printing.Print('this is a very important value')(context_mask)
-        # f_with_print = theano.function([context_mask], x_printed)
-        # assert numpy.all( f_with_print([[2,2],[2,2]]))
 
 
-        preact2 = tensor.dot(h1, U_nl)+b_nl
-
-
-
-        #
-        # # x = tensor.matrix('temp_x', dtype='int64')
-        # x_printed = theano.printing.Print('this is a very important value')(context_mask)
-        # f_with_print = theano.function([context_mask], x_printed)
-        # assert numpy.all( f_with_print([[3,3],[3,3]]))
-
-
+        preact2 = tensor.dot(word_hidden1, U_nl)+b_nl
         preact2 += tensor.dot(ctx_, Wc) + tensor.dot(chunk_hidden, W_current_chunk_c)
         preact2 = tensor.nnet.sigmoid(preact2)
-
-        #
-        # # x = tensor.matrix('temp_x', dtype='int64')
-        # x_printed = theano.printing.Print('this is a very important value')(context_mask)
-        # f_with_print = theano.function([context_mask], x_printed)
-        # assert numpy.all( f_with_print([[4,4],[4,4]]))
 
         r2 = _slice(preact2, 0, dim)
         u2 = _slice(preact2, 1, dim)
 
-        preactx2 = tensor.dot(h1, Ux_nl)+bx_nl
+        preactx2 = tensor.dot(word_hidden1, Ux_nl)+bx_nl
         preactx2 *= r2
         preactx2 += tensor.dot(ctx_, Wcx) + tensor.dot(chunk_hidden, W_current_chunk_hidden) # here we add current chunk representation
 
 
         h2 = tensor.tanh(preactx2)
 
-        h2 = u2 * h1 + (1. - u2) * h2
-        h2 = m_[:, None] * h2 + (1. - m_)[:, None] * h1
+        h2 = u2 * word_hidden1 + (1. - u2) * h2
+        h2 = m_[:, None] * h2 + (1. - m_)[:, None] * word_hidden1
 
         return h2, ctx_, alpha.T  # pstate_, preact, preactx, r, u
 
 
-    #
-    # chunking slice
-    #
-    def _chunk_step_decode(chunk_m_, chunk_index, last_chunk_emb ,  # seq
-                           h_chunk, ctx_chunk, alpha_chunk, # output_info
-                           pctx_chunk, cc,
-                           chunk_transform_matrix, U_chunk, Wc_chunk, W_comb_att_chunk, U_att_chunk, c_tt_chunk,
-                           Ux_chunk, Wcx_chunk, U_nl_chunk, Ux_nl_chunk, b_nl_chunk, bx_nl_chunk,  Wx_chunk, bx_chunk, W_chunk, b_chunk):
 
-        # projected x
-        #
-        # shape0 = last_chunk_emb.shape[0]
-        # shape1 = last_chunk_emb.shape[1]
-        # last_chunk_emb = last_chunk_emb.reshape([1, shape0 * shape1])
-        # transform = chunk_transform_matrix[chunk_index]
-        #
-        # shape2 = transform.shape[2]
-        # transform = transform.reshape([transform.shape[0] * transform.shape[1], transform.shape[2]])
-        transform = chunk_transform_matrix[0]
-
-        last_chunk_emb =  tensor.dot(last_chunk_emb, transform) # TODO, make sure that here the chunkindex is last chunk index
+    def scan_step(  # seq
+                    m_, chunk_boundary, cw_x_, cw_xx_,
+                    # outputs info
+                    h_chunk, position_chunk_hidden2, ctx_chunk, alpha_chunk, chunk_true,
+                    h_cw, position_h1, h1_last_chunk_end_word, ctx_cw, alpha_cw,
+                    # non sequences
+                    pctx_chunk, pctx_cw, cc,
+                    chunk_transform_matrix, U_chunk, Wc_chunk, W_comb_att_chunk, U_att_chunk, c_tt_chunk,
+                    Ux_chunk, Wcx_chunk, U_nl_chunk, Ux_nl_chunk, b_nl_chunk, bx_nl_chunk, Wx_chunk, bx_chunk,
+                    W_chunk, b_chunk,
+                    W_current_chunk_hidden, W_current_chunk_c, U, Wc, W_comb_att, W_cu_chunk_att, U_att, c_tt, Ux, Wcx,
+                    U_nl, Ux_nl, b_nl, bx_nl):
 
 
-        chunk_xx_ = tensor.dot(last_chunk_emb, Wx_chunk) + \
-                    bx_chunk
-        chunk_x_ = tensor.dot(last_chunk_emb, W_chunk) + \
-                   b_chunk
-
-
-        preact1 = tensor.dot(h_chunk, U_chunk)
-        preact1 += chunk_x_
-        preact1 = tensor.nnet.sigmoid(preact1)
-
-        r1 = _slice(preact1, 0, chunk_hidden_dim)
-        u1 = _slice(preact1, 1, chunk_hidden_dim)
-
-        preactx1 = tensor.dot(h_chunk, Ux_chunk)
-        preactx1 *= r1
-        preactx1 += chunk_xx_
-
-        h1 = tensor.tanh(preactx1)
-
-
-        h1 = u1 * h_chunk + (1. - u1) * h1
-
-
-        h1 = chunk_m_[:, None] * h1 + (1. - chunk_m_)[:, None] * h_chunk
-
-        # attention
-        pstate_ = tensor.dot(h1, W_comb_att_chunk)
-        pctx__ = pctx_chunk + pstate_[None, :, :]
-        #pctx__ += xc_
-        pctx__ = tensor.tanh(pctx__)
-        alpha = tensor.dot(pctx__, U_att_chunk)+c_tt_chunk
-        alpha = alpha.reshape([alpha.shape[0], alpha.shape[1]])
-        alpha = tensor.exp(alpha)
-        if context_mask:
-            alpha = alpha * context_mask
-        alpha = alpha / alpha.sum(0, keepdims=True)
-        ctx_ = (cc * alpha[:, :, None]).sum(0)  # current context
-
-
-        preact2 = tensor.dot(h1, U_nl_chunk)+b_nl_chunk
-        preact2 += tensor.dot(ctx_, Wc_chunk)
-        preact2 = tensor.nnet.sigmoid(preact2)
-
-        r2 = _slice(preact2, 0, chunk_hidden_dim)
-        u2 = _slice(preact2, 1, chunk_hidden_dim)
-
-        preactx2 = tensor.dot(h1, Ux_nl_chunk)+bx_nl_chunk
-        preactx2 *= r2
-        preactx2 += tensor.dot(ctx_, Wcx_chunk)
-
-        h2 = tensor.tanh(preactx2)
-
-        h2 = u2 * h1 + (1. - u2) * h2
-        h2 = chunk_m_[:, None] * h2 + (1. - chunk_m_)[:, None] * h1
-
-
-
-        return h2, ctx_, alpha.T   # chunk_word retval, pstate_, preact, preactx, r, u
-
-    #
-    # chunking slice
-    #
-    def _chunk_step_slice(chunk_m_, cw_m_, chunk_index, cw_x_, cw_xx_,  # seq
-                          h_chunk, ctx_chunk, alpha_chunk, last_chunk_emb,h_cw, ctx_cw, alpha_cw,  # output_info
-                          pctx_chunk, pctx_cw, cc,
+        word_hidden1, \
+        last_chunk_emb, \
+        current_position_hypo_chunk_hidden, \
+        chunk_ctx, chunk_alpha = \
+            predict_chunk(m_, cw_x_, cw_xx_, h_chunk,
+                          h_cw, h1_last_chunk_end_word,
+                          pctx_chunk, cc,
                           chunk_transform_matrix, U_chunk, Wc_chunk, W_comb_att_chunk, U_att_chunk, c_tt_chunk,
-                          Ux_chunk, Wcx_chunk, U_nl_chunk, Ux_nl_chunk, b_nl_chunk, bx_nl_chunk, Wx_chunk, bx_chunk, W_chunk, b_chunk,
-                          W_current_chunk_hidden, W_current_chunk_c, U, Wc, W_comb_att, U_att, c_tt, Ux, Wcx, U_nl, Ux_nl, b_nl, bx_nl):
+                          Ux_chunk, Wcx_chunk, U_nl_chunk, Ux_nl_chunk, b_nl_chunk, bx_nl_chunk, Wx_chunk, bx_chunk,
+                          W_chunk, b_chunk,
+                          W_current_chunk_hidden, W_current_chunk_c, U, Wc, W_comb_att, W_cu_chunk_att, U_att, c_tt, Ux,
+                          Wcx, U_nl, Ux_nl, b_nl, bx_nl)
 
 
-        transform = chunk_transform_matrix[0]
+        #
+        # if current chunk indocator is 1, then this is a begin of a new chunk,
+        # the chunk hidden is cuttent chunk hidde, otherwise, this word is still in the old chunk
+        # the last chunk hidden will still be used.
+        #
+        chunk_hidden = chunk_boundary[:, None] * current_position_hypo_chunk_hidden \
+                       + (1. - chunk_boundary)[:, None] * h_chunk
 
-        last_chunk_emb =  tensor.dot(last_chunk_emb, transform) # TODO, make sure that here the chunkindex is last chunk index
-        # last_chunk_emb = last_chunk_emb.reshape([shape0, shape2])
-
-
-        chunk_xx_ = tensor.dot(last_chunk_emb, Wx_chunk) + \
-                    bx_chunk
-        chunk_x_ = tensor.dot(last_chunk_emb, W_chunk) + \
-                   b_chunk
-
-
-        preact1 = tensor.dot(h_chunk, U_chunk)
-        preact1 += chunk_x_
-        preact1 = tensor.nnet.sigmoid(preact1)
-
-        r1 = _slice(preact1, 0, chunk_hidden_dim)
-        u1 = _slice(preact1, 1, chunk_hidden_dim)
-
-        preactx1 = tensor.dot(h_chunk, Ux_chunk)
-        preactx1 *= r1
-        preactx1 += chunk_xx_
-
-        h1 = tensor.tanh(preactx1)
+        h1_last_chunk_end_word = chunk_boundary[:, None] * word_hidden1 \
+                                 + (1. - chunk_boundary)[:, None] * h1_last_chunk_end_word
 
 
-        h1 = u1 * h_chunk + (1. - u1) * h1
-
-
-        h1 = chunk_m_[:, None] * h1 + (1. - chunk_m_)[:, None] * h_chunk
-
-        # attentionst_chunk_emb.shape[0]
-        pstate_ = tensor.dot(h1, W_comb_att_chunk)
-        pctx__ = pctx_chunk + pstate_[None, :, :]
-        #pctx__ += xc_
-        pctx__ = tensor.tanh(pctx__)
-        alpha = tensor.dot(pctx__, U_att_chunk)+c_tt_chunk
-        alpha = alpha.reshape([alpha.shape[0], alpha.shape[1]])
-        alpha = tensor.exp(alpha)
-        if context_mask:
-            alpha = alpha * context_mask
-        alpha = alpha / alpha.sum(0, keepdims=True)
-        ctx_ = (cc * alpha[:, :, None]).sum(0)  # current context
-
-
-        preact2 = tensor.dot(h1, U_nl_chunk)+b_nl_chunk
-        preact2 += tensor.dot(ctx_, Wc_chunk)
-        preact2 = tensor.nnet.sigmoid(preact2)
-
-        r2 = _slice(preact2, 0, chunk_hidden_dim)
-        u2 = _slice(preact2, 1, chunk_hidden_dim)
-
-        preactx2 = tensor.dot(h1, Ux_nl_chunk)+bx_nl_chunk
-        preactx2 *= r2
-        preactx2 += tensor.dot(ctx_, Wcx_chunk)
-
-        h2 = tensor.tanh(preactx2)
-
-        h2 = u2 * h1 + (1. - u2) * h2
-        h2 = chunk_m_[:, None] * h2 + (1. - chunk_m_)[:, None] * h1
-
-
-        seqs = [cw_m_, cw_x_, cw_xx_]
-        #seqs = [mask, state_below_, state_belowx, state_belowc]
-        _step = _step_slice
-
-
-        rval_chunk_words, updates = theano.scan(_step,
-                                                sequences=seqs,
-                                                outputs_info=[h_cw[-1],
-                                                              ctx_cw[-1],
-                                                              alpha_cw[-1]],
-                                                non_sequences=[pctx_cw, cc]+[W_current_chunk_hidden, W_current_chunk_c, U, Wc, W_comb_att, U_att, c_tt, Ux, Wcx, U_nl, Ux_nl, b_nl, bx_nl, h2], # hidden of chunk should help word disambiguation
-                                                name=_p(prefix, '_layers'),
-                                                n_steps=n_chunk_word_step,
-                                                profile=profile,
-                                                strict=True)
-
-        y_chunk_emb = rval_chunk_words[0][-1] - h_cw[-1] # the chunk representation is the difference of chunk word hiddens
+        word_hidden2, \
+        word_ctx_, \
+        word_alpha = predict_word_hidden2(m_, word_hidden1, chunk_hidden,
+                                          pctx_cw, cc,
+                                          W_current_chunk_hidden, W_current_chunk_c, U, Wc, W_comb_att,
+                                          W_cu_chunk_att, U_att, c_tt, Ux, Wcx, U_nl, Ux_nl, b_nl, bx_nl)
 
 
 
-        return h2, ctx_, alpha.T, y_chunk_emb, rval_chunk_words[0], rval_chunk_words[1], rval_chunk_words[2]   # chunk_word retval, pstate_, preact, preactx, r, u
+        return chunk_hidden, current_position_hypo_chunk_hidden, chunk_ctx, chunk_alpha, last_chunk_emb, \
+               word_hidden2, word_hidden1, h1_last_chunk_end_word, word_ctx_, word_alpha
 
 
 
-
-
-    _step = _chunk_step_slice
-    #
+    _step = scan_step
 
     word_shared_vars = [tparams[_p(prefix, 'W_use_current_chunk')],
                         tparams[_p(prefix, 'W_current_chunk_c')],
                         tparams[_p(prefix, 'U')],
                         tparams[_p(prefix, 'Wc')],
                         tparams[_p(prefix, 'W_comb_att')],
+                        tparams[_p(prefix, 'W_cu_chunk_att')],
                         tparams[_p(prefix, 'U_att')],
                         tparams[_p(prefix, 'c_tt')],
                         tparams[_p(prefix, 'Ux')],
@@ -882,68 +830,41 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
                          tparams[_p(prefix, 'W_chunk')],
                          tparams[_p(prefix, 'b_chunk')]]
 
+    # compute the word hidden1 and chunk hidden during sample
     if one_step_chunk:
 
-        # shared_vars = [tparams[_p(prefix, 'U_chunk')],
-        #                tparams[_p(prefix, 'Wc_chunk')],
-        #                tparams[_p(prefix, 'W_comb_att_chunk')],
-        #                tparams[_p(prefix, 'U_att_chunk')],
-        #                tparams[_p(prefix, 'c_tt_chunk')],
-        #                tparams[_p(prefix, 'Ux_chunk')],
-        #                tparams[_p(prefix, 'Wcx_chunk')],
-        #                tparams[_p(prefix, 'U_nl_chunk')],
-        #                tparams[_p(prefix, 'Ux_nl_chunk')],
-        #                tparams[_p(prefix, 'b_nl_chunk')],
-        #                tparams[_p(prefix, 'bx_nl_chunk')]]
-
-
-        # chunk pctx
         chunk_pctx_ = tensor.dot(context, tparams[_p(prefix, 'Wc_att_chunk')]) + \
                       tparams[_p(prefix, 'b_att_chunk')]
-        #
-        # # projected x
-        # chunk_state_belowx = tensor.dot(chunk_emb, tparams[_p(prefix, 'Wx_chunk')]) +\
-        #     tparams[_p(prefix, 'bx_chunk')]
-        # chunk_state_below_ = tensor.dot(chunk_emb, tparams[_p(prefix, 'W_chunk')]) +\
-        #     tparams[_p(prefix, 'b_chunk')]
 
-
-
-        seqs = [chunk_mask, chunk_index, last_chunk_emb]
-        rval = _chunk_step_decode(*(seqs + [init_state_chunk, None, None, chunk_pctx_, context] +
-                                    chunk_shared_vars ))
-        return rval[0], rval[1], rval[2], None, None, None
-
-    elif one_step_word:
-
-        # word pctx
-        pctx_ = tensor.dot(context, tparams[_p(prefix, 'Wc_att')]) + \
-                tparams[_p(prefix, 'b_att')]
 
         # projected x
-        # TODO make sure that the tensor multiplication with matrix ?
         state_belowx = tensor.dot(emb, tparams[_p(prefix, 'Wx')]) + \
                        tparams[_p(prefix, 'bx')]
         state_below_ = tensor.dot(emb, tparams[_p(prefix, 'W')]) + \
                        tparams[_p(prefix, 'b')]
 
 
-        seqs = [chunk_word_mask, state_below_, state_belowx]
-        # chunk_words_shared_vars = [tparams[_p(prefix, 'U')],
-        #            tparams[_p(prefix, 'Wc')],
-        #            tparams[_p(prefix, 'W_comb_att')],
-        #            tparams[_p(prefix, 'U_att')],
-        #            tparams[_p(prefix, 'c_tt')],
-        #            tparams[_p(prefix, 'Ux')],
-        #            tparams[_p(prefix, 'Wcx')],
-        #            tparams[_p(prefix, 'U_nl')],
-        #            tparams[_p(prefix, 'Ux_nl')],
-        #            tparams[_p(prefix, 'b_nl')],
-        #            tparams[_p(prefix, 'bx_nl')]]
 
-        rval = _step_slice(*(seqs + [init_state_chunk_words, None, None, pctx_, context] +
-                             word_shared_vars + [current_chunk_hidden] ))
-        return rval[0], rval[1], rval[2], None, None, None
+        seqs = [mask, state_below_, state_belowx, init_state_chunk,
+                init_state_chunk_words, last_chunk_end_word_hidden1]
+        rval = predict_chunk(*(seqs + [chunk_pctx_, context] +
+                               chunk_shared_vars + word_shared_vars))
+        return rval[0], rval[1], rval[2], rval[3], rval[4], None, None, None, None, None
+        # ret_word_hidden1, last_chunk_emb, chunk_hidden2, chunk_ctx, chunk_alpha
+
+    # given the word hidden1 and chunk hidden, compute the word hidden 2
+    elif one_step_word:
+
+        # word pctx
+        pctx_ = tensor.dot(context, tparams[_p(prefix, 'Wc_att')]) + \
+                tparams[_p(prefix, 'b_att')]
+
+        seqs = [mask, current_word_hidden1, current_chunk_hidden,
+                pctx_, context]
+
+        rval = predict_word_hidden2(*(seqs + word_shared_vars ))
+        return rval[0], rval[1], rval[2], None, None, None, None, None, None, None
+        # word hidden2, word ctx, word attention alpha
 
 
     # word pctx
@@ -962,65 +883,54 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
     state_below_ = tensor.dot(emb, tparams[_p(prefix, 'W')]) + \
                    tparams[_p(prefix, 'b')]
 
-    #
-    # # projected x
-    # chunk_state_belowx = tensor.dot(chunk_emb, tparams[_p(prefix, 'Wx_chunk')]) +\
-    #     tparams[_p(prefix, 'bx_chunk')]
-    # chunk_state_below_ = tensor.dot(chunk_emb, tparams[_p(prefix, 'W_chunk')]) +\
-    #     tparams[_p(prefix, 'b_chunk')]
+    # the sequence is
+    # @mask the word mask for batch training
+    # @chunk_boundary_indicator 1: this is a begin of a chunk, 0: this is a inter part of a chunk
+    # @state_below_ W*y_emb
+    # @state_belowx W*y_emb, for different usage
+    seqs = [mask, chunk_boundary_indicator, state_below_, state_belowx]
 
 
-    seqs = [chunk_mask, chunk_indicator, chunk_index,
-            state_below_, state_belowx]
 
-    #
-    # # x = tensor.matrix('temp_x', dtype='int64')
-    # x_printed = theano.printing.Print('this is a very important value')(init_state_chunk_words.shape)
-    # f_with_print = theano.function([init_state_chunk_words], x_printed)
-    # assert numpy.all( f_with_print([[10,3],[3,3]]))
+    # outputs_info of the training scan process
+    init_chunk_ctx = tensor.alloc(0., n_samples, context.shape[2])
+    init_chunk_alpha = tensor.alloc(0., n_samples, context.shape[0])
+    h1_last_chunk_end_word =  tensor.alloc(0., n_samples, dim) # set last chunk hidden 0
+    position_h1 =  tensor.alloc(0., n_samples, dim)
+    last_chunk_emb =  tensor.alloc(0., n_samples, options['dim_chunk'])
+
+    init_word_ctx = tensor.alloc(0., n_samples, context.shape[2])
+    init_word_alpha = tensor.alloc(0., n_samples, context.shape[0])
 
 
-    # shared_vars = [tparams[_p(prefix, 'U_chunk')],
-    #                tparams[_p(prefix, 'Wc_chunk')],
-    #                tparams[_p(prefix, 'W_comb_att_chunk')],
-    #                tparams[_p(prefix, 'U_att_chunk')],
-    #                tparams[_p(prefix, 'c_tt_chunk')],
-    #                tparams[_p(prefix, 'Ux_chunk')],
-    #                tparams[_p(prefix, 'Wcx_chunk')],
-    #                tparams[_p(prefix, 'U_nl_chunk')],
-    #                tparams[_p(prefix, 'Ux_nl_chunk')],
-    #                tparams[_p(prefix, 'b_nl_chunk')],
-    #                tparams[_p(prefix, 'bx_nl_chunk')]]
+    #chunk_hidden, current_position_hypo_chunk_hidden, chunk_ctx, chunk_alpha, last_chunk_emb, \
+    #           word_hidden1, word_hidden2, h1_last_chunk_end_word, word_ctx_, word_alpha
 
-    init_word_hidden = tensor.tile(init_state_chunk_words.reshape([1, init_state_chunk_words.shape[0], init_state_chunk_words.shape[1]]), (n_chunk_word_step, 1, 1))
+    outputs = [init_state_chunk,
+               init_state_chunk, # only for output
+               init_chunk_ctx,
+               init_chunk_alpha,
+               last_chunk_emb,
+               init_state_chunk_words,
+               position_h1,   # current position computed word hidden1
+               h1_last_chunk_end_word,
+               init_word_ctx,
+               init_word_alpha]
+
+
     rval, updates = theano.scan(_step,
                                 sequences=seqs,
-                                outputs_info=[init_state_chunk,
-                                              tensor.alloc(0., n_samples,
-                                                           context.shape[2]),
-                                              tensor.alloc(0., n_samples,
-                                                           context.shape[0]),
-                                              tensor.alloc(0., n_samples,
-                                                           options['dim']), # the true represent of last chunk
-                                              init_word_hidden,
-                                              tensor.alloc(0., n_chunk_word_step, n_samples,
-                                                           context.shape[2]),
-                                              tensor.alloc(0., n_chunk_word_step, n_samples,
-                                                           context.shape[0])],
+                                outputs_info=outputs,
+                                # here pctx is the tranformation of the source context
                                 non_sequences=[chunk_pctx_, pctx_, context]+chunk_shared_vars+word_shared_vars,
                                 name=_p(prefix, '_layers'),
                                 #n_steps=n_chunk_step,
-                                n_steps=n_chunk_step,
+                                n_steps=nsteps,
                                 profile=profile,
                                 strict=True)
 
-    #
-    # # x = tensor.matrix('temp_x', dtype='int64')
-    # x_printed = theano.printing.Print('this is a very important value')(context_mask)
-    # f_with_print = theano.function([context_mask], x_printed)
-    # assert numpy.all( f_with_print([[16,3],[3,3]]))
-
     return rval
+    # chunk_hidden, chunk_ctx, chunk_alpha, word_hidden2, h1_last_chunk_end_word, word_ctx_, word_alpha
 
 
 
@@ -1083,6 +993,9 @@ def init_params(options):
     params = get_layer('ff')[0](options, params, prefix='ff_logit_ctx',
                                 nin=ctxdim, nout=options['dim_word'],
                                 ortho=False)
+    params = get_layer('ff')[0](options, params, prefix='ff_logit_using_chunk_hidden',
+                                nin=options['dim_chunk_hidden'], nout=options['dim_word'],
+                                ortho=False)
     # params = get_layer('ff')[0](options, params, prefix='ff_logit_chunk_hidden',
     #                             nin=ctxdim, nout=options['dim_word'],
     #                             ortho=False)
@@ -1098,15 +1011,28 @@ def init_params(options):
 
     # we should note here, we use word dim
     params = get_layer('ff')[0](options, params, prefix='ff_logit_prev_chunk',
-                                nin=options['dim'],
+                                nin=options['dim_chunk'],
                                 nout=options['dim_chunk'], ortho=False)
     params = get_layer('ff')[0](options, params, prefix='ff_logit_ctx_chunk',
                                 nin=ctxdim, nout=options['dim_chunk'],
                                 ortho=False)
 
+    params = get_layer('ff')[0](options, params, prefix='logit_ctx_last_word',
+                                nin=options['dim_word'],
+                                nout=options['dim_chunk'],
+                                ortho=False)
+
+    params = get_layer('ff')[0](options, params, prefix='logit_ctx_current_word_hidden1',
+                                nin=options['dim'],
+                                nout=options['dim_chunk'],
+                                ortho=False)
+
+
     params = get_layer('ff')[0](options, params, prefix='ff_logit_chunk',
                                 nin=options['dim_chunk'],
-                                nout=options['n_chunks'])
+                                nout=options['dim_chunk'],
+                                ortho=False)
+
 
     return params
 
@@ -1125,7 +1051,7 @@ def build_model(tparams, options):
     y_chunk = tensor.matrix('y_chunk', dtype='int64')
     y_chunk_words = tensor.matrix('y_chunk_words', dtype='int64')
     y_mask = tensor.matrix('y_mask', dtype='float32')
-    chunk_indicator = tensor.matrix('chunk_indicator', dtype='int64')
+    chunk_indicator = tensor.matrix('chunk_indicator', dtype='float32')
 
     # for the backward rnn, we just need to invert x and x_mask
     xr = x[::-1]
@@ -1180,59 +1106,46 @@ def build_model(tparams, options):
     y_chunk_shift = tensor.zeros_like(y_chunk)
     y_chunk_shift = tensor.set_subtensor(y_chunk_shift[1:], y_chunk[:-1])
 
-
-
-    proj = get_layer(options['decoder'])[1](tparams, emb, y_chunk_shift, options,
-                                            prefix='decoder',
-                                            chunk_mask=y_mask,
-                                            chunk_indicator=chunk_indicator,
-                                            context=ctx,
-                                            context_mask=x_mask,
-                                            init_state_chunk=init_state_chunk,
-                                            init_state_chunk_words=init_state_chunk_words,
-                                            n_chunk_step=n_timesteps_y)
-
-    # predict the chunk
-
-    proj_h = proj[0]
-
-    # weighted averages of context, generated by attention module
-    ctxs = proj[1]
-
-    # weights (alignment matrix)
-    opt_ret['dec_alphas_chunk'] = proj[2]
-
-    chunk_emb = proj[3]
-
-
-
-    # shift the chunk embeddings, because we use the last chunk embedding to predict
-    # the next chunking label
-
-    chunk_emb_shifted = tensor.zeros_like(chunk_emb)
-    chunk_emb_shifted = tensor.set_subtensor(chunk_emb_shifted[1:], chunk_emb[:-1])
-    chunk_emb = chunk_emb_shifted
-
     #
+    # decoder
     #
-    # #
-    # # x = tensor.matrix('temp_x', dtype='int64')
-    # x_printed = theano.printing.Print('proj_h ')(proj_h.shape)
-    # f_with_print = theano.function([proj_h], x_printed)
-    # assert numpy.all( f_with_print([[[1,2]],[[2,4]]]))
+    chunk_hidden, \
+    current_position_hypo_chunk_hidden, \
+    chunk_ctx, \
+    chunk_alpha, \
+    last_chunk_emb, \
+    word_hidden1, \
+    word_hidden2, \
+    h1_last_chunk_end_word, \
+    word_ctx_, \
+    word_alpha = get_layer(options['decoder'])[1](tparams, emb, y_chunk_shift,
+                                                  options,
+                                                  prefix='decoder',
+                                                  mask=y_mask,
+                                                  chunk_boundary_indicator=chunk_indicator,
+                                                  context=ctx,
+                                                  context_mask=x_mask,
+                                                  init_state_chunk=init_state_chunk,
+                                                  init_state_chunk_words=init_state_chunk_words)
+    opt_ret['dec_alphas_chunk'] = chunk_alpha
 
 
-    # compute word probabilities
-    logit_lstm_chunk = get_layer('ff')[1](tparams, proj_h, options,
+    logit_lstm_chunk = get_layer('ff')[1](tparams, current_position_hypo_chunk_hidden, options,
                                     prefix='ff_logit_lstm_chunk', activ='linear')
-    logit_prev_chunk = get_layer('ff')[1](tparams, chunk_emb, options,
+    logit_prev_chunk = get_layer('ff')[1](tparams, last_chunk_emb, options,
                                     prefix='ff_logit_prev_chunk', activ='linear')
-    logit_ctx_chunk = get_layer('ff')[1](tparams, ctxs, options,
+    logit_ctx_chunk = get_layer('ff')[1](tparams, chunk_ctx, options,
                                    prefix='ff_logit_ctx_chunk', activ='linear')
 
+    logit_ctx_last_word = get_layer('ff')[1](tparams, emb, options,
+                                   prefix='logit_ctx_last_word', activ='linear')
+    logit_ctx_current_word_hidden1 = get_layer('ff')[1](tparams, word_hidden1, options,
+                                   prefix='logit_ctx_current_word_hidden1', activ='linear')
 
 
-    logit_chunk = tensor.tanh(logit_lstm_chunk+logit_prev_chunk+logit_ctx_chunk)
+
+    logit_chunk = tensor.tanh(logit_lstm_chunk+logit_prev_chunk+logit_ctx_chunk+logit_ctx_last_word+logit_ctx_current_word_hidden1)
+
     if options['use_dropout']:
         logit_chunk = dropout_layer(logit_chunk, use_noise, trng)
     logit_chunk = get_layer('ff')[1](tparams, logit_chunk, options,
@@ -1248,47 +1161,45 @@ def build_model(tparams, options):
     cost = cost.reshape([y_chunk.shape[0], y_chunk.shape[1]])
 
 
-    # predict the words!
-
-    # hidden states of the decoder gru
-    proj_h_cw = proj[4]
-
-    # weighted averages of context, generated by attention module
-    ctxs_cw = proj[5]
-
     # weights (alignment matrix)
-    opt_ret['dec_alphas_cw'] = proj[6]
+    opt_ret['dec_alphas_cw'] = word_ctx_
 
     # compute word probabilities
-    logit_lstm_cw = get_layer('ff')[1](tparams, proj_h_cw, options,
+    logit_lstm_cw = get_layer('ff')[1](tparams, word_hidden2, options,
                                     prefix='ff_logit_lstm', activ='linear')
     logit_prev_cw = get_layer('ff')[1](tparams, emb, options,
                                     prefix='ff_logit_prev', activ='linear')
-    logit_ctx_cw = get_layer('ff')[1](tparams, ctxs_cw, options,
+    logit_ctx_cw = get_layer('ff')[1](tparams, word_ctx_, options,
                                    prefix='ff_logit_ctx', activ='linear')
-    logit_cw = tensor.tanh(logit_lstm_cw+logit_prev_cw+logit_ctx_cw)
+
+
+    logit_ctx_using_current_chunk_hidden = get_layer('ff')[1](tparams, chunk_hidden, options,
+                                  prefix='ff_logit_using_chunk_hidden', activ='linear')
+
+
+    logit_cw = tensor.tanh(logit_lstm_cw+logit_prev_cw+logit_ctx_cw+logit_ctx_using_current_chunk_hidden)
 
     if options['use_dropout']:
         logit_cw = dropout_layer(logit_cw, use_noise, trng)
     logit_cw = get_layer('ff')[1](tparams, logit_cw, options,
                                prefix='ff_logit', activ='linear')
     logit_shp_cw = logit_cw.shape
-    probs_cw = tensor.nnet.softmax(logit_cw.reshape([logit_shp_cw[0]*logit_shp_cw[1]*logit_shp_cw[2],
-                                               logit_shp_cw[3]]))
+    probs_cw = tensor.nnet.softmax(logit_cw.reshape([logit_shp_cw[0]*logit_shp_cw[1],
+                                               logit_shp_cw[2]]))
 
     # cost
     y_flat_cw = y_chunk_words.flatten()
     y_flat_idx_cw = tensor.arange(y_flat_cw.shape[0]) * options['n_words'] + y_flat_cw
 
     cost_cw = -tensor.log(probs_cw.flatten()[y_flat_idx_cw])
-    cost_cw = cost_cw.reshape([y_chunk_words.shape[0], y_chunk_words.shape[1], y_chunk_words.shape[2]])
-    cost_cw = (cost_cw * y_chunk_words_mask).sum(1)
+    cost_cw = cost_cw.reshape([y_chunk_words.shape[0], y_chunk_words.shape[1]])
+
 
     cost = cost + cost_cw
-    cost = (cost * y_chunk_mask).sum(0)
+    cost = (cost * y_mask).sum(0)
 
-    return trng, use_noise, x, x_mask, y_chunk, y_chunk_mask, y_chunk_words, \
-           y_chunk_words_mask, opt_ret, cost
+    return trng, use_noise, x, x_mask, y_chunk, y_mask, y_chunk_words, chunk_indicator,\
+           opt_ret, cost, cost_cw
 
 # build a sampler
 def build_sampler(tparams, options, trng, use_noise):
@@ -1296,10 +1207,6 @@ def build_sampler(tparams, options, trng, use_noise):
 
     x = tensor.matrix('x', dtype='int64')
 
-    # y_chunk = tensor.matrix('y_chunk', dtype='int64')
-    # y_chunk_words = tensor.matrix('y_chunk_words', dtype='int64')
-
-    # for the backward rnn, we just need to invert x and x_mask
     xr = x[::-1]
 
     n_timesteps = x.shape[0]
@@ -1338,15 +1245,23 @@ def build_sampler(tparams, options, trng, use_noise):
 
 
 
+
+    #
+    # build predict word hidden 1 and chunk hidden2
+    #
+
     # TODO note that here the y_chunk and y_chunk_words are both vector, because it only conduct one steps!
-    y_chunk = tensor.vector('y_sample_chunk', dtype='int64')
+    # y_chunk = tensor.vector('y_sample_chunk', dtype='int64')
     y_chunk_words = tensor.vector('y_sample_chunk_words', dtype='int64')
+
+    chunk_boundary = tensor.vector('chunk_boundary', dtype='float32')
 
     init_state_chunk = tensor.matrix('init_state', dtype='float32')
     init_state_chunk_words = tensor.matrix('init_state', dtype='float32')
 
+    last_chunk_end_word_hidden1 = tensor.matrix('last_chunk_end_word_hidden1', dtype='float32')
 
-    last_chunk_true = tensor.matrix('last_chunk_true', dtype='float32')
+
     current_chunk_hidden = tensor.matrix('current_chunk_hidden', dtype='float32')
 
     # if it's the first word, emb should be all zero and it is indicated by -1
@@ -1354,74 +1269,126 @@ def build_sampler(tparams, options, trng, use_noise):
                         tensor.alloc(0., 1, tparams['Wemb_dec'].shape[1]),
                         tparams['Wemb_dec'][y_chunk_words])
 
-    # apply one step of conditional gru with attention
-    proj_chunk = get_layer(options['decoder'])[1](tparams, None, y_chunk,  options,
-                                            prefix='decoder',
-                                            chunk_mask=None,
-                                            chunk_word_mast=None,context=ctx,
-                                            one_step_word=False,
-                                            one_step_chunk=True,
-                                            init_state_chunk=init_state_chunk,
-                                            init_state_chunk_words=None,
-                                            last_chunk_emb=last_chunk_true)
 
 
+    #
+    # decoder
+    #
+    retval_predict_chunk = get_layer(options['decoder'])[1](tparams,
+                                                            emb_chunk_word,
+                                                            None,
+                                                            options,
+                                                            prefix='decoder',
+                                                            context=ctx,
+                                                            one_step=True,
+                                                            one_step_word=False,
+                                                            one_step_chunk=True,
+                                                            init_state_chunk=init_state_chunk,
+                                                            init_state_chunk_words=init_state_chunk_words,
+                                                            last_chunk_end_word_hidden1=last_chunk_end_word_hidden1)
+    word_hidden1 = retval_predict_chunk[0]
+    last_chunk_emb = retval_predict_chunk[1]
+    current_position_hypo_chunk_hidden = retval_predict_chunk[2]
+    chunk_ctx = retval_predict_chunk[3]
+    chunk_alpha = retval_predict_chunk[4]
 
-    # apply one step of conditional gru with attention
-    proj_word = get_layer(options['decoder'])[1](tparams, emb_chunk_word, None,  options,
-                                            prefix='decoder',
-                                            chunk_mask=None,
-                                            chunk_word_mast=None,context=ctx,
-                                            one_step_word=True,
-                                            one_step_chunk=False,
-                                            init_state_chunk=None,
-                                            init_state_chunk_words=init_state_chunk_words,
-                                            current_chunk_hidden=current_chunk_hidden)
 
-
-
-
-
-    # begin to get the probability vectors
-
-    proj_h = proj_chunk[0]
-
-    # weighted averages of context, generated by attention module
-    ctxs =  proj_chunk[1]
-
-    # compute word probabilities
-    logit_lstm_chunk = get_layer('ff')[1](tparams, proj_h, options,
+    #
+    # get the chunk prediction
+    #
+    logit_lstm_chunk = get_layer('ff')[1](tparams, current_position_hypo_chunk_hidden, options,
                                     prefix='ff_logit_lstm_chunk', activ='linear')
-    logit_prev_chunk = get_layer('ff')[1](tparams, last_chunk_true, options,
+    logit_prev_chunk = get_layer('ff')[1](tparams, last_chunk_emb, options,
                                     prefix='ff_logit_prev_chunk', activ='linear')
-    logit_ctx_chunk = get_layer('ff')[1](tparams, ctxs, options,
+    logit_ctx_chunk = get_layer('ff')[1](tparams, chunk_ctx, options,
                                    prefix='ff_logit_ctx_chunk', activ='linear')
-    logit_chunk = tensor.tanh(logit_lstm_chunk+logit_prev_chunk+logit_ctx_chunk)
+
+    logit_ctx_last_word = get_layer('ff')[1](tparams, emb_chunk_word, options,
+                                   prefix='logit_ctx_last_word', activ='linear')
+    logit_ctx_current_word_hidden1 = get_layer('ff')[1](tparams, word_hidden1, options,
+                                   prefix='logit_ctx_current_word_hidden1', activ='linear')
+
+    logit_chunk = tensor.tanh(logit_lstm_chunk+logit_prev_chunk+logit_ctx_chunk+logit_ctx_last_word+logit_ctx_current_word_hidden1)
+
     if options['use_dropout']:
         logit_chunk = dropout_layer(logit_chunk, use_noise, trng)
     logit_chunk = get_layer('ff')[1](tparams, logit_chunk, options,
                                prefix='ff_logit_chunk', activ='linear')
     probs_chunk = tensor.nnet.softmax(logit_chunk)
+
     next_sample_chunk = trng.multinomial(pvals=probs_chunk).argmax(1)
 
 
+    print 'Building f_next_chunk..'
+    inps = [y_chunk_words, ctx, init_state_chunk, init_state_chunk_words, last_chunk_end_word_hidden1]
+    outs = [probs_chunk, next_sample_chunk, word_hidden1, current_position_hypo_chunk_hidden]
+    f_next_chunk = theano.function(inps, outs, name='f_next_chunk', profile=profile)
+    print 'End Building f_next_chunk..'
 
-    # predict the words!
 
-    # hidden states of the decoder gru
-    proj_h_cw = proj_word[0]
 
-    # weighted averages of context, generated by attention module
-    ctxs_cw = proj_word[1]
+
+
+
+
+
+    #
+    # begin to predict the word hidden2
+    #
+
+
+    chunk_boundary = tensor.vector('chunk_boundary', dtype='float32')
+    current_chunk_hidden = tensor.matrix('current_chunk_hidden', dtype='float32')
+    current_position_hypo_chunk_hidden = tensor.matrix('current_position_hypo_chunk_hidden', dtype='float32')
+    word_hidden1 = tensor.matrix('word_hidden1', dtype='float32')
+    last_chunk_end_word_hidden1 = tensor.matrix('last_chunk_end_word_hidden1', dtype='float32')
+
+
+
+    # given the chunk indicator, compute the word hidden2
+    chunk_hidden = chunk_boundary[:, None] * current_position_hypo_chunk_hidden \
+                   + (1. - chunk_boundary)[:, None] * current_chunk_hidden
+
+    h1_last_chunk_end_word = chunk_boundary[:, None] * word_hidden1 \
+                             + (1. - chunk_boundary)[:, None] * last_chunk_end_word_hidden1
+
+
+    #
+    # decoder for word hidden2
+    #
+    retval_predict_chunk = get_layer(options['decoder'])[1](tparams,
+                                                            None,
+                                                            None,
+                                                            options,
+                                                            prefix='decoder',
+                                                            context=ctx,
+                                                            one_step=True,
+                                                            one_step_word=True,
+                                                            one_step_chunk=False,
+                                                            current_chunk_hidden=chunk_hidden,
+                                                            current_word_hidden1=word_hidden1)
+
+
+    word_hidden2 = retval_predict_chunk[0]
+    word_ctx = retval_predict_chunk[1]
+    word_alpha = retval_predict_chunk[2]
+
 
     # compute word probabilities
-    logit_lstm_cw = get_layer('ff')[1](tparams, proj_h_cw, options,
+    logit_lstm_cw = get_layer('ff')[1](tparams, word_hidden2, options,
                                     prefix='ff_logit_lstm', activ='linear')
     logit_prev_cw = get_layer('ff')[1](tparams, emb_chunk_word, options,
                                     prefix='ff_logit_prev', activ='linear')
-    logit_ctx_cw = get_layer('ff')[1](tparams, ctxs_cw, options,
+    logit_ctx_cw = get_layer('ff')[1](tparams, word_ctx, options,
                                    prefix='ff_logit_ctx', activ='linear')
-    logit_cw = tensor.tanh(logit_lstm_cw+logit_prev_cw+logit_ctx_cw)
+
+
+    logit_ctx_using_current_chunk_hidden = get_layer('ff')[1](tparams, chunk_hidden, options,
+                                  prefix='ff_logit_using_chunk_hidden', activ='linear')
+
+
+    logit_cw = tensor.tanh(logit_lstm_cw+logit_prev_cw+logit_ctx_cw+logit_ctx_using_current_chunk_hidden)
+
     if options['use_dropout']:
         logit_cw = dropout_layer(logit_cw, use_noise, trng)
     logit_cw = get_layer('ff')[1](tparams, logit_cw, options,
@@ -1429,392 +1396,167 @@ def build_sampler(tparams, options, trng, use_noise):
     probs_cw = tensor.nnet.softmax(logit_cw)
     next_sample_cw = trng.multinomial(pvals=probs_cw).argmax(1)
 
-    # sample from softmax distribution to get the sample
 
+
+
+    # sample from softmax distribution to get the sample
     # compile a function to do the whole thing above, next word probability,
     # sampled word for the next target, next hidden state to be used
-    print 'Building f_next..',
-    inps = [y_chunk, ctx, init_state_chunk, last_chunk_true]
-    outs = [probs_chunk, next_sample_chunk, proj_h]
-    f_next_chunk = theano.function(inps, outs, name='f_next_chunk', profile=profile)
-    inps = [y_chunk_words, ctx, init_state_chunk_words, current_chunk_hidden]
-    outs = [probs_cw, next_sample_cw, proj_h_cw]
+    print 'Building f_next_word..'
+    inps = [y_chunk_words,
+            ctx,
+            chunk_boundary,
+            current_chunk_hidden,
+            current_position_hypo_chunk_hidden,
+            word_hidden1,
+            last_chunk_end_word_hidden1]
+    outs = [probs_cw, next_sample_cw, word_hidden2, h1_last_chunk_end_word, chunk_hidden]
     f_next_chunk_word = theano.function(inps, outs, name='f_next_chunk_word', profile=profile)
     print 'Done'
 
     return f_init, f_next_chunk, f_next_chunk_word
 
+
+
+
 # generate sample, either with stochastic sampling or beam search. Note that,
 # this function iteratively calls f_init and f_next functions.
 def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
-               options, trng=None, k_chunk=1, k_word=1, k=8, maxlen_words=10,
-               maxlen_chunks=10,
+               options, trng=None, k_chunk=1, k_word=1, k=5, maxlen=50,
                stochastic=True, argmax=False):
 
     # k is the beam size we have
-    if k_chunk > 1 or k_word > 1:
+    if k > 1:
         assert not stochastic, \
             'Beam search does not support stochastic sampling'
 
+    sample = []
+    sample_score = []
+    if stochastic:
+        sample_score = 0
 
-    # used to record the fixed item for beam search
-    chunk_live_k = 1
-    chunk_dead_k = 0
+    live_k = 1
+    dead_k = 0
 
-    word_live_k = 1
-    word_dead_k = 0
+    hyp_samples = [[]] * live_k
+    hyp_scores = numpy.zeros(live_k).astype('float32')
+    hyp_states = []
 
-
-    # get initial state of chunk and word decoder rnn
+    # get initial state of decoder rnn and encoder context
     ret = f_init(x)
     next_state_chunk, next_state_word, ctx0 = ret[0], ret[1], ret[2]
+    last_chunk_last_word_hidden1 = numpy.zeros((1, options['dim'])).astype('float32')
 
 
-    # TODO we have to note that our code only support one dimention generate now.!
-    # we have to modify the code
+    next_w = -1 * numpy.ones((1,)).astype('int64')  # bos indicator
 
-    next_word = -1 * numpy.ones((1,)).astype('int64')  # bos indicator
     next_chunk = -1 * numpy.ones((1,)).astype('int64')  # bos indicator
 
-    next_chunk_emb = numpy.zeros((1, options['dim'])).astype('float32')
+    word_hidden1 = None
 
 
-    # sample container for beam search
-
-    final_beam_sample_word = []
-    final_beam_sample_chunk = []
-    final_beam_score = []
-
-    # containers for mulitple beam search
-
-    chunk_beam_word_sample = [[]] * chunk_live_k
-    chunk_beam_chunk_sample = [[]] * chunk_live_k
-
-    chunk_beam_scores = numpy.zeros(chunk_live_k).astype('float32')
-    chunk_beam_chunk_hiddens = [next_state_chunk] # next_state_chunk
-    chunk_beam_chunk_trues = [next_chunk_emb] # next_chunk_emb
-
-
-    chunk_beam_word_hiddens = [next_state_word[0]] * chunk_live_k# next_state_word
-
-
-
-
-
-    #
-    # for max chunk iteration
-    #
-
-    for ii_chunk in xrange(maxlen_chunks):
-
-        # print '================================= chunk beam', ii_chunk
-        #
-        # print chunk_beam_word_sample
-
-
-        # get the next chunk configuration
-        ctx = numpy.tile(ctx0, [chunk_live_k, 1])
-        inps = [next_chunk, ctx, next_state_chunk, next_chunk_emb] # the next chunk here is really the last chunk label index
-
-        # print next_chunk_emb
+    for ii in xrange(maxlen):
+        ctx = numpy.tile(ctx0, [live_k, 1])
+        inps = [next_w,
+                ctx,
+                next_state_chunk,
+                next_state_word,
+                last_chunk_last_word_hidden1]
         ret = f_next_chunk(*inps)
-        next_p_chunk, next_chunk, next_state_chunk = ret[0], ret[1], ret[2]
-
-        # print ii_chunk, next_p_chunk
+        next_chunk_p, next_chunk, word_hidden1, hypo_chunk_hidden = ret[0], ret[1], ret[2], ret[3]
 
 
-        # stochastic: greedy decoding
+        # get the chunk boundrary indocator
+        next_chunk = next_chunk_p.argmax(1)
+        chunk_boundary = numpy.zeros((next_chunk.shape[0],)).astype('float32')
+
+        for i in xrange(next_chunk.shape[0]):
+            if next_chunk[i] != 1:
+                chunk_boundary[i] = 1.0
+
+        inps = [next_w,
+                ctx,
+                chunk_boundary,
+                next_state_chunk,
+                hypo_chunk_hidden,
+                word_hidden1,
+                last_chunk_last_word_hidden1]
+
+        ret = f_next_word(*inps)
+
+        next_word_p, \
+        next_w, \
+        next_state_word, \
+        last_chunk_last_word_hidden1, \
+        next_state_chunk \
+            = ret[0], ret[1], ret[2], ret[3], ret[4]
+
+
+
+
         if stochastic:
             if argmax:
-                nc = next_p_chunk[0].argmax()
+                nw = next_word_p[0].argmax()
             else:
-                nc = next_chunk[0]
-            final_beam_sample_chunk.append(nc)
-            final_beam_score -= numpy.log(next_p_chunk[0, nc])
-
-            if nc == 0:
+                nw = next_w[0]
+            sample.append(nw)
+            sample_score -= numpy.log(next_word_p[0, nw])
+            if nw == 0:
                 break
-
-            final_beam_sample_word.append( -1 * nc)
-
-
-            next_chunk_emb = next_state_word
-
-            next_word = -1 * numpy.ones((1,)).astype('int64')  # bos indicator
-
-            for ii_chunk in xrange(maxlen_words):
-                ctx = numpy.tile(ctx0, [word_live_k, 1])
-                inps = [next_word, ctx, next_state_word, next_state_chunk]
-                ret = f_next_word(*inps)
-                next_p_word, next_word, next_state_word = ret[0], ret[1], ret[2]
-
-                if stochastic:
-                    if argmax:
-                        nw = next_p_word[0].argmax()
-                    else:
-                        nw = next_word[0]
-                    final_beam_sample_word.append(nw)
-                    final_beam_score -= numpy.log(next_p_word[0, nc])
-                    if nw == 0:
-                        break
-            next_chunk_emb = next_state_word - next_chunk_emb
-        #
-        # # beam search decoding
         else:
+            cand_scores = hyp_scores[:, None] - numpy.log(next_word_p)
+            cand_flat = cand_scores.flatten()
+            ranks_flat = cand_flat.argsort()[:(k-dead_k)]
 
-            # get the best k candidates, by 0~vob, vob+1 ~ 2vob ...
-            chunk_cand_scores = chunk_beam_scores[:, None] - numpy.log(next_p_chunk)
-            chunk_cand_flat = chunk_cand_scores.flatten()
-            chunk_ranks_flat = chunk_cand_flat.argsort()[:(k_chunk-chunk_dead_k)]
+            voc_size = next_word_p.shape[1]
+            trans_indices = ranks_flat / voc_size
+            word_indices = ranks_flat % voc_size
+            costs = cand_flat[ranks_flat]
 
-            chunk_voc_size = next_p_chunk.shape[1] # next_p_chunk    shape0: sample size   shape1: chunk vocab size
-            chunk_trans_indices = chunk_ranks_flat / chunk_voc_size # index in the sample
-            chunk_indices = chunk_ranks_flat % chunk_voc_size
-            chunk_costs = chunk_cand_flat[chunk_ranks_flat] # get all the probability
+            new_hyp_samples = []
+            new_hyp_scores = numpy.zeros(k-dead_k).astype('float32')
+            new_hyp_states = []
 
-            new_chunk_hyp_samples = []
-            new_chunk_hyp_scores = []
-            new_chunk_hyp_states = []
+            for idx, [ti, wi] in enumerate(zip(trans_indices, word_indices)):
+                new_hyp_samples.append(hyp_samples[ti]+[wi])
+                new_hyp_scores[idx] = copy.copy(costs[idx])
+                new_hyp_states.append(copy.copy(next_state[ti]))
 
+            # check the finished samples
+            new_live_k = 0
+            hyp_samples = []
+            hyp_scores = []
+            hyp_states = []
 
-            # container for word beam search
-            complete_word_sample = []
-            complete_word_sample_score = []
-            complete_word_sample_state = []
-            complete_word_sample_chunk_index = []
-
-
-
-            # idx is the order of the executed chunk sequence,
-            # and ti is the index of the parant sequence it is generated from
-
-            new_chunk_hyp_index = -1
-            for idx, [ti, wi] in enumerate(zip(chunk_trans_indices, chunk_indices)):
-
-
-                #============
-                # begin to sample the possible words for each chunk
-                # for each chunk, we predict the corresponding words
-                #============
-
-                if wi == 0:
-
-                    final_beam_sample_chunk.append(chunk_beam_chunk_sample[ti]+[wi])
-
-                    # we don't add the chunk score into the word score here.
-                    final_beam_sample_word.append(chunk_beam_word_sample[ti])
-
-                    final_beam_score.append( copy.copy(chunk_costs[idx]))
-
-                    chunk_dead_k += 1
-
-                    # print '$$END ONE CHUNK$$',
-                    # print 'chunks', final_beam_sample_chunk[-1]
-                    # print 'words', final_beam_sample_word[-1]
-                    continue
-
+            for idx in xrange(len(new_hyp_samples)):
+                if new_hyp_samples[idx][-1] == 0:
+                    sample.append(new_hyp_samples[idx])
+                    sample_score.append(new_hyp_scores[idx])
+                    dead_k += 1
                 else:
+                    new_live_k += 1
+                    hyp_samples.append(new_hyp_samples[idx])
+                    hyp_scores.append(new_hyp_scores[idx])
+                    hyp_states.append(new_hyp_states[idx])
+            hyp_scores = numpy.array(hyp_scores)
+            live_k = new_live_k
 
-                    new_chunk_hyp_samples.append(chunk_beam_chunk_sample[ti]+[wi])
-                    new_chunk_hyp_scores.append( copy.copy(chunk_costs[idx]) )
-                    new_chunk_hyp_states.append(copy.copy(next_state_chunk[ti]))
-                    new_chunk_hyp_index += 1
-
-
-
-
-                word_live_k = 1
-                word_dead_k = 0
-
-                hyp_word_sample = [chunk_beam_word_sample[ti]]
-                hyp_word_sample_score = numpy.array([new_chunk_hyp_scores[-1]])
-                hyp_word_sample_state = []
-                hyp_word_sample_chunk_index = []
-
-
-                ii_word_state = chunk_beam_word_hiddens[ti].reshape((1, options['dim']))
-
-
-                # TODO we modify the code here to make it consistent with the training case
-                # the initial word of one chunk is always -1
-                # if len(chunk_beam_word_sample[ti]) == 0:
-                current_next_word = -1 * numpy.ones((1,)).astype('int64')
-                # else:
-                #     current_next_word = copy.copy(chunk_beam_word_sample[ti][-1]) * numpy.ones((1,)).astype('int64')
-
-                for ii_word in xrange(maxlen_words):
-
-                    # print '###### word i:',ii_word
-                    #
-                    # print 'word sample', hyp_word_sample
-
-
-                    ctx = numpy.tile(ctx0, [word_live_k, 1])
-
-                    chunk_hidden = numpy.tile(new_chunk_hyp_states[-1], [word_live_k, 1])
-
-                    inps = [current_next_word, ctx, ii_word_state, chunk_hidden]
-
-                    ret = f_next_word(*inps)
-                    new_next_p_word_i, current_next_word, ii_word_state \
-                        = ret[0], ret[1], ret[2]
-
-
-                    word_cand_scores = hyp_word_sample_score[:, None] - numpy.log(new_next_p_word_i)
-                    word_cand_flat = word_cand_scores.flatten()
-                    word_ranks_flat = word_cand_flat.argsort()[:(k_word-word_dead_k)]
-
-                    word_voc_size = new_next_p_word_i.shape[1]
-                    word_trans_indices = word_ranks_flat / word_voc_size # index in the sample
-                    word_indices = word_ranks_flat % word_voc_size
-                    word_costs = word_cand_flat[word_ranks_flat] # get all the probability
-
-
-
-                    new_word_hyp_samples = []
-                    new_word_hyp_scores = []
-                    new_word_hyp_states = []
-                    new_word_hyp_chunk_index = []
-
-                    for idx_word, [ti_word, wi_word] in enumerate(zip(word_trans_indices, word_indices)):
-
-                        if wi_word == 0:
-                            complete_word_sample.append( hyp_word_sample[ti_word]+[wi_word] +  [-1 * wi] )
-                            complete_word_sample_score.append(copy.copy(word_costs[idx_word]))
-                            complete_word_sample_state.append(copy.copy(ii_word_state[ti_word]))
-                            complete_word_sample_chunk_index.append([new_chunk_hyp_index, ti])
-
-                            # new_chunk_hyp_index is the index in the current performned beam
-                            # ti is the index in last beam, expand from the ti chunk beam
-                            # print '(END ONE WORDS)',
-                            # print 'word sample', complete_word_sample[-1]
-                            word_dead_k += 1
-
-                            continue
-
-                        else:
-                            new_word_hyp_samples.append(hyp_word_sample[ti_word]+[wi_word])
-                            new_word_hyp_scores.append( copy.copy(word_costs[idx_word]))
-                            new_word_hyp_states.append(copy.copy(ii_word_state[ti_word]))
-                            new_word_hyp_chunk_index.append([new_chunk_hyp_index, ti])
-
-
-                    # add all the new generated hyposis into the hyposis container, which will be used for next word prediction
-                    hyp_word_sample = []
-                    hyp_word_sample_score = []
-                    hyp_word_sample_state = []
-                    hyp_word_sample_chunk_index = []
-
-                    hyp_word_sample.extend(new_word_hyp_samples)
-                    hyp_word_sample_score.extend(new_word_hyp_scores)
-                    hyp_word_sample_state.extend(new_word_hyp_states)
-                    hyp_word_sample_chunk_index.extend(new_word_hyp_chunk_index)
-
-                    # print '%% APPEND WORD SAMPLE', hyp_word_sample
-
-
-                    word_live_k = k_word - word_dead_k
-
-                    if word_live_k < 1:
-                        break
-                    if word_dead_k >= k_word:
-                        break
-
-                    # prepare the next phrase configuration for next word computation
-                    current_next_word = numpy.array([w[-1] for w in hyp_word_sample])
-                    ii_word_state = numpy.array(hyp_word_sample_state)
-                    hyp_word_sample_score = numpy.array(hyp_word_sample_score)
-
-
-
-                # end max word iteration
-
-                # collect all the un_funished hypthesis
-
-                if word_dead_k < k_word:
-
-                    for remain_i in xrange(len(hyp_word_sample)):
-
-                        complete_word_sample.append([-10000] + hyp_word_sample[remain_i])
-                        complete_word_sample_score.append(hyp_word_sample_score[remain_i])
-                        complete_word_sample_state.append(hyp_word_sample_state[remain_i])
-                        complete_word_sample_chunk_index.append(hyp_word_sample_chunk_index[remain_i])
-
-
-                #============
-                # end to sample max words
-                #============
-
-
-            # end sample all chunks
-
-            # get the k best candidates in the chunk beam
-            best_k_index_chunk_beam = numpy.array(complete_word_sample_score).argsort()[:(k_chunk-chunk_dead_k)]
-
-            # index for each item corresponds to the original bean chunk item
-
-            # one index for the newly generated chunk beam
-            # another index is used to track the original chunk beam index
-
-            # actually I can copy everything here to avoid the complex copy by index
-            best_k_index_new_chunk_beam_index = [complete_word_sample_chunk_index[i][0] for i in best_k_index_chunk_beam]
-            best_k_index_chunk_beam_index = [complete_word_sample_chunk_index[i][1] for i in best_k_index_chunk_beam]
-
-            chunk_beam_chunk_sample = [new_chunk_hyp_samples[i] for i in best_k_index_new_chunk_beam_index]
-            chunk_beam_word_sample = [complete_word_sample[i] for i in best_k_index_chunk_beam]
-            chunk_beam_scores = [complete_word_sample_score[i] for i in best_k_index_chunk_beam]
-            chunk_beam_chunk_hiddens = [new_chunk_hyp_states[i] for i in best_k_index_new_chunk_beam_index]
-
-            # print 'complete_word_sample_state',complete_word_sample_state
-            #
-            # print 'complete_word_sample_state[0]',complete_word_sample_state[0]
-            #
-            # print 'chunk_beam_word_hiddens',chunk_beam_word_hiddens
-            #
-            # print 'chunk_beam_word_hiddens[0]',chunk_beam_word_hiddens[0]
-
-            chunk_beam_chunk_trues = [ complete_word_sample_state[i] - chunk_beam_word_hiddens[k] for i, k in zip(best_k_index_chunk_beam, best_k_index_chunk_beam_index)]
-            chunk_beam_word_hiddens = [complete_word_sample_state[i] for i in best_k_index_chunk_beam]
-
-            # print 'chunk_beam_word_hiddens',chunk_beam_word_hiddens
-
-
-            chunk_live_k = k_chunk - chunk_dead_k
-
-
-            if chunk_live_k < 1:
+            if new_live_k < 1:
                 break
-            if chunk_dead_k >= k_chunk:
+            if dead_k >= k:
                 break
 
-
-            chunk_beam_scores = numpy.array(chunk_beam_scores)
-
-            # print [w for w in chunk_beam_chunk_sample]
-            next_chunk = numpy.array([w[-1] for w in chunk_beam_chunk_sample])
-            next_state_chunk = numpy.array(chunk_beam_chunk_hiddens)
-            next_chunk_emb = numpy.array(chunk_beam_chunk_trues)
-
-            # print 'chunk_beam_chunk_trues',chunk_beam_chunk_trues
-            #
-            # print 'next_chunk_emb',next_chunk_emb
-
-
-
-        # end if stochastic
-
-    # end chunk iteration for max chunk len
+            next_w = numpy.array([w[-1] for w in hyp_samples])
+            next_state = numpy.array(hyp_states)
 
     if not stochastic:
         # dump every remaining one
-        if chunk_dead_k < k_chunk:
+        if live_k > 0:
+            for idx in xrange(live_k):
+                sample.append(hyp_samples[idx])
+                sample_score.append(hyp_scores[idx])
 
-            for remain_i in xrange(len(chunk_beam_word_sample)):
-                final_beam_sample_word.append(chunk_beam_word_sample[remain_i])
-                final_beam_sample_chunk.append(chunk_beam_chunk_sample[remain_i])
-                final_beam_score.append(chunk_beam_scores[remain_i])
-
-    return final_beam_sample_word, final_beam_score
+    return sample, sample_score
 
 
 # calculate the log probablities on a given corpus using translation model
@@ -1959,7 +1701,7 @@ def train(dim_word=100,  # word vector dimensionality
           n_words=100000,  # target vocabulary size
           n_chunks=1000,  # target vocabulary size
           maxlen_chunk=10,  # maximum length of the description
-          maxlen_chunk_words=8,  # maximum length of the description
+          maxlen_chunk_words=50,  # maximum length of the description
           optimizer='rmsprop',
           batch_size=16,
           valid_batch_size=16,
@@ -2043,12 +1785,12 @@ def train(dim_word=100,  # word vector dimensionality
     # modify the module of build model!
     # especially the inputs and outputs
     trng, use_noise, \
-    x, x_mask, y_chunk, y_chunk_mask, y_cw, y_cw_mask, \
+    x, x_mask, y_chunk, y_mask, y_cw, y_chunk_indicator, \
     opt_ret, \
-    cost= \
+    cost, cost_cw= \
         build_model(tparams, model_options)
 
-    inps = [x, x_mask, y_chunk, y_chunk_mask, y_cw, y_cw_mask]
+    inps = [x, x_mask, y_chunk, y_mask, y_cw, y_chunk_indicator]
 
     print 'Building sampler'
     f_init, f_next_chunk, f_next_word = build_sampler(tparams, model_options, trng, use_noise)
@@ -2073,11 +1815,11 @@ def train(dim_word=100,  # word vector dimensionality
     if alpha_c > 0. and not model_options['decoder'].endswith('simple'):
         alpha_c = theano.shared(numpy.float32(alpha_c), name='alpha_c')
         alpha_reg = alpha_c * (
-            (tensor.cast(y_chunk_mask.sum(0)//x_mask.sum(0), 'float32')[:, None] -
-             opt_ret['dec_alphas'].sum(0))**2).sum(1).mean()
+            (tensor.cast(y_mask.sum(0)//x_mask.sum(0), 'float32')[:, None] -
+             opt_ret['dec_alphas_chunk'].sum(0))**2).sum(1).mean()
         alpha_reg += alpha_c * (
-            (tensor.cast(y_cw_mask.sum(0).sum(0)//x_mask.sum(0), 'float32')[:, None] -
-             opt_ret['dec_alphas'].sum(0).sum(0))**2).sum(1).mean()
+            (tensor.cast(y_mask.sum(0).sum(0)//x_mask.sum(0), 'float32')[:, None] -
+             opt_ret['dec_alphas_cw'].sum(0).sum(0))**2).sum(1).mean()
         cost += alpha_reg
 
     # after all regularizers - compile the computational graph for cost
@@ -2138,7 +1880,7 @@ def train(dim_word=100,  # word vector dimensionality
             uidx += 1
             use_noise.set_value(1.)
 
-            x, x_mask, y_c, y_mask_c, y_cw, y_mask_cw = prepare_training_data(x, y_chunk, y_cw, maxlen_chunk=maxlen_chunk, maxlen_cw=maxlen_chunk_words,
+            x, x_mask, y_c, y_cw, chunk_indicator, y_mask = prepare_training_data(x, y_chunk, y_cw, maxlen_chunk=maxlen_chunk, maxlen_cw=maxlen_chunk_words,
                                                                               n_words_src=n_words_src,
                                                                               n_words=n_words)
 
@@ -2152,7 +1894,7 @@ def train(dim_word=100,  # word vector dimensionality
 
 
             # compute cost, grads and copy grads to sh            self.target_buffer = _tcbufared variables
-            cost = f_grad_shared(x, x_mask, y_c, y_mask_c, y_cw, y_mask_cw)
+            cost = f_grad_shared(x, x_mask, y_c, y_mask, y_cw, chunk_indicator)
 
             print 'Epoch ', eidx, 'processed one batch'
 
@@ -2200,9 +1942,7 @@ def train(dim_word=100,  # word vector dimensionality
                     stochastic = True
                     sample, score = gen_sample(tparams, f_init, f_next_chunk, f_next_word,
                                                x[:, jj][:, None],
-                                               model_options, trng=trng, k_chunk=1, k_word=1,
-                                               maxlen_words=10,
-                                               maxlen_chunks=10,
+                                               model_options, trng=trng, k=1,
                                                stochastic=stochastic,
                                                argmax=False)
                     print 'Source ', jj, ': ',
@@ -2217,19 +1957,16 @@ def train(dim_word=100,  # word vector dimensionality
                     print 'Truth ', jj, ' : ',
                     ci = 0
                     # print y_chunk[: , jj]
-                    for chunk_index in y_c[:, jj]:
+                    for chunk_index, word_index in zip(y_c[:, jj], y_cw[:, jj]):
 
-                        if chunk_index == 0:
+                        if word_index == 0:
                             break
-                        if chunk_index in worddict_r_chunk:
+                        if chunk_index in worddict_r_chunk and chunk_index != 1: # not NULL
                             print '|', worddict_r_chunk[chunk_index],
-                        for wi in y_cw[ci, :, jj]:
-                            if wi == 0:
-                                break
-                            if wi in worddicts_r[1]:
-                                print worddicts_r[1][wi],
-                            else:
-                                print 'UNK',
+                        if word_index in worddicts_r[1]:
+                            print worddicts_r[1][word_index],
+                        else:
+                            print 'UNK',
                         ci += 1
                     print
                     print 'Sample ', jj, ': ',

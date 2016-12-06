@@ -33,8 +33,8 @@ def main(job_id, params):
                                '/home/Data/nmt/corpus.chunked.en'],
                      valid_datasets=['/home/Data/nmt/devntest/MT02/MT02.src',
                                      '/home/Data/nmt/devntest/MT02/reference0.tag.chunked.chunked'],
-                     dictionaries=['/home/Data/nmt/corpus.ch.pkl',
-                                   '/home/Data/nmt/corpus.en.pkl'],
+                     dictionaries=['/home/Data/nmt/corpus.ch.filter.pkl',
+                                   '/home/Data/nmt/corpus.en.filter.pkl'],
                      dictionary_chunk='/home/Data/nmt/corpus.en.chunktag.pkl',
                      use_dropout=params['use-dropout'][0],
                      overwrite=False)

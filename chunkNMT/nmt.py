@@ -631,9 +631,6 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
         preact1 = tensor.dot(h_, U)
         preact1 += x_
         preact1 = tensor.nnet.sigmoid(preact1)
-        preact1 = tensor.dot(h_, U)
-        preact1 += x_
-        preact1 = tensor.nnet.sigmoid(preact1)
 
         r1 = _slice(preact1, 0, dim)
         u1 = _slice(preact1, 1, dim)
@@ -1086,6 +1083,7 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
 
 # initialize all parameters
 def init_params(options):
+
     params = OrderedDict()
 
     # embedding
@@ -1533,6 +1531,8 @@ def build_sampler(tparams, options, trng, use_noise):
                                     prefix='ff_logit_prev_chunk', activ='linear')
     logit_ctx_chunk = get_layer('ff')[1](tparams, ctxs, options,
                                    prefix='ff_logit_ctx_chunk', activ='linear')
+
+
     logit_chunk = tensor.tanh(logit_lstm_chunk+logit_prev_chunk+logit_ctx_chunk)
     if options['use_dropout']:
         logit_chunk = dropout_layer(logit_chunk, use_noise, trng)

@@ -110,8 +110,9 @@ def main():
 
         newChunkDict = OrderedDict()
         newChunkDict['eos'] = 0
+        newChunkDict['NULL'] = 1
         for ii, ww in enumerate(chunk_tag_dict):
-            newChunkDict[ww] = ii + 1
+            newChunkDict[ww] = ii + 2
 
         with open('%s.pkl'%filename, 'wb') as f:
             pkl.dump(worddict, f)

@@ -80,10 +80,12 @@ class TrainingTextIterator:
             tokens = chunk_line.strip().split('\t')
 
             words = tokens[1].strip().split()
-            ctags = ['NULL'] * len(words)
+            ctags = ['NULL'] * len(words)   # index of 'NULL' in chunk dictionary is 1
             ctags[0] = tokens[0]
             chunk_tag.extend( ctags )
             chunk_words.extend( words )
+
+        assert len(chunk_tag) == len(chunk_words)
 
         return chunk_tag, chunk_words
 
@@ -197,7 +199,7 @@ class TrainingTextIterator:
                 # if the source or target chunk or words in target chunk exceed max len, just skip
                 # if len(ss) > self.max_word_len and len(tt) > self.max_chunk_len:
                 #     continue
-                if len(ss) > self.maxlen and len(tt) > self.maxlen:
+                if len(ss) > self.max_word_len and len(tt) > self.max_word_len:
                     continue
 
                 source.append(ss)
