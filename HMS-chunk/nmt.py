@@ -1423,7 +1423,7 @@ def build_sampler(tparams, options, trng, use_noise):
 # this function iteratively calls f_init and f_next functions.
 def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
                options, trng=None, k_chunk=1, k_word=1, k=5, maxlen=50,
-               stochastic=True, argmax=False):
+               stochastic=True, argmax=False, jointProb=True):
 
     # k is the beam size we have
     if k > 1:
@@ -1450,9 +1450,9 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
 
     next_w = -1 * numpy.ones((1,)).astype('int64')  # bos indicator
 
-    next_chunk = -1 * numpy.ones((1,)).astype('int64')  # bos indicator
-
-    word_hidden1 = None
+    # next_chunk = -1 * numpy.ones((1,)).astype('int64')  # bos indicator
+    #
+    # word_hidden1 = None
 
 
     for ii in xrange(maxlen):
@@ -1492,6 +1492,10 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
             = ret[0], ret[1], ret[2], ret[3], ret[4]
 
 
+        if jointProb:
+            indicator_score = next_chunk_p.max(1)
+            indicator_score = indicator_score.reshape(indicator_score.shape[0], 1)
+            next_word_p = indicator_score * next_word_p
 
 
         if stochastic:
@@ -1568,11 +1572,11 @@ def pred_probs(f_log_probs, prepare_data, options, iterator, verbose=True):
     for x, y_chunk, y_cw in iterator:
         n_done += len(x)
 
-        x, x_mask, y_c, y_mask_c, y_cw, y_mask_cw = prepare_data(x, y_chunk, y_cw,
+        x, x_mask, y_c, y_cw, chunk_indicator, y_mask = prepare_data(x, y_chunk, y_cw,
                                             n_words_src=options['n_words_src'],
                                             n_words=options['n_words'])
 
-        pprobs = f_log_probs(x, x_mask, y_c, y_mask_c, y_cw, y_mask_cw)
+        pprobs = f_log_probs(x, x_mask, y_chunk, y_mask, y_cw, chunk_indicator)
         for pp in pprobs:
             probs.append(pp)
 

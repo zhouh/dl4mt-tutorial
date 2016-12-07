@@ -28,7 +28,7 @@ def main(job_id, params):
                      saveFreq=1000,
                      sampleFreq=100,
                      maxlen_chunk=30,  # maximum length of the description
-                     maxlen_chunk_words=5,  # maximum length of the description
+                     maxlen_chunk_words=50,  # maximum length of the description
                      datasets=['/home/Data/nmt/corpus.ch',
                                '/home/Data/nmt/corpus.chunked.en'],
                      valid_datasets=['/home/Data/nmt/devntest/MT02/MT02.src',

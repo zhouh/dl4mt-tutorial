@@ -8,21 +8,18 @@ from collections import OrderedDict
 
 def main():
 
-#    sf = open(sys.argv[1])
-#    tf = open(sys.argv[2])
-    tchunk = open(sys.argv[1])
+    sf = open(sys.argv[1])
+    tf = open(sys.argv[2])
+    tchunk = open(sys.argv[3])
 
-#    sfo = open(sys.argv[1]+'.filter', 'w')
-#    tfo = open(sys.argv[2]+'.filter', 'w')
-    chunk_f = open(sys.argv[2]+'.filter', 'w')
+    sfo = open(sys.argv[4]+'ch.filter', 'w')
+    tfo = open(sys.argv[4]+'en.filter', 'w')
+    chunk_f = open(sys.argv[4]+'.filter', 'w')
 
     cl = 0
     wl = 0
 
     first_line = True
-
-#    sline = sf.readline()
-#    tline = tf.readline()
 
     chunk_instance = []
 
@@ -36,15 +33,14 @@ def main():
 
         if len(line.strip()) == 0:
 
+            sline = sf.readline()
+            tline = tf.readline()
+
 
             if cl <= 30 and wl <= 5:
                 
-#                if not first_line:
-#                    print >> sfo, '\n',
-#                    print >> tfo, '\n',
-#                    print >> chunk_f, '\n'
-#                else:
-#                    first_line = False
+                print >> sfo, sline.strip()
+                print >> tfo, tline.strip()
 
 #                print >> sfo, sline.strip(),
 #                print >> tfo, tline.strip(),

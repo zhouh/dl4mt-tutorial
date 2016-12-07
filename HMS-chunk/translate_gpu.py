@@ -13,8 +13,8 @@ from nmt import (build_sampler, gen_sample, load_params,
 from multiprocessing import Process, Queue
 
 
-def main(model, pklmodel, dictionary, dictionary_target, source_file, saveto, ck=5, wk=5,k=8,
-         normalize=False, n_process=5, chr_level=False):
+def main(model, pklmodel, dictionary, dictionary_target, source_file, saveto, ck=5, wk=5,k=5,
+         normalize=False, n_process=5, chr_level=False,jointProb=False):
 
     print 'load model model_options'
     with open('%s' % pklmodel, 'rb') as f:
@@ -98,9 +98,8 @@ def main(model, pklmodel, dictionary, dictionary_target, source_file, saveto, ck
         # sample given an input sequence and obtain scores
         sample, score = gen_sample(tparams, f_init, f_next_chunk, f_next_word,
                                    numpy.array(seq).reshape([len(seq), 1]),
-                                   options, trng=trng, maxlen_words=5, k_chunk=ck, k_word=wk, k=k,
-               maxlen_chunks=50,
-                                   stochastic=be_stochastic, argmax=True)
+                                   options, trng=trng, maxlen_words=300, k_chunk=ck, k_word=wk, k=k,
+               maxlen_chunks=50, stochastic=be_stochastic, argmax=True, jointProb=False)
 
         if be_stochastic:
             return sample
@@ -140,6 +139,7 @@ if __name__ == "__main__":
     parser.add_argument('-k', type=int, default=8)
     parser.add_argument('-p', type=int, default=5)
     parser.add_argument('-n', action="store_true", default=False)
+    parser.add_argument('-jointProb', action="store_true", default=False)
     parser.add_argument('-c', action="store_true", default=False)
     parser.add_argument('model', type=str)
     parser.add_argument('pklmodel', type=str)
@@ -152,4 +152,4 @@ if __name__ == "__main__":
 
     main(args.model, args.pklmodel, args.dictionary, args.dictionary_target, args.source,
          args.saveto, ck=args.ck, wk=args.wk, normalize=args.n, n_process=args.p,
-         chr_level=args.c)
+         chr_level=args.c, jointProb=args.jointProb)
