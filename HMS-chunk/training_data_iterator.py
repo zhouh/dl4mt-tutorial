@@ -200,7 +200,11 @@ class TrainingTextIterator:
                 # if len(ss) > self.max_word_len and len(tt) > self.max_chunk_len:
                 #     continue
                 if len(ss) > self.max_word_len and len(tt) > self.max_word_len:
+
+                    # print 'skip', len(ss), len(tt)
                     continue
+                # else:
+                #     print 'not skip', len(ss), len(tt)
 
                 source.append(ss)
                 target_chunk.append(tt)

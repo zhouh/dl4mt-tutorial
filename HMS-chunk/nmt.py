@@ -903,7 +903,7 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
     init_word_alpha = tensor.alloc(0., n_samples, context.shape[0])
 
 
-    #chunk_hidden, current_position_hypo_chunk_hidden, chunk_ctx, chunk_alpha, last_chunk_emb, \
+    # chunk_hidden, current_position_hypo_chunk_hidden, chunk_ctx, chunk_alpha, last_chunk_emb, \
     #           word_hidden1, word_hidden2, h1_last_chunk_end_word, word_ctx_, word_alpha
 
     outputs = [init_state_chunk,
@@ -1108,14 +1108,13 @@ def build_model(tparams, options):
 
     #
     # decoder
-    #
     chunk_hidden, \
     current_position_hypo_chunk_hidden, \
     chunk_ctx, \
     chunk_alpha, \
     last_chunk_emb, \
-    word_hidden1, \
     word_hidden2, \
+    word_hidden1, \
     h1_last_chunk_end_word, \
     word_ctx_, \
     word_alpha = get_layer(options['decoder'])[1](tparams, emb, y_chunk_shift,
@@ -1127,6 +1126,7 @@ def build_model(tparams, options):
                                                   context_mask=x_mask,
                                                   init_state_chunk=init_state_chunk,
                                                   init_state_chunk_words=init_state_chunk_words)
+    #
     opt_ret['dec_alphas_chunk'] = chunk_alpha
 
 
@@ -1256,8 +1256,8 @@ def build_sampler(tparams, options, trng, use_noise):
 
     chunk_boundary = tensor.vector('chunk_boundary', dtype='float32')
 
-    init_state_chunk = tensor.matrix('init_state', dtype='float32')
-    init_state_chunk_words = tensor.matrix('init_state', dtype='float32')
+    init_state_chunk = tensor.matrix('init_state_chunk', dtype='float32')
+    init_state_chunk_words = tensor.matrix('init_state_chunk_words', dtype='float32')
 
     last_chunk_end_word_hidden1 = tensor.matrix('last_chunk_end_word_hidden1', dtype='float32')
 
@@ -1576,7 +1576,7 @@ def pred_probs(f_log_probs, prepare_data, options, iterator, verbose=True):
                                             n_words_src=options['n_words_src'],
                                             n_words=options['n_words'])
 
-        pprobs = f_log_probs(x, x_mask, y_chunk, y_mask, y_cw, chunk_indicator)
+        pprobs = f_log_probs(x, x_mask, y_c, y_mask, y_cw, chunk_indicator)
         for pp in pprobs:
             probs.append(pp)
 
@@ -1900,7 +1900,7 @@ def train(dim_word=100,  # word vector dimensionality
             # compute cost, grads and copy grads to sh            self.target_buffer = _tcbufared variables
             cost = f_grad_shared(x, x_mask, y_c, y_mask, y_cw, chunk_indicator)
 
-            print 'Epoch ', eidx, 'processed one batch'
+            # print 'Epoch ', eidx, 'processed one batch'
 
             # do the update on parameters
             f_update(lrate)

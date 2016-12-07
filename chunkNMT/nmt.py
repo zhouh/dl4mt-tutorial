@@ -1471,8 +1471,8 @@ def build_sampler(tparams, options, trng, use_noise):
 
     last_word_in_chunk = tensor.vector('last_word_in_chunk', dtype='int64')
 
-    init_state_chunk = tensor.matrix('init_state', dtype='float32')
-    init_state_chunk_words = tensor.matrix('init_state', dtype='float32')
+    init_state_chunk = tensor.matrix('init_state_chunk', dtype='float32')
+    init_state_chunk_words = tensor.matrix('init_state_chunk_words', dtype='float32')
 
 
     last_chunk_true = tensor.matrix('last_chunk_true', dtype='float32')
