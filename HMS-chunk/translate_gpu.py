@@ -98,8 +98,8 @@ def main(model, pklmodel, dictionary, dictionary_target, source_file, saveto, ck
         # sample given an input sequence and obtain scores
         sample, score = gen_sample(tparams, f_init, f_next_chunk, f_next_word,
                                    numpy.array(seq).reshape([len(seq), 1]),
-                                   options, trng=trng, maxlen_words=300, k_chunk=ck, k_word=wk, k=k,
-               maxlen_chunks=50, stochastic=be_stochastic, argmax=True, jointProb=False)
+                                   options, trng=trng, maxlen=300, k_chunk=ck, k_word=wk, k=k,
+               stochastic=be_stochastic, argmax=True, jointProb=False)
 
         if be_stochastic:
             return sample

@@ -1441,6 +1441,8 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
     hyp_samples = [[]] * live_k
     hyp_scores = numpy.zeros(live_k).astype('float32')
     hyp_states = []
+    hyp_chunk_states = []
+    hyp_last_chunk_last_word_hidden1 = []
 
     # get initial state of decoder rnn and encoder context
     ret = f_init(x)
@@ -1520,17 +1522,23 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
             new_hyp_samples = []
             new_hyp_scores = numpy.zeros(k-dead_k).astype('float32')
             new_hyp_states = []
+            new_hyp_chunk_states = []
+            new_hyp_last_chunk_last_word_hidden1 = []
 
             for idx, [ti, wi] in enumerate(zip(trans_indices, word_indices)):
                 new_hyp_samples.append(hyp_samples[ti]+[wi])
                 new_hyp_scores[idx] = copy.copy(costs[idx])
-                new_hyp_states.append(copy.copy(next_state[ti]))
+                new_hyp_states.append(copy.copy(next_state_word[ti]))
+                new_hyp_chunk_states.append(copy.copy(next_state_chunk[ti]))
+                new_hyp_last_chunk_last_word_hidden1.append(copy.copy(last_chunk_last_word_hidden1[ti]))
 
             # check the finished samples
             new_live_k = 0
             hyp_samples = []
             hyp_scores = []
             hyp_states = []
+            hyp_chunk_states = []
+            hyp_last_chunk_last_word_hidden1 = []
 
             for idx in xrange(len(new_hyp_samples)):
                 if new_hyp_samples[idx][-1] == 0:
@@ -1542,6 +1550,9 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
                     hyp_samples.append(new_hyp_samples[idx])
                     hyp_scores.append(new_hyp_scores[idx])
                     hyp_states.append(new_hyp_states[idx])
+                    hyp_chunk_states.append(new_hyp_chunk_states[idx])
+                    hyp_last_chunk_last_word_hidden1.append(new_hyp_last_chunk_last_word_hidden1[idx])
+
             hyp_scores = numpy.array(hyp_scores)
             live_k = new_live_k
 
@@ -1551,7 +1562,9 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
                 break
 
             next_w = numpy.array([w[-1] for w in hyp_samples])
-            next_state = numpy.array(hyp_states)
+            next_state_word = numpy.array(hyp_states)
+            next_state_chunk = numpy.array(hyp_chunk_states)
+            last_chunk_last_word_hidden1 = numpy.array(hyp_last_chunk_last_word_hidden1)
 
     if not stochastic:
         # dump every remaining one

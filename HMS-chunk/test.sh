@@ -5,14 +5,16 @@
 #PBS -A course
 #PBS -q ShortQ
 
-export THEANO_FLAGS=device=cpu,floatX=float32
+
+export THEANO_FLAGS=device=cpu,optimizer=None,floatX=float32,exception_verbosity=high
 
 #cd $PBS_O_WORKDIR
-python ./translate.py -n -p 4 \
+python ./translate_gpu.py -n \
 	./model_hal.npz  \
-	/home/Data/nmt/corpus.ch.pkl \
-	/home/Data/nmt/corpus.en.pkl \
-	/home/Data/nmt/devntest/MT02/MT02.src \
+	./model_hal.npz.pkl  \
+	../../nmtdata/small.ch.pkl \
+	../../nmtdata/small.en.chunked.pkl \
+	../../nmtdata/devntest/MT02/MT02.src \
 	./test.result
 
 
