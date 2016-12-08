@@ -199,7 +199,7 @@ class TrainingTextIterator:
                 # if the source or target chunk or words in target chunk exceed max len, just skip
                 # if len(ss) > self.max_word_len and len(tt) > self.max_chunk_len:
                 #     continue
-                if len(ss) > self.max_word_len and len(tt) > self.max_word_len:
+                if len(ss) > self.max_word_len or len(tt) > self.max_word_len:
 
                     # print 'skip', len(ss), len(tt)
                     continue
