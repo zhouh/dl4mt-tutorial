@@ -709,7 +709,13 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
         # word attention
         pstate_ = tensor.dot(word_hidden1, W_comb_att)
         pstate_chunk = tensor.dot(chunk_hidden, W_cu_chunk_att)
-        pctx__ = pctx_ + pstate_[None, :, :] + pstate_chunk[None, :, :]
+
+
+        ################
+        # revise
+        ################
+        # pctx__ = pctx_ + pstate_[None, :, :] + pstate_chunk[None, :, :]
+        pctx__ = pctx_ + pstate_[None, :, :]
         pctx__ = tensor.tanh(pctx__)
         alpha = tensor.dot(pctx__, U_att)+c_tt
         alpha = alpha.reshape([alpha.shape[0], alpha.shape[1]])
@@ -722,7 +728,13 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
 
 
         preact2 = tensor.dot(word_hidden1, U_nl)+b_nl
-        preact2 += tensor.dot(ctx_, Wc) + tensor.dot(chunk_hidden, W_current_chunk_c)
+
+
+        ################
+        # revise
+        ################
+        # preact2 += tensor.dot(ctx_, Wc) + tensor.dot(chunk_hidden, W_current_chunk_c)
+        preact2 += tensor.dot(ctx_, Wc)
         preact2 = tensor.nnet.sigmoid(preact2)
 
         r2 = _slice(preact2, 0, dim)
@@ -730,7 +742,13 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
 
         preactx2 = tensor.dot(word_hidden1, Ux_nl)+bx_nl
         preactx2 *= r2
-        preactx2 += tensor.dot(ctx_, Wcx) + tensor.dot(chunk_hidden, W_current_chunk_hidden) # here we add current chunk representation
+
+
+        ################
+        # revise
+        ################
+        # preactx2 += tensor.dot(ctx_, Wcx) + tensor.dot(chunk_hidden, W_current_chunk_hidden) # here we add current chunk representation
+        preactx2 += tensor.dot(ctx_, Wcx) # here we add current chunk representation
 
 
         h2 = tensor.tanh(preactx2)
@@ -1177,7 +1195,8 @@ def build_model(tparams, options):
                                   prefix='ff_logit_using_chunk_hidden', activ='linear')
 
 
-    logit_cw = tensor.tanh(logit_lstm_cw+logit_prev_cw+logit_ctx_cw+logit_ctx_using_current_chunk_hidden)
+    # logit_cw = tensor.tanh(logit_lstm_cw+logit_prev_cw+logit_ctx_cw+logit_ctx_using_current_chunk_hidden)
+    logit_cw = tensor.tanh(logit_lstm_cw+logit_prev_cw+logit_ctx_cw)
 
     if options['use_dropout']:
         logit_cw = dropout_layer(logit_cw, use_noise, trng)
@@ -1195,7 +1214,8 @@ def build_model(tparams, options):
     cost_cw = cost_cw.reshape([y_chunk_words.shape[0], y_chunk_words.shape[1]])
 
 
-    cost = cost + cost_cw
+    # cost = cost + cost_cw
+    cost = cost_cw
     cost = (cost * y_mask).sum(0)
 
     return trng, use_noise, x, x_mask, y_chunk, y_mask, y_chunk_words, chunk_indicator,\
