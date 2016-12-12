@@ -179,8 +179,19 @@ class TrainingTextIterator:
 
                 # print 'target chunk before', tt
 
+                #
+                # revise !!!
+                #
+                #
+
                 tt = [self.target_chunk_dict[w] if w in self.target_chunk_dict else 1
                       for w in tt]
+
+                #
+                # mark all the chunk tag in the dictionary as 0 and 1,
+                # we only want to predict the boundary
+                #
+                tt = [1 if w == 1 else 0 for w in tt]
 
                 # print 'target chunk after', tt
                 # tt = [w if w < self.n_words_target else 1 for w in tt]

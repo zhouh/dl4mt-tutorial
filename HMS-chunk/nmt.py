@@ -704,18 +704,26 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
                              W_current_chunk_hidden, W_current_chunk_c, U, Wc, W_comb_att,
                              W_cu_chunk_att, U_att, c_tt, Ux, Wcx, U_nl, Ux_nl, b_nl, bx_nl):
 
+
+        zero_chunk_hidden = tensor.alloc(0., chunk_hidden.shape[0], chunk_hidden.shape[1])
+
         #
         # given the word hidden1 and chunk hidden , compute
         # word attention
         pstate_ = tensor.dot(word_hidden1, W_comb_att)
-        pstate_chunk = tensor.dot(chunk_hidden, W_cu_chunk_att)
+
+        #
+        # zero
+        #
+        pstate_chunk = tensor.dot(zero_chunk_hidden, W_cu_chunk_att)
+
 
 
         ################
         # revise
         ################
-        # pctx__ = pctx_ + pstate_[None, :, :] + pstate_chunk[None, :, :]
-        pctx__ = pctx_ + pstate_[None, :, :]
+        pctx__ = pctx_ + pstate_[None, :, :] + pstate_chunk[None, :, :]
+        # pctx__ = pctx_ + pstate_[None, :, :]
         pctx__ = tensor.tanh(pctx__)
         alpha = tensor.dot(pctx__, U_att)+c_tt
         alpha = alpha.reshape([alpha.shape[0], alpha.shape[1]])
@@ -733,8 +741,11 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
         ################
         # revise
         ################
-        # preact2 += tensor.dot(ctx_, Wc) + tensor.dot(chunk_hidden, W_current_chunk_c)
-        preact2 += tensor.dot(ctx_, Wc)
+        #
+        # zero
+        #
+        preact2 += tensor.dot(ctx_, Wc) + tensor.dot(zero_chunk_hidden, W_current_chunk_c)
+        # preact2 += tensor.dot(ctx_, Wc)
         preact2 = tensor.nnet.sigmoid(preact2)
 
         r2 = _slice(preact2, 0, dim)
@@ -747,8 +758,9 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
         ################
         # revise
         ################
+        preactx2 += tensor.dot(ctx_, Wcx) + tensor.dot(zero_chunk_hidden, W_current_chunk_hidden) # here we add current chunk representation
         # preactx2 += tensor.dot(ctx_, Wcx) + tensor.dot(chunk_hidden, W_current_chunk_hidden) # here we add current chunk representation
-        preactx2 += tensor.dot(ctx_, Wcx) # here we add current chunk representation
+        # preactx2 += tensor.dot(ctx_, Wcx) # here we add current chunk representation
 
 
         h2 = tensor.tanh(preactx2)
@@ -1150,10 +1162,26 @@ def build_model(tparams, options):
 
     logit_lstm_chunk = get_layer('ff')[1](tparams, current_position_hypo_chunk_hidden, options,
                                     prefix='ff_logit_lstm_chunk', activ='linear')
+
+    #
+    # revise
+    #
+    m = tensor.alloc(0., logit_lstm_chunk.shape[0], logit_lstm_chunk.shape[1], logit_lstm_chunk.shape[2])
+    logit_lstm_chunk = m * logit_lstm_chunk
+
+
     logit_prev_chunk = get_layer('ff')[1](tparams, last_chunk_emb, options,
                                     prefix='ff_logit_prev_chunk', activ='linear')
+
+
     logit_ctx_chunk = get_layer('ff')[1](tparams, chunk_ctx, options,
                                    prefix='ff_logit_ctx_chunk', activ='linear')
+
+    #
+    # revise
+    #
+    m = tensor.alloc(0., logit_ctx_chunk.shape[0], logit_ctx_chunk.shape[1], logit_ctx_chunk.shape[2])
+    logit_ctx_chunk = m * logit_ctx_chunk
 
     logit_ctx_last_word = get_layer('ff')[1](tparams, emb, options,
                                    prefix='logit_ctx_last_word', activ='linear')
@@ -1194,9 +1222,12 @@ def build_model(tparams, options):
     logit_ctx_using_current_chunk_hidden = get_layer('ff')[1](tparams, chunk_hidden, options,
                                   prefix='ff_logit_using_chunk_hidden', activ='linear')
 
+    m = tensor.alloc(0., logit_ctx_using_current_chunk_hidden.shape[0], logit_ctx_using_current_chunk_hidden.shape[1], logit_ctx_using_current_chunk_hidden.shape[2])
+    logit_ctx_using_current_chunk_hidden = m * logit_ctx_using_current_chunk_hidden
 
-    # logit_cw = tensor.tanh(logit_lstm_cw+logit_prev_cw+logit_ctx_cw+logit_ctx_using_current_chunk_hidden)
-    logit_cw = tensor.tanh(logit_lstm_cw+logit_prev_cw+logit_ctx_cw)
+
+    logit_cw = tensor.tanh(logit_lstm_cw+logit_prev_cw+logit_ctx_cw+logit_ctx_using_current_chunk_hidden)
+    # logit_cw = tensor.tanh(logit_lstm_cw+logit_prev_cw+logit_ctx_cw)
 
     if options['use_dropout']:
         logit_cw = dropout_layer(logit_cw, use_noise, trng)
@@ -1214,8 +1245,7 @@ def build_model(tparams, options):
     cost_cw = cost_cw.reshape([y_chunk_words.shape[0], y_chunk_words.shape[1]])
 
 
-    # cost = cost + cost_cw
-    cost = cost_cw
+    cost = cost + cost_cw
     cost = (cost * y_mask).sum(0)
 
     return trng, use_noise, x, x_mask, y_chunk, y_mask, y_chunk_words, chunk_indicator,\
@@ -1316,19 +1346,42 @@ def build_sampler(tparams, options, trng, use_noise):
     #
     # get the chunk prediction
     #
+
     logit_lstm_chunk = get_layer('ff')[1](tparams, current_position_hypo_chunk_hidden, options,
                                     prefix='ff_logit_lstm_chunk', activ='linear')
+
+
+
+    #
+    # revise
+    #
+    m = tensor.alloc(0., logit_lstm_chunk.shape[0], logit_lstm_chunk.shape[1])
+    logit_lstm_chunk = m * logit_lstm_chunk
+
+
     logit_prev_chunk = get_layer('ff')[1](tparams, last_chunk_emb, options,
                                     prefix='ff_logit_prev_chunk', activ='linear')
+
+
     logit_ctx_chunk = get_layer('ff')[1](tparams, chunk_ctx, options,
                                    prefix='ff_logit_ctx_chunk', activ='linear')
 
+    #
+    # revise
+    #
+    m = tensor.alloc(0., logit_ctx_chunk.shape[0], logit_ctx_chunk.shape[1])
+    logit_ctx_chunk = m * logit_ctx_chunk
+
     logit_ctx_last_word = get_layer('ff')[1](tparams, emb_chunk_word, options,
                                    prefix='logit_ctx_last_word', activ='linear')
+
     logit_ctx_current_word_hidden1 = get_layer('ff')[1](tparams, word_hidden1, options,
                                    prefix='logit_ctx_current_word_hidden1', activ='linear')
 
+
     logit_chunk = tensor.tanh(logit_lstm_chunk+logit_prev_chunk+logit_ctx_chunk+logit_ctx_last_word+logit_ctx_current_word_hidden1)
+
+
 
     if options['use_dropout']:
         logit_chunk = dropout_layer(logit_chunk, use_noise, trng)
@@ -1405,6 +1458,10 @@ def build_sampler(tparams, options, trng, use_noise):
 
     logit_ctx_using_current_chunk_hidden = get_layer('ff')[1](tparams, chunk_hidden, options,
                                   prefix='ff_logit_using_chunk_hidden', activ='linear')
+
+
+    m = tensor.alloc(0., logit_ctx_using_current_chunk_hidden.shape[0], logit_ctx_using_current_chunk_hidden.shape[1])
+    logit_ctx_using_current_chunk_hidden = m * logit_ctx_using_current_chunk_hidden
 
 
     logit_cw = tensor.tanh(logit_lstm_cw+logit_prev_cw+logit_ctx_cw+logit_ctx_using_current_chunk_hidden)
@@ -1781,7 +1838,13 @@ def train(dim_word=100,  # word vector dimensionality
     worddict_r_chunk = dict()
     for kk, vv in worddict_chunk.iteritems():
         worddict_r_chunk[vv] = kk
-    model_options['n_chunks'] = len(worddict_chunk)
+
+    #
+    # we only predict boundrary
+    #
+    model_options['n_chunks'] = 2
+
+
     print 'chunk_dict size: ', model_options['n_chunks']
     print worddict_chunk
 
