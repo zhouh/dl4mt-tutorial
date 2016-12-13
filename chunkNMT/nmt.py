@@ -628,6 +628,13 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
                     W_current_chunk_hidden, W_current_chunk_c, U, Wc, W_comb_att, W_cu_chunk_att, U_att, c_tt, Ux, Wcx, U_nl, Ux_nl, b_nl, bx_nl, chunk_hidden):
 
 
+        #
+        # we set the chunk_hidden 0 here to make it better than others
+        #
+
+        zeor_mask = tensor.alloc(0., chunk_hidden.shape[0],  chunk_hidden.shape[1])
+        chunk_hidden = zeor_mask * chunk_hidden
+
         preact1 = tensor.dot(h_, U)
         preact1 += x_
         preact1 = tensor.nnet.sigmoid(preact1)
@@ -1318,7 +1325,6 @@ def build_model(tparams, options):
 
 
 
-    # shift the word embeddings
     def _step_get_predict_word_embedding(emb_i, last_word_e, e):
 
         emb_i = tensor.set_subtensor(emb_i[0], last_word_e)
