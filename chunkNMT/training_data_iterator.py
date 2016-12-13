@@ -197,6 +197,10 @@ class TrainingTextIterator:
                 # if the source or target chunk or words in target chunk exceed max len, just skip
                 # if len(ss) > self.max_word_len and len(tt) > self.max_chunk_len:
                 #     continue
+
+                if len(ss) > 50:
+                    continue
+
                 if len(tt) > self.max_chunk_len:
                     continue
                 if numpy.max([len(chunk_words_i) for chunk_words_i in tcw]) > self.max_word_len:
