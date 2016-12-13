@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="BookmarkManager">
-    <bookmark url="file://$PROJECT_DIR$/chunkNMT/nmt.py" line="825" mnemonic="1" />
-    <bookmark url="file://$PROJECT_DIR$/chunkNMT/nmt.py" line="1075" mnemonic="8" />
-    <bookmark url="file://$PROJECT_DIR$/chunkNMT/nmt.py" line="1533" mnemonic="7" />
-    <bookmark url="file://$PROJECT_DIR$/chunkNMT/nmt.py" line="1654" mnemonic="9" />
-    <bookmark url="file://$PROJECT_DIR$/chunkNMT/nmt.py" line="1798" mnemonic="0" />
+    <bookmark url="file://$PROJECT_DIR$/chunkNMT/nmt.py" line="829" mnemonic="1" />
+    <bookmark url="file://$PROJECT_DIR$/chunkNMT/nmt.py" line="1079" mnemonic="8" />
+    <bookmark url="file://$PROJECT_DIR$/chunkNMT/nmt.py" line="1540" mnemonic="7" />
+    <bookmark url="file://$PROJECT_DIR$/chunkNMT/nmt.py" line="1663" mnemonic="9" />
+    <bookmark url="file://$PROJECT_DIR$/chunkNMT/nmt.py" line="1807" mnemonic="0" />
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1344b957-e1f7-4ece-9849-5b0fe816b362" name="Default" comment="">
@@ -34,8 +34,8 @@
       <file leaf-file-name="nmt.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/chunkNMT/nmt.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.69187146">
-              <caret line="688" column="31" selection-start-line="688" selection-start-column="31" selection-end-line="688" selection-end-column="31" />
+            <state vertical-scroll-proportion="0.6379962">
+              <caret line="1590" column="29" selection-start-line="1590" selection-start-column="29" selection-end-line="1590" selection-end-column="29" />
               <folding />
             </state>
           </provider>
@@ -148,6 +148,7 @@
       <sortByType />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
@@ -197,7 +198,6 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -883,17 +883,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="-0.36483932">
           <caret line="104" column="0" selection-start-line="104" selection-start-column="0" selection-end-line="104" selection-end-column="0" />
-          <folding>
-            <marker date="1481595278781" expanded="false" signature="-1:-1" placeholder="import ..." />
-            <marker date="1481595278781" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481595278781" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481595278781" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481595278781" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481595278781" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481595278781" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481595278781" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481595278781" expanded="true" signature="-1:-1" placeholder="..." />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -901,24 +891,14 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.2693762">
           <caret line="89" column="37" selection-start-line="89" selection-start-column="37" selection-end-line="89" selection-end-column="37" />
-          <folding>
-            <marker date="1481612391420" expanded="false" signature="-1:-1" placeholder="import ..." />
-            <marker date="1481612391420" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481612391420" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481612391420" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481612391420" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481612391420" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481612391420" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481612391420" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481612391420" expanded="true" signature="-1:-1" placeholder="..." />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/chunkNMT/nmt.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.69187146">
-          <caret line="688" column="31" selection-start-line="688" selection-start-column="31" selection-end-line="688" selection-end-column="31" />
+        <state vertical-scroll-proportion="0.6379962">
+          <caret line="1590" column="29" selection-start-line="1590" selection-start-column="29" selection-end-line="1590" selection-end-column="29" />
           <folding />
         </state>
       </provider>

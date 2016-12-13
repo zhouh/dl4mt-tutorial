@@ -633,8 +633,10 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
         # we set the chunk_hidden 0 here to make it better than others
         #
 
-        zeor_mask = tensor.alloc(0., chunk_hidden.shape[0],  chunk_hidden.shape[1])
-        chunk_hidden = zeor_mask * chunk_hidden
+        # zeor_mask = tensor.alloc(0., chunk_hidden.shape[0],  chunk_hidden.shape[1])
+        # chunk_hidden = zeor_mask * chunk_hidden
+
+        zero_chunk_hidden = chunk_hidden * 0
 
         preact1 = tensor.dot(h_, U)
         preact1 += x_
@@ -669,7 +671,7 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
 
         # attention
         pstate_ = tensor.dot(h1, W_comb_att)
-        pstate_chunk = tensor.dot(chunk_hidden, W_cu_chunk_att)
+        pstate_chunk = tensor.dot(zero_chunk_hidden, W_cu_chunk_att)
         pctx__ = pctx_ + pstate_[None, :, :] + pstate_chunk[None, :, :]
         #pctx__ += xc_
         pctx__ = tensor.tanh(pctx__)
@@ -682,7 +684,9 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
 
         alpha = alpha / alpha.sum(0, keepdims=True)
 
-        alpha = alpha * chunk_alpha.T
+        chunk_alpha = 0 * chunk_alpha
+        alpha = alpha + chunk_alpha.T
+
         ctx_ = (cc_ * alpha[:, :, None]).sum(0)  # current context
 
         chunk_ctx = 0 * chunk_ctx
@@ -1407,6 +1411,9 @@ def build_model(tparams, options):
     logit_ctx_using_chunk_hidden = get_layer('ff')[1](tparams, proj_h, options,
                                    prefix='ff_logit_using_chunk_hidden', activ='linear')
 
+
+    logit_ctx_using_chunk_hidden = logit_ctx_using_chunk_hidden * 0
+
     # reshape the chunk hidden outputs, which will be broadcasted in the following add operates
     logit_ctx_using_chunk_hidden = logit_ctx_using_chunk_hidden.reshape([logit_ctx_using_chunk_hidden.shape[0],
                                                                          1, logit_ctx_using_chunk_hidden.shape[1],
@@ -1583,6 +1590,8 @@ def build_sampler(tparams, options, trng, use_noise):
                                    prefix='ff_logit_ctx', activ='linear')
     logit_ctx_using_chunk_hidden = get_layer('ff')[1](tparams, current_chunk_hidden, options,
                                    prefix='ff_logit_using_chunk_hidden', activ='linear')
+
+    logit_ctx_using_chunk_hidden = logit_ctx_using_chunk_hidden * 0
 
     logit_cw = tensor.tanh(logit_lstm_cw+logit_prev_cw+logit_ctx_cw+logit_ctx_using_chunk_hidden)
 
