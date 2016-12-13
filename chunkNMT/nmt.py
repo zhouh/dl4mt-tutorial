@@ -682,14 +682,14 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
 
         alpha = alpha / alpha.sum(0, keepdims=True)
 
-        chunk_alpha = 0 * chunk_alpha
-        alpha = alpha + chunk_alpha.T
+        alpha = alpha * chunk_alpha.T
         ctx_ = (cc_ * alpha[:, :, None]).sum(0)  # current context
+
+        chunk_ctx = 0 * chunk_ctx
+        ctx_ = ctx_ + chunk_ctx
 
         # zeor_mask = tensor.alloc(0., ctx_.shape[0], ctx_.shape[1])
 
-        ctx_ = 0 * ctx_ + 1
-        ctx_ = ctx_ * chunk_ctx
 
         #
         # # x = tensor.matrix('temp_x', dtype='int64')

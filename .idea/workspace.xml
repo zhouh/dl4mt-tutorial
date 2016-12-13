@@ -9,7 +9,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1344b957-e1f7-4ece-9849-5b0fe816b362" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/chunkNMT/training_data_iterator.py" afterPath="$PROJECT_DIR$/chunkNMT/training_data_iterator.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/chunkNMT/nmt.py" afterPath="$PROJECT_DIR$/chunkNMT/nmt.py" />
     </list>
     <ignored path="dl4mt-tutorial.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -31,11 +31,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="training_data_iterator.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/HMS-chunk/training_data_iterator.py">
+      <file leaf-file-name="nmt.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/chunkNMT/nmt.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.31758034">
-              <caret line="109" column="33" selection-start-line="109" selection-start-column="33" selection-end-line="109" selection-end-column="33" />
+            <state vertical-scroll-proportion="0.69187146">
+              <caret line="688" column="31" selection-start-line="688" selection-start-column="31" selection-end-line="688" selection-end-column="31" />
               <folding />
             </state>
           </provider>
@@ -88,8 +88,8 @@
         <option value="$PROJECT_DIR$/HMS-chunk/training_data_iterator.py" />
         <option value="$PROJECT_DIR$/HMS-chunk/nmt.py" />
         <option value="$PROJECT_DIR$/chunkNMT/train_nmt_zh2en_pc.py" />
-        <option value="$PROJECT_DIR$/chunkNMT/nmt.py" />
         <option value="$PROJECT_DIR$/chunkNMT/training_data_iterator.py" />
+        <option value="$PROJECT_DIR$/chunkNMT/nmt.py" />
       </list>
     </option>
   </component>
@@ -192,20 +192,6 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="chunkNMT" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="dl4mt-tutorial" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="dl4mt-tutorial" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="HMS-chunk" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -893,62 +879,28 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/chunkNMT/nmt.py">
+    <entry file="file://$PROJECT_DIR$/HMS-chunk/training_data_iterator.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.44045368">
-          <caret line="689" column="0" selection-start-line="689" selection-start-column="0" selection-end-line="689" selection-end-column="0" />
+        <state vertical-scroll-proportion="-0.36483932">
+          <caret line="104" column="0" selection-start-line="104" selection-start-column="0" selection-end-line="104" selection-end-column="0" />
           <folding>
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-            <marker date="1481609720012" expanded="false" signature="-1:-1" placeholder="import ..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1481609720012" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481595278781" expanded="false" signature="-1:-1" placeholder="import ..." />
+            <marker date="1481595278781" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481595278781" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481595278781" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481595278781" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481595278781" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481595278781" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481595278781" expanded="true" signature="-1:-1" placeholder="..." />
+            <marker date="1481595278781" expanded="true" signature="-1:-1" placeholder="..." />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/chunkNMT/training_data_iterator.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.305293">
-          <caret line="191" column="19" selection-start-line="191" selection-start-column="19" selection-end-line="191" selection-end-column="19" />
+        <state vertical-scroll-proportion="0.2693762">
+          <caret line="89" column="37" selection-start-line="89" selection-start-column="37" selection-end-line="89" selection-end-column="37" />
           <folding>
             <marker date="1481612391420" expanded="false" signature="-1:-1" placeholder="import ..." />
             <marker date="1481612391420" expanded="true" signature="-1:-1" placeholder="..." />
@@ -963,10 +915,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/HMS-chunk/training_data_iterator.py">
+    <entry file="file://$PROJECT_DIR$/chunkNMT/nmt.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.31758034">
-          <caret line="109" column="33" selection-start-line="109" selection-start-column="33" selection-end-line="109" selection-end-column="33" />
+        <state vertical-scroll-proportion="0.69187146">
+          <caret line="688" column="31" selection-start-line="688" selection-start-column="31" selection-end-line="688" selection-end-column="31" />
           <folding />
         </state>
       </provider>
