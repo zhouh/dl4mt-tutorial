@@ -1640,10 +1640,6 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
 
     chunk_beam_word_hiddens = [next_state_word[0]] * chunk_live_k# next_state_word
 
-
-
-
-
     #
     # for max chunk iteration
     #
@@ -1709,13 +1705,16 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
         else:
 
             # get the best k candidates, by 0~vob, vob+1 ~ 2vob ...
-            chunk_cand_scores = chunk_beam_scores[:, None] - numpy.log(next_p_chunk)
-            chunk_cand_flat = chunk_cand_scores.flatten()
+            # chunk_cand_scores = chunk_beam_scores[:, None] - numpy.log(next_p_chunk)
+            chunk_cand_scores = chunk_beam_scores
+            # chunk_cand_flat = chunk_cand_scores.flatten()
+            chunk_cand_flat = chunk_cand_scores
             chunk_ranks_flat = chunk_cand_flat.argsort()[:(k_chunk-chunk_dead_k)]
 
             chunk_voc_size = next_p_chunk.shape[1] # next_p_chunk    shape0: sample size   shape1: chunk vocab size
-            chunk_trans_indices = chunk_ranks_flat / chunk_voc_size # index in the sample
-            chunk_indices = chunk_ranks_flat % chunk_voc_size
+            # chunk_trans_indices = chunk_ranks_flat / chunk_voc_size # index in the sample
+            chunk_trans_indices = [0] * (k_chunk - chunk_dead_k)
+            chunk_indices = chunk_ranks_flat
             chunk_costs = chunk_cand_flat[chunk_ranks_flat] # get all the probability
 
             new_chunk_hyp_samples = []
