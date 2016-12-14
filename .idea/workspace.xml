@@ -7,7 +7,7 @@
   <component name="ChangeListManager">
     <list default="true" id="c9d0d8be-ffe4-4cfa-9c71-411b5c586e10" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/HMS-chunk/nmt.py" afterPath="$PROJECT_DIR$/HMS-chunk/nmt.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/HMS-chunk/scp.sh" afterPath="$PROJECT_DIR$/HMS-chunk/scp.sh" />
     </list>
     <ignored path="dl4mt-tutorial.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -31,8 +31,8 @@
       <file leaf-file-name="nmt.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/HMS-chunk/nmt.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-1.6442022">
-              <caret line="707" column="22" selection-start-line="707" selection-start-column="22" selection-end-line="707" selection-end-column="22" />
+            <state vertical-scroll-proportion="0.18235877">
+              <caret line="717" column="43" selection-start-line="717" selection-start-column="43" selection-end-line="717" selection-end-column="43" />
               <folding />
             </state>
           </provider>
@@ -463,8 +463,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/HMS-chunk/nmt.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-1.6442022">
-          <caret line="707" column="22" selection-start-line="707" selection-start-column="22" selection-end-line="707" selection-end-column="22" />
+        <state vertical-scroll-proportion="0.18235877">
+          <caret line="717" column="43" selection-start-line="717" selection-start-column="43" selection-end-line="717" selection-end-column="43" />
           <folding />
         </state>
       </provider>
