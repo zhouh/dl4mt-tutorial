@@ -1222,8 +1222,8 @@ def build_model(tparams, options):
     logit_ctx_using_current_chunk_hidden = get_layer('ff')[1](tparams, chunk_hidden, options,
                                   prefix='ff_logit_using_chunk_hidden', activ='linear')
 
-    m = tensor.alloc(0., logit_ctx_using_current_chunk_hidden.shape[0], logit_ctx_using_current_chunk_hidden.shape[1], logit_ctx_using_current_chunk_hidden.shape[2])
-    logit_ctx_using_current_chunk_hidden = m * logit_ctx_using_current_chunk_hidden
+    # m = tensor.alloc(0., logit_ctx_using_current_chunk_hidden.shape[0], logit_ctx_using_current_chunk_hidden.shape[1], logit_ctx_using_current_chunk_hidden.shape[2])
+    # logit_ctx_using_current_chunk_hidden = m * logit_ctx_using_current_chunk_hidden
 
 
     logit_cw = tensor.tanh(logit_lstm_cw+logit_prev_cw+logit_ctx_cw+logit_ctx_using_current_chunk_hidden)
@@ -1408,8 +1408,6 @@ def build_sampler(tparams, options, trng, use_noise):
     #
     # begin to predict the word hidden2
     #
-
-
     chunk_boundary = tensor.vector('chunk_boundary', dtype='float32')
     current_chunk_hidden = tensor.matrix('current_chunk_hidden', dtype='float32')
     current_position_hypo_chunk_hidden = tensor.matrix('current_position_hypo_chunk_hidden', dtype='float32')
@@ -1460,8 +1458,8 @@ def build_sampler(tparams, options, trng, use_noise):
                                   prefix='ff_logit_using_chunk_hidden', activ='linear')
 
 
-    m = tensor.alloc(0., logit_ctx_using_current_chunk_hidden.shape[0], logit_ctx_using_current_chunk_hidden.shape[1])
-    logit_ctx_using_current_chunk_hidden = m * logit_ctx_using_current_chunk_hidden
+    # m = tensor.alloc(0., logit_ctx_using_current_chunk_hidden.shape[0], logit_ctx_using_current_chunk_hidden.shape[1])
+    # logit_ctx_using_current_chunk_hidden = m * logit_ctx_using_current_chunk_hidden
 
 
     logit_cw = tensor.tanh(logit_lstm_cw+logit_prev_cw+logit_ctx_cw+logit_ctx_using_current_chunk_hidden)
