@@ -1172,9 +1172,8 @@ def init_params(options):
 
     return params
 
-
 # build a training model
-def build_model(tparams, options):
+def build_model(tparams, options, jointProb=False):
     opt_ret = dict()
 
     trng = RandomStreams(1234)
@@ -1413,7 +1412,12 @@ def build_model(tparams, options):
     cost_cw = cost_cw.reshape([y_chunk_words.shape[0], y_chunk_words.shape[1], y_chunk_words.shape[2]])
     cost_cw = (cost_cw * y_chunk_words_mask).sum(1)
 
+
     cost = cost + cost_cw
+
+    if(jointProb == False):
+        cost = cost_cw
+
     cost = (cost * y_chunk_mask).sum(0)
 
     return trng, use_noise, x, x_mask, y_chunk, y_chunk_mask, y_chunk_words, \
