@@ -1986,9 +1986,13 @@ def pred_probs(f_log_probs, prepare_data, options, iterator, verbose=True):
     for x, y_chunk, y_cw in iterator:
         n_done += len(x)
 
+
         x, x_mask, y_c, y_mask_c, y_cw, y_mask_cw, last_word_in_chunk = prepare_data(x, y_chunk, y_cw,
                                             n_words_src=options['n_words_src'],
                                             n_words=options['n_words'])
+
+
+        token_size += y_cw
 
         pprobs = f_log_probs(x, x_mask, y_c, y_mask_c, y_cw, y_mask_cw, last_word_in_chunk)
         for pp in pprobs:

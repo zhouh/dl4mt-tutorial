@@ -23,7 +23,7 @@ def main(job_id, params):
                      patience=1000,
                      batch_size=32,
                      valid_batch_size=32,
-                     validFreq=10000,
+                     validFreq=1000,
                      dispFreq=10,
                      saveFreq=1000,
                      sampleFreq=100,

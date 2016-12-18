@@ -13,9 +13,8 @@ from nmt import (build_sampler, gen_sample, load_params,
 from multiprocessing import Process, Queue
 
 
-def main(model, pklmodel, dictionary, dictionary_target, source_file, saveto, ck=5, wk=5,k=5,
-         normalize=False, n_process=5, chr_level=False,jointProb=False):
-
+def main(model, pklmodel, dictionary, dictionary_target, source_file, saveto, ck=5, wk=5, k=5,
+         normalize=False, n_process=5, chr_level=False, jointProb=False, show_boundary=False):
     print 'load model model_options'
     with open('%s' % pklmodel, 'rb') as f:
         options = pkl.load(f)
@@ -39,11 +38,11 @@ def main(model, pklmodel, dictionary, dictionary_target, source_file, saveto, ck
     word_idict_trg[1] = 'UNK'
 
     # utility function
-    def _seqs2words(caps):
+    def _seqs2words(caps, boundary):
         capsw = []
-        for cc in caps:
+        for cc, bb in zip(caps, boundary):
             ww = []
-            for w in cc:
+            for w, b in zip(cc, bb):
                 if w == 0:
                     continue
                 # if w == -10000:
@@ -52,6 +51,10 @@ def main(model, pklmodel, dictionary, dictionary_target, source_file, saveto, ck
                 elif w < 0:
                     # ww.append('|' +  str(w))
                     continue
+
+                if show_boundary:
+                    if b == 1.0:
+                        ww.append('|')
                 ww.append(word_idict_trg[w])
             capsw.append(' '.join(ww))
         return capsw
@@ -69,7 +72,6 @@ def main(model, pklmodel, dictionary, dictionary_target, source_file, saveto, ck
                 x += [0]
                 retval.append(x)
         return retval
-
 
     print 'Translating ', source_file, '...'
 
@@ -90,16 +92,14 @@ def main(model, pklmodel, dictionary, dictionary_target, source_file, saveto, ck
     # word index
     f_init, f_next_chunk, f_next_word = build_sampler(tparams, options, trng, use_noise)
 
-
-
     def _translate(seq):
 
         be_stochastic = False
         # sample given an input sequence and obtain scores
-        sample, score = gen_sample(tparams, f_init, f_next_chunk, f_next_word,
-                                   numpy.array(seq).reshape([len(seq), 1]),
-                                   options, trng=trng, maxlen=200, k_chunk=ck, k_word=wk, k=k,
-               stochastic=be_stochastic, argmax=True, jointProb=False)
+        sample, boundary, score = gen_sample(tparams, f_init, f_next_chunk, f_next_word,
+                                             numpy.array(seq).reshape([len(seq), 1]),
+                                             options, trng=trng, maxlen=200, k_chunk=ck, k_word=wk, k=k,
+                                             stochastic=be_stochastic, argmax=True, jointProb=False)
 
         if be_stochastic:
             return sample
@@ -113,22 +113,25 @@ def main(model, pklmodel, dictionary, dictionary_target, source_file, saveto, ck
         # print 'candidates', sample
 
         sidx = numpy.argmin(score)
-        return sample[sidx]
-
+        return sample[sidx], boundary[sidx]
 
     ys = []
+    yb = []
     idx = 0
     for x in n_samples:
-
-        y = _translate(x)
+        y, y_boundary = _translate(x)
         ys.append(y)
+        yb.append(y_boundary)
         print idx
         idx += 1
 
-    trans = _seqs2words(ys)
+
+    # print ys
+    # print yb
+    trans = _seqs2words(ys, yb)
 
     with open(saveto, 'w') as f:
-        print >>f, '\n'.join(trans)
+        print >> f, '\n'.join(trans)
     print 'Done'
 
 
@@ -141,6 +144,7 @@ if __name__ == "__main__":
     parser.add_argument('-n', action="store_true", default=False)
     parser.add_argument('-jointProb', action="store_true", default=False)
     parser.add_argument('-c', action="store_true", default=False)
+    parser.add_argument('-show_boundary', action="store_true", default=False)
     parser.add_argument('model', type=str)
     parser.add_argument('pklmodel', type=str)
     parser.add_argument('dictionary', type=str)
@@ -152,4 +156,4 @@ if __name__ == "__main__":
 
     main(args.model, args.pklmodel, args.dictionary, args.dictionary_target, args.source,
          args.saveto, ck=args.ck, wk=args.wk, normalize=args.n, n_process=args.p,
-         chr_level=args.c, jointProb=args.jointProb)
+         chr_level=args.c, jointProb=args.jointProb, show_boundary=args.show_boundary)

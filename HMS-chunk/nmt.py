@@ -522,7 +522,7 @@ def param_init_gru_cond(options, params, prefix='gru_cond',
     return params
 
 
-def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
+def  gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
                    mask=None, chunk_boundary_indicator=None, context=None,
                    one_step=False, one_step_chunk=False, one_step_word=False,
                    init_state_chunk=None,init_state_chunk_words=None,
@@ -1060,7 +1060,7 @@ def init_params(options):
 
     params = get_layer('ff')[0](options, params, prefix='ff_logit_chunk',
                                 nin=options['dim_chunk'],
-                                nout=options['dim_chunk'],
+                                nout=options['n_chunks'],
                                 ortho=False)
 
 
@@ -1506,6 +1506,7 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
             'Beam search does not support stochastic sampling'
 
     sample = []
+    sample_boundary = []
     sample_score = []
     if stochastic:
         sample_score = 0
@@ -1514,6 +1515,7 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
     dead_k = 0
 
     hyp_samples = [[]] * live_k
+    hyp_sample_boundary = [[]] * live_k
     hyp_scores = numpy.zeros(live_k).astype('float32')
     hyp_states = []
     hyp_chunk_states = []
@@ -1544,10 +1546,13 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
 
 
         # get the chunk boundrary indocator
+
         next_chunk = next_chunk_p.argmax(1)
         chunk_boundary = numpy.zeros((next_chunk.shape[0],)).astype('float32')
 
+        # print 'next_chunk.shape[0] ', next_chunk.shape[0]
         for i in xrange(next_chunk.shape[0]):
+            # print i, next_chunk[i]
             if next_chunk[i] != 1:
                 chunk_boundary[i] = 1.0
 
@@ -1595,6 +1600,7 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
             costs = cand_flat[ranks_flat]
 
             new_hyp_samples = []
+            new_hyp_sample_boundary = []
             new_hyp_scores = numpy.zeros(k-dead_k).astype('float32')
             new_hyp_states = []
             new_hyp_chunk_states = []
@@ -1602,6 +1608,8 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
 
             for idx, [ti, wi] in enumerate(zip(trans_indices, word_indices)):
                 new_hyp_samples.append(hyp_samples[ti]+[wi])
+                new_hyp_sample_boundary.append(hyp_sample_boundary[ti] + [copy.copy(chunk_boundary[ti])])
+
                 new_hyp_scores[idx] = copy.copy(costs[idx])
                 new_hyp_states.append(copy.copy(next_state_word[ti]))
                 new_hyp_chunk_states.append(copy.copy(next_state_chunk[ti]))
@@ -1610,6 +1618,7 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
             # check the finished samples
             new_live_k = 0
             hyp_samples = []
+            hyp_sample_boundary = []
             hyp_scores = []
             hyp_states = []
             hyp_chunk_states = []
@@ -1618,11 +1627,13 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
             for idx in xrange(len(new_hyp_samples)):
                 if new_hyp_samples[idx][-1] == 0:
                     sample.append(new_hyp_samples[idx])
+                    sample_boundary.append(new_hyp_sample_boundary[idx])
                     sample_score.append(new_hyp_scores[idx])
                     dead_k += 1
                 else:
                     new_live_k += 1
                     hyp_samples.append(new_hyp_samples[idx])
+                    hyp_sample_boundary.append(new_hyp_sample_boundary[idx])
                     hyp_scores.append(new_hyp_scores[idx])
                     hyp_states.append(new_hyp_states[idx])
                     hyp_chunk_states.append(new_hyp_chunk_states[idx])
@@ -1646,19 +1657,26 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
         if live_k > 0:
             for idx in xrange(live_k):
                 sample.append(hyp_samples[idx])
+                sample_boundary.append(hyp_sample_boundary[idx])
                 sample_score.append(hyp_scores[idx])
 
-    return sample, sample_score
+    return sample, sample_boundary, sample_score
 
 
 # calculate the log probablities on a given corpus using translation model
 def pred_probs(f_log_probs, prepare_data, options, iterator, verbose=True):
     probs = []
 
+    token_size = 0
+
+
     n_done = 0
 
     for x, y_chunk, y_cw in iterator:
         n_done += len(x)
+
+        len_list = [ len(y_cw[a])+1 for a in range(len(y_cw)) ]
+        token_size += sum(len_list)
 
         x, x_mask, y_c, y_cw, chunk_indicator, y_mask = prepare_data(x, y_chunk, y_cw,
                                             n_words_src=options['n_words_src'],
