@@ -41,33 +41,6 @@ def getCost(tparams, options, model, valid):
     valid_errs = pred_probs(f_log_probs, prepare_training_data,
                                         options, valid)
     valid_err = valid_errs.mean()
-    # allocate model parameters
-    params = init_params(options)
-
-    # load model parameters and set theano shared variables
-    params = load_params(model, params)
-    tparams = init_tparams(params)
-
-
-    trng, use_noise, \
-    x, x_mask, y_chunk, y_chunk_mask, y_cw, y_cw_mask, lw_in_chunk, \
-    opt_ret, \
-    cost= \
-        build_model(tparams, options)
-
-
-    inps = [x, x_mask, y_chunk, y_chunk_mask, y_cw, y_cw_mask, lw_in_chunk]
-
-
-
-    # before any regularizer
-    print 'Building f_log_probs...',
-    f_log_probs = theano.function(inps, cost, profile=False)
-    print 'Done'
-
-    valid_errs = pred_probs(f_log_probs, prepare_training_data,
-                                        options, valid)
-    valid_err = valid_errs.mean()
 
     return valid_err
 
@@ -97,7 +70,7 @@ def main(model,
 
 
 
-    f = open(logfile, 'w')
+    logfile = open(logfile, 'w')
 
     best_bleu = -1
     best_bleu_iter = beginModelIter
@@ -134,6 +107,8 @@ def main(model,
 
     for iter in range(beginModelIter, 500000, 1000):
 
+        print iter
+
 
         model_file_name = model + '.iter' + str(iter) + '.npz'
 
@@ -155,9 +130,9 @@ def main(model,
 
         currentIterCost = -1 * getCost(tparams, options, model_file_name, valid)
 
-        print >> f, '==========================='
+        print >> logfile, '==========================='
 
-        print >> f, 'Iter ' + str(iter) + ', Cost' + str(-1 * currentIterCost)
+        print >> logfile, 'Iter ' + str(iter) + ', Cost' + str(-1 * currentIterCost)
 
 
         compute_bleu = False
@@ -173,7 +148,9 @@ def main(model,
 
         if compute_bleu:
             heapq.heappush(heap, currentIterCost)
-            print >> f, '###Compute BLEU at Iter '+str(iter)
+
+            print 'begin to compute BLEU'
+            print >> logfile, '###Compute BLEU at Iter '+str(iter)
 
 
 
@@ -181,7 +158,7 @@ def main(model,
 
             val_start_time = time.time()
 
-            print >>f, "Decoding took {} minutes".format(float(time.time() - val_start_time) / 60.)
+            print >>logfile, "Decoding took {} minutes".format(float(time.time() - val_start_time) / 60.)
 
             translate_file(options,
                            model_file_name,
@@ -206,15 +183,17 @@ def main(model,
 
             bleu_score = float(out.group()[13:])
 
-            print >>f, 'Iter '+str(iter) + 'BLEU: ' + str(bleu_score)
+            print >>logfile, 'Iter '+str(iter) + 'BLEU: ' + str(bleu_score)
 
             if bleu_score > best_bleu:
                 best_bleu = bleu_score
                 best_bleu_iter = iter
 
-            print >>f, '## Best BLEU: ' + str(best_bleu) + 'at Iter' + str(best_bleu_iter)
+            print >>logfile, '## Best BLEU: ' + str(best_bleu) + 'at Iter' + str(best_bleu_iter)
 
-            f.flush()
+            logfile.flush()
+
+        logfile.close()
 
 
 
