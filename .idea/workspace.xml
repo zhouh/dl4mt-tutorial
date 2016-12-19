@@ -30,17 +30,15 @@
     <favorites_list name="dl4mt-tutorial" />
   </component>
   <component name="FileEditorManager">
-    <splitter split-orientation="horizontal" split-proportion="0.6015625">
+    <splitter split-orientation="horizontal" split-proportion="0.47760418">
       <split-first>
         <leaf>
           <file leaf-file-name="validate.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/chunkNMT/validate.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state vertical-scroll-proportion="0.46932516">
-                  <caret line="72" column="32" selection-start-line="72" selection-start-column="32" selection-end-line="72" selection-end-column="32" />
-                  <folding>
-                    <element signature="e#60#75#0" expanded="true" />
-                  </folding>
+                <state vertical-scroll-proportion="0.6590684">
+                  <caret line="113" column="37" selection-start-line="113" selection-start-column="37" selection-end-line="113" selection-end-column="37" />
+                  <folding />
                 </state>
               </provider>
             </entry>
@@ -52,8 +50,8 @@
           <file leaf-file-name="translate_gpu.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/chunkNMT/translate_gpu.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state vertical-scroll-proportion="0.0">
-                  <caret line="16" column="99" selection-start-line="16" selection-start-column="99" selection-end-line="16" selection-end-column="99" />
+                <state vertical-scroll-proportion="0.52923685">
+                  <caret line="245" column="31" selection-start-line="245" selection-start-column="31" selection-end-line="245" selection-end-column="31" />
                   <folding />
                 </state>
               </provider>
@@ -111,6 +109,7 @@
         <option value="$PROJECT_DIR$/chunkNMT/nmt.py" />
         <option value="$PROJECT_DIR$/chunkNMT/compute_prob.py" />
         <option value="$PROJECT_DIR$/chunkNMT/translate_gpu.py" />
+        <option value="$PROJECT_DIR$/chunkNMT/computeCost.py" />
         <option value="$PROJECT_DIR$/chunkNMT/validate.py" />
       </list>
     </option>
@@ -125,9 +124,9 @@
     <order />
   </component>
   <component name="ProjectFrameBounds">
-    <option name="y" value="-4" />
+    <option name="y" value="24" />
     <option name="width" value="1920" />
-    <option name="height" value="1084" />
+    <option name="height" value="1056" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -467,7 +466,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="-4" width="1920" height="1084" extended-state="6" />
+    <frame x="0" y="24" width="1920" height="1056" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.13697916" sideWeight="0.5" order="4" side_tool="false" content_ui="combo" />
@@ -550,16 +549,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/do/gru_theano.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="110" column="13" selection-start-line="110" selection-start-column="13" selection-end-line="110" selection-end-column="13" />
-          <folding>
-            <element signature="e#0#18#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/session0/train.sh">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
@@ -910,21 +899,31 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/chunkNMT/computeCost.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-0.6967294">
+          <caret line="32" column="33" selection-start-line="32" selection-start-column="33" selection-end-line="32" selection-end-column="33" />
+          <folding>
+            <marker date="1482132072490" expanded="true" signature="-1:-1" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
+            <marker date="1482132072490" expanded="true" signature="-1:-1" placeholder="import ..." />
+            <marker date="1482132072490" expanded="true" signature="-1:-1" placeholder="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/chunkNMT/translate_gpu.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="16" column="99" selection-start-line="16" selection-start-column="99" selection-end-line="16" selection-end-column="99" />
+        <state vertical-scroll-proportion="0.52923685">
+          <caret line="245" column="31" selection-start-line="245" selection-start-column="31" selection-end-line="245" selection-end-column="31" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/chunkNMT/validate.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.46932516">
-          <caret line="72" column="32" selection-start-line="72" selection-start-column="32" selection-end-line="72" selection-end-column="32" />
-          <folding>
-            <element signature="e#60#75#0" expanded="true" />
-          </folding>
+        <state vertical-scroll-proportion="0.6590684">
+          <caret line="113" column="37" selection-start-line="113" selection-start-column="37" selection-end-line="113" selection-end-column="37" />
+          <folding />
         </state>
       </provider>
     </entry>
