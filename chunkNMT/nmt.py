@@ -464,10 +464,6 @@ def param_init_gru_cond(options, params, prefix='gru_cond',
     W_comb_att = norm_weight(dim, dimctx)
     params[_p(prefix, 'W_comb_att')] = W_comb_att
 
-    # attention: combined -> hidden
-    W_cu_chunk_att = norm_weight(dim_chunk_hidden, dimctx)
-    params[_p(prefix, 'W_cu_chunk_att')] = W_cu_chunk_att
-
     # attention: context -> hidden
     Wc_att = norm_weight(dimctx)
     params[_p(prefix, 'Wc_att')] = Wc_att
@@ -625,7 +621,7 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
     def _step_slice(m_, x_, xx_,
                     h_, ctx_, alpha_,
                     pctx_, cc_,
-                    W_current_chunk_hidden, W_current_chunk_c, U, Wc, W_comb_att, W_cu_chunk_att, U_att, c_tt, Ux, Wcx, U_nl, Ux_nl, b_nl, bx_nl, chunk_hidden):
+                    W_current_chunk_hidden, W_current_chunk_c, U, Wc, W_comb_att, U_att, c_tt, Ux, Wcx, U_nl, Ux_nl, b_nl, bx_nl, chunk_hidden):
 
 
         preact1 = tensor.dot(h_, U)
@@ -661,8 +657,7 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
 
         # attention
         pstate_ = tensor.dot(h1, W_comb_att)
-        pstate_chunk = tensor.dot(chunk_hidden, W_cu_chunk_att)
-        pctx__ = pctx_ + pstate_[None, :, :] + pstate_chunk[None, :, :]
+        pctx__ = pctx_ + pstate_[None, :, :]
         #pctx__ += xc_
         pctx__ = tensor.tanh(pctx__)
         alpha = tensor.dot(pctx__, U_att)+c_tt
@@ -806,7 +801,7 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
                           pctx_chunk, pctx_cw, cc,
                           chunk_transform_matrix, U_chunk, Wc_chunk, W_comb_att_chunk, U_att_chunk, c_tt_chunk,
                           Ux_chunk, Wcx_chunk, U_nl_chunk, Ux_nl_chunk, b_nl_chunk, bx_nl_chunk, Wx_chunk, bx_chunk, W_chunk, b_chunk,
-                          W_current_chunk_hidden, W_current_chunk_c, U, Wc, W_comb_att, W_cu_chunk_att,  U_att, c_tt, Ux, Wcx, U_nl, Ux_nl, b_nl, bx_nl):
+                          W_current_chunk_hidden, W_current_chunk_c, U, Wc, W_comb_att, U_att, c_tt, Ux, Wcx, U_nl, Ux_nl, b_nl, bx_nl):
 
         # projected x
 
@@ -890,7 +885,7 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
                                     outputs_info=[h_cw[-1],
                                                   ctx_cw[-1],
                                                   alpha_cw[-1]],
-                                    non_sequences=[pctx_cw, cc]+[W_current_chunk_hidden, W_current_chunk_c, U, Wc, W_comb_att, W_cu_chunk_att, U_att, c_tt, Ux, Wcx, U_nl, Ux_nl, b_nl, bx_nl, h2], # hidden of chunk should help word disambiguation
+                                    non_sequences=[pctx_cw, cc]+[W_current_chunk_hidden, W_current_chunk_c, U, Wc, W_comb_att, U_att, c_tt, Ux, Wcx, U_nl, Ux_nl, b_nl, bx_nl, h2], # hidden of chunk should help word disambiguation
                                     name=_p(prefix, '_layers'),
                                     n_steps=n_chunk_word_step,
                                     profile=profile,
@@ -914,7 +909,6 @@ def gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
            tparams[_p(prefix, 'U')],
            tparams[_p(prefix, 'Wc')],
            tparams[_p(prefix, 'W_comb_att')],
-           tparams[_p(prefix, 'W_cu_chunk_att')],
            tparams[_p(prefix, 'U_att')],
            tparams[_p(prefix, 'c_tt')],
            tparams[_p(prefix, 'Ux')],
@@ -1172,8 +1166,9 @@ def init_params(options):
 
     return params
 
+
 # build a training model
-def build_model(tparams, options, jointProb=False):
+def build_model(tparams, options):
     opt_ret = dict()
 
     trng = RandomStreams(1234)
@@ -1412,12 +1407,7 @@ def build_model(tparams, options, jointProb=False):
     cost_cw = cost_cw.reshape([y_chunk_words.shape[0], y_chunk_words.shape[1], y_chunk_words.shape[2]])
     cost_cw = (cost_cw * y_chunk_words_mask).sum(1)
 
-
     cost = cost + cost_cw
-
-    if(jointProb == False):
-        cost = cost_cw
-
     cost = (cost * y_chunk_mask).sum(0)
 
     return trng, use_noise, x, x_mask, y_chunk, y_chunk_mask, y_chunk_words, \
@@ -1644,6 +1634,10 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
 
     chunk_beam_word_hiddens = [next_state_word[0]] * chunk_live_k# next_state_word
 
+
+
+
+
     #
     # for max chunk iteration
     #
@@ -1709,16 +1703,13 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
         else:
 
             # get the best k candidates, by 0~vob, vob+1 ~ 2vob ...
-            # chunk_cand_scores = chunk_beam_scores[:, None] - numpy.log(next_p_chunk)
-            chunk_cand_scores = chunk_beam_scores
-            # chunk_cand_flat = chunk_cand_scores.flatten()
-            chunk_cand_flat = chunk_cand_scores
+            chunk_cand_scores = chunk_beam_scores[:, None] - numpy.log(next_p_chunk)
+            chunk_cand_flat = chunk_cand_scores.flatten()
             chunk_ranks_flat = chunk_cand_flat.argsort()[:(k_chunk-chunk_dead_k)]
 
             chunk_voc_size = next_p_chunk.shape[1] # next_p_chunk    shape0: sample size   shape1: chunk vocab size
-            # chunk_trans_indices = chunk_ranks_flat / chunk_voc_size # index in the sample
-            chunk_trans_indices = [0] * (k_chunk - chunk_dead_k)
-            chunk_indices = chunk_ranks_flat
+            chunk_trans_indices = chunk_ranks_flat / chunk_voc_size # index in the sample
+            chunk_indices = chunk_ranks_flat % chunk_voc_size
             chunk_costs = chunk_cand_flat[chunk_ranks_flat] # get all the probability
 
             new_chunk_hyp_samples = []
@@ -1776,7 +1767,11 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
                 word_dead_k = 0
 
                 hyp_word_sample = [chunk_beam_word_sample[ti]]
-                hyp_word_sample_score = numpy.array([new_chunk_hyp_scores[-1]])
+
+                # modify  the hyp_word_sample score, we make the score as 0 in the initial word prediction
+                # hyp_word_sample_score = numpy.array([new_chunk_hyp_scores[-1]])
+                hyp_word_sample_score = numpy.zeros(1).astype('float32')
+
                 hyp_word_sample_state = []
                 hyp_word_sample_chunk_index = []
 
@@ -1840,8 +1835,16 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
                     for idx_word, [ti_word, wi_word] in enumerate(zip(word_trans_indices, word_indices)):
 
                         if wi_word == 0:
+
                             complete_word_sample.append( hyp_word_sample[ti_word]+[wi_word] +  [-1 * wi] )
-                            complete_word_sample_score.append(copy.copy(word_costs[idx_word]))
+
+                            #
+                            # modify
+                            # normalize every word!
+                            score = copy.copy(word_costs[idx_word])  / (ii_word + 1)
+                            score = score + new_chunk_hyp_scores[-1]
+                            complete_word_sample_score.append(score)
+                            # complete_word_sample_score.append(copy.copy(word_costs[idx_word]))
                             complete_word_sample_state.append(copy.copy(ii_word_state[ti_word]))
                             complete_word_sample_chunk_index.append([new_chunk_hyp_index, ti])
 
@@ -1898,7 +1901,11 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
                     for remain_i in xrange(len(hyp_word_sample)):
 
                         complete_word_sample.append(hyp_word_sample[remain_i] + [0, -10000])
-                        complete_word_sample_score.append(hyp_word_sample_score[remain_i])
+
+                        score = hyp_word_sample_score[remain_i] / maxlen_words
+                        score = score + new_chunk_hyp_scores[-1]
+                        complete_word_sample_score.append(score)
+
                         complete_word_sample_state.append(hyp_word_sample_state[remain_i])
                         complete_word_sample_chunk_index.append(hyp_word_sample_chunk_index[remain_i])
 

@@ -93,7 +93,7 @@ def main(model,
     print valid_err
 
     with open(result_file, 'w') as result_file:
-        print >>result_file, valid_err
+        print >> result_file, valid_err
 
 
 

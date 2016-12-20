@@ -85,8 +85,19 @@ def translate_file(options, model, word_dict, word_idict_trg, source_file, savet
 
         # normalize scores according to sequence lengths
         if normalize:
-            lengths = numpy.array([len(s) for s in sample])
-            score = score / lengths
+
+            chunk_len = []
+            for sample_i in sample:
+
+                chunk_len_i = 0
+                for i in sample_i:
+                    if i < 0:
+                        chunk_len_i += 1
+                chunk_len.append(chunk_len_i)
+
+
+            chunk_len = numpy.array(chunk_len)
+            score = score / chunk_len
 
         # print 'score', score
         # print 'candidates', sample
@@ -150,6 +161,23 @@ def main(model, pklmodel, dictionary, dictionary_target, source_file, saveto, ck
                 elif w < 0:
                     # ww.append('|' +  str(w))
                     continue
+                ww.append(word_idict_trg[w])
+            capsw.append(' '.join(ww))
+        return capsw
+
+    # utility function
+    def _seqs2Chunkwords(caps):
+        capsw = []
+        for cc in caps:
+            ww = []
+            for w in cc:
+                if w == 0:
+                    continue
+                # if w == -10000:
+                #     ww.append('| NOTEND')
+                #     continue
+                elif w < 0:
+                    ww.append('|' +  str(w))
                 ww.append(word_idict_trg[w])
             capsw.append(' '.join(ww))
         return capsw
@@ -226,8 +254,16 @@ def main(model, pklmodel, dictionary, dictionary_target, source_file, saveto, ck
 
     trans = _seqs2words(ys)
 
+    chunk_trans = _seqs2Chunkwords(ys)
+
     with open(saveto, 'w') as f:
         print >>f, '\n'.join(trans)
+
+
+    with open(saveto+'.chunk', 'w') as f:
+        print >>f, '\n'.join(chunk_trans)
+
+
     print 'Done'
 
 

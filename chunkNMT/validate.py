@@ -12,6 +12,7 @@ import logging
 import time
 import subprocess
 import re
+import os
 
 from nmt import (build_model, pred_probs, load_params,
                  init_params, init_tparams, prepare_training_data)
@@ -22,9 +23,6 @@ from training_data_iterator import TrainingTextIterator
 def getBLEU():
 
     return 0
-
-
-
 
 
 
@@ -51,8 +49,10 @@ def main(model,
     best_bleu = -1
     best_bleu_iter = beginModelIter
 
-    heap = []
-    heapq.heapify(heap)
+    last_compute_bleu_iter = -1
+
+    cost_cache = []
+    cost_iter = []
 
     for iter in range(beginModelIter, 500000, 1000):
 
@@ -60,6 +60,9 @@ def main(model,
 
 
         model_file_name = model + '.iter' + str(iter) + '.npz'
+
+
+
 
 
         cmd_get_cost = ['python',
@@ -75,81 +78,97 @@ def main(model,
 
         subprocess.check_call(" ".join(cmd_get_cost), shell=True)
 
-        fin = open('./output.eva', 'rU')
+        fin = open('./cost.result', 'rU')
         out = fin.readline()
 
-        currentIterCost = float(out.strip()) * -1
+        currentIterCost = float(out.strip())
         fin.close()
 
 
         print >> logfile, '==========================='
 
-        print >> logfile, 'Iter ' + str(iter) + ', Cost' + str(-1 * currentIterCost)
+        print >> logfile, 'Iter ' + str(iter) + ', Cost ' + str(currentIterCost)
+
+        cost_cache.append(currentIterCost)
+        cost_iter.append(iter)
 
 
-        compute_bleu = False
-
-        if len(heap) < k_best_keep:
-            compute_bleu = True
-        else:
-            top_item = heap[0] # smallest in heap
-            if top_item < currentIterCost: # min heap
-                heapq.heappop(heap)
-                compute_bleu = True
-
-
-        if compute_bleu:
-            heapq.heappush(heap, currentIterCost)
-
-            print 'begin to compute BLEU'
-            print >> logfile, '###Compute BLEU at Iter '+str(iter)
-
-            output_iter = outputfile + str(iter)
-
-            val_start_time = time.time()
-
-            cmd_translate = ['python',
-                            'translate_gpu.py',
-                            model_file_name,
-                            pklmodel,
-                            dictionaries[0],
-                            dictionaries[1],
-                            valid_datasets[0],
-                            './output.eva']
-
-            subprocess.check_call(" ".join(cmd_translate), shell=True)
-
-
-            print >>logfile, "Decoding took {} minutes".format(float(time.time() - val_start_time) / 60.)
+        if iter % 50000 == 0 and iter != beginModelIter:
 
 
 
-            cmd_bleu_cmd = ['perl', bleu_scrip, \
-                            valid_datasets[2], \
-                            '<', \
-                            output_iter, \
-                            '>'
-                            './output.eva']
+            list = numpy.array(cost_cache)
+            toDecode = list.argsort()[:5]
 
-            subprocess.check_call(" ".join(cmd_bleu_cmd), shell=True)
+            for d in toDecode:
 
-            fin = open('./output.eva', 'rU')
-            out = re.search('BLEU = [-.0-9]+', fin.readlines()[0])
-            fin.close()
+                d_iter = cost_iter[d]
 
-            bleu_score = float(out.group()[7:])
+                decode_model_name = model + '.iter' + str(d_iter) + '.npz'
 
-            print >>logfile, 'Iter '+str(iter) + 'BLEU: ' + str(bleu_score)
+                print >> logfile, 'To Decode for Iter '+str(d_iter)
 
-            if bleu_score > best_bleu:
-                best_bleu = bleu_score
-                best_bleu_iter = iter
 
-            print >>logfile, '## Best BLEU: ' + str(best_bleu) + 'at Iter' + str(best_bleu_iter)
+                output_iter = outputfile + str(d_iter)
 
-            logfile.flush()
+                val_start_time = time.time()
 
-        logfile.close()
+                cmd_translate = ['python',
+                                 'translate_gpu.py',
+                                 '-n -ck 18 -wk 3',
+                                 decode_model_name,
+                                 pklmodel,
+                                 dictionaries[0],
+                                 dictionaries[1],
+                                 valid_datasets[0],
+                                 './output.eva']
+
+                subprocess.check_call(" ".join(cmd_translate), shell=True)
+
+
+                print >>logfile, "Decoding took {} minutes".format(float(time.time() - val_start_time) / 60.)
+
+
+
+                cmd_bleu_cmd = ['perl', bleu_scrip, \
+                                valid_datasets[2], \
+                                '<', \
+                                output_iter, \
+                                '>'
+                                './output.eva']
+
+                subprocess.check_call(" ".join(cmd_bleu_cmd), shell=True)
+
+                fin = open('./output.eva', 'rU')
+                out = re.search('BLEU = [-.0-9]+', fin.readlines()[0])
+                fin.close()
+
+                bleu_score = float(out.group()[7:])
+
+                print >>logfile, 'Iter '+str(d_iter) + 'BLEU: ' + str(bleu_score)
+
+                if bleu_score > best_bleu:
+                    best_bleu = bleu_score
+                    best_bleu_iter = d_iter
+
+                print >>logfile, '## Best BLEU: ' + str(best_bleu) + 'at Iter' + str(best_bleu_iter)
+
+                logfile.flush()
+
+
+
+            cost_cache = []
+            cost_iter = []
+
+            # decode the best five
+
+
+
+
+
+
+
+    logfile.close()
 
 
 
