@@ -1679,8 +1679,9 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
 
     for ii_chunk in xrange(maxlen_chunks):
 
-        # print '================================= chunk beam', ii_chunk
-        #
+
+        print '================================= chunk beam', ii_chunk
+
         # print chunk_beam_word_sample
 
 
@@ -1766,6 +1767,9 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
             new_chunk_hyp_index = -1
             for idx, [ti, wi] in enumerate(zip(chunk_trans_indices, chunk_indices)):
 
+                print 'idx', idx
+
+                print 'ti', ti
 
                 #============
                 # begin to sample the possible words for each chunk
@@ -1838,12 +1842,14 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
 
                     ctx = numpy.tile(ctx0, [word_live_k, 1])
 
-                    chunk_ctx = numpy.tile(chunk_ctx[ti], [word_live_k, 1])
-                    chunk_alpha = numpy.tile(chunk_alpha[ti], [word_live_k, 1])
+                    print 'chunk_ctx.shape', chunk_ctx.shape
+
+                    chunk_ctx4word = numpy.tile(chunk_ctx[ti], [word_live_k, 1])
+                    chunk_alpha4word = numpy.tile(chunk_alpha[ti], [word_live_k, 1])
 
                     chunk_hidden = numpy.tile(new_chunk_hyp_states[-1], [word_live_k, 1])
 
-                    inps = [last_word_in_chunk, current_next_word, ctx, ii_word_state, chunk_hidden, chunk_ctx, chunk_alpha]
+                    inps = [last_word_in_chunk, current_next_word, ctx, ii_word_state, chunk_hidden, chunk_ctx4word, chunk_alpha4word]
 
                     ret = f_next_word(*inps)
                     new_next_p_word_i, current_next_word, ii_word_state \
