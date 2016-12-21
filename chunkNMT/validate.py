@@ -121,7 +121,7 @@ def main(model,
                                  dictionaries[0],
                                  dictionaries[1],
                                  valid_datasets[0],
-                                 './output.eva']
+                                 'output_iter']
 
                 subprocess.check_call(" ".join(cmd_translate), shell=True)
 

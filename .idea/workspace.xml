@@ -9,9 +9,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1344b957-e1f7-4ece-9849-5b0fe816b362" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/chunkNMT/computeCost.py" afterPath="$PROJECT_DIR$/chunkNMT/computeCost.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/chunkNMT/nmt.py" afterPath="$PROJECT_DIR$/chunkNMT/nmt.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/chunkNMT/translate_gpu.py" afterPath="$PROJECT_DIR$/chunkNMT/translate_gpu.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/chunkNMT/validate.py" afterPath="$PROJECT_DIR$/chunkNMT/validate.py" />
     </list>
     <ignored path="dl4mt-tutorial.iws" />
@@ -37,8 +34,8 @@
       <file leaf-file-name="validate.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/chunkNMT/validate.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.38949454">
-              <caret line="117" column="43" selection-start-line="117" selection-start-column="43" selection-end-line="117" selection-end-column="43" />
+            <state vertical-scroll-proportion="0.71555996">
+              <caret line="123" column="34" selection-start-line="123" selection-start-column="34" selection-end-line="123" selection-end-column="34" />
               <folding />
             </state>
           </provider>
@@ -109,9 +106,9 @@
     <order />
   </component>
   <component name="ProjectFrameBounds">
-    <option name="y" value="24" />
+    <option name="y" value="-4" />
     <option name="width" value="1920" />
-    <option name="height" value="1056" />
+    <option name="height" value="1084" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -155,7 +152,6 @@
       <sortByType />
     </navigator>
     <panes>
-      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -205,6 +201,7 @@
         </subPane>
       </pane>
       <pane id="Scope" />
+      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -451,7 +448,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="24" width="1920" height="1056" extended-state="6" />
+    <frame x="0" y="-4" width="1920" height="1084" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.16822916" sideWeight="0.5" order="4" side_tool="false" content_ui="combo" />
@@ -851,7 +848,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.22001982">
           <caret line="24" column="8" selection-start-line="24" selection-start-column="8" selection-end-line="24" selection-end-column="8" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -866,10 +862,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.49067432">
           <caret line="24" column="35" selection-start-line="24" selection-start-column="35" selection-end-line="24" selection-end-column="35" />
-          <folding>
-            <marker date="1476773770919" expanded="false" signature="-1:-1" placeholder="import ..." />
-            <marker date="1476773770919" expanded="true" signature="-1:-1" placeholder="..." />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -877,10 +870,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.599713">
           <caret line="28" column="36" selection-start-line="28" selection-start-column="36" selection-end-line="28" selection-end-column="36" />
-          <folding>
-            <marker date="1478658328055" expanded="false" signature="-1:-1" placeholder="import ..." />
-            <marker date="1478658328055" expanded="true" signature="-1:-1" placeholder="..." />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -888,51 +878,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="1.7700694">
           <caret line="1979" column="34" selection-start-line="1979" selection-start-column="34" selection-end-line="1979" selection-end-column="34" />
-          <folding>
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-            <marker date="1482218408059" expanded="false" signature="-1:-1" placeholder="import ..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218408059" expanded="true" signature="-1:-1" placeholder="..." />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -940,19 +886,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.5272547">
           <caret line="244" column="0" selection-start-line="244" selection-start-column="0" selection-end-line="244" selection-end-column="0" />
-          <folding>
-            <marker date="1482218584619" expanded="true" signature="-1:-1" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-            <marker date="1482218584619" expanded="false" signature="-1:-1" placeholder="import ..." />
-            <marker date="1482218584619" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218584619" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218584619" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218584619" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218584619" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218584619" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218584619" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218584619" expanded="true" signature="-1:-1" placeholder="..." />
-            <marker date="1482218584619" expanded="true" signature="-1:-1" placeholder="..." />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -960,18 +894,13 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.48959365">
           <caret line="95" column="16" selection-start-line="95" selection-start-column="16" selection-end-line="95" selection-end-column="16" />
-          <folding>
-            <marker date="1482156254043" expanded="true" signature="-1:-1" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-            <marker date="1482156254043" expanded="false" signature="-1:-1" placeholder="import ..." />
-            <marker date="1482156254043" expanded="true" signature="-1:-1" placeholder="..." />
-          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/chunkNMT/validate.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.38949454">
-          <caret line="117" column="43" selection-start-line="117" selection-start-column="43" selection-end-line="117" selection-end-column="43" />
+        <state vertical-scroll-proportion="0.71555996">
+          <caret line="123" column="34" selection-start-line="123" selection-start-column="34" selection-end-line="123" selection-end-column="34" />
           <folding />
         </state>
       </provider>
