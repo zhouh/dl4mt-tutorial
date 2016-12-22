@@ -1285,6 +1285,8 @@ def build_model(tparams, options):
     cost = cost_boundary + cost_cw + cost_chunk
     cost = (cost * y_mask).sum(0)
 
+    cost_cw = (cost_cw * y_mask).sum(0)
+
     return trng, use_noise, x, x_mask, y_chunk, y_mask, y_chunk_words, chunk_indicator,\
            opt_ret, cost, cost_cw
 
@@ -2220,16 +2222,16 @@ def train(dim_word=100,  # word vector dimensionality
         zipp(best_p, tparams)
 
     use_noise.set_value(0.)
-    valid_err = pred_probs(f_log_probs, prepare_training_data,
-                           model_options, valid).mean()
+    valid_err, valid_errs_cw = pred_probs(f_log_probs, f_log_probs_cw, prepare_training_data,
+                           model_options, valid)
 
-    print 'Valid ', valid_err
+    print 'Valid ', valid_err.mean(), 'Valid word ', valid_errs_cw.mean()
 
     params = copy.copy(best_p)
-    numpy.savez(saveto, zipped_params=best_p,
-                history_errs=history_errs,
-                uidx=uidx,
-                **params)
+    params_cw = copy.copy(best_p_cw)
+
+    numpy.savez(saveto, history_errs=history_errs, history_errs_cw=history_errs_cw, uidx=uidx, **params)
+    numpy.savez(saveto+'.cw', history_errs=history_errs, history_errs_cw=history_errs_cw, uidx=uidx, **params_cw)
 
     return valid_err
 
