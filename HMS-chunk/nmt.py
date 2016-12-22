@@ -686,7 +686,7 @@ def  gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
         h2 = u2 * h1 + (1. - u2) * h2
         h2 = m_[:, None] * h2 + (1. - m_)[:, None] * h1
 
-        chunk_hidden2 = h2 * 0 + h1
+        chunk_hidden2 = h2
         chunk_ctx = ctx_
         chunk_alpha = alpha.T
 
@@ -715,7 +715,7 @@ def  gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
         #
         # zero
         #
-        pstate_chunk = tensor.dot(chunk_hidden, W_cu_chunk_att)
+        pstate_chunk = tensor.dot(zero_chunk_hidden, W_cu_chunk_att)
 
 
 

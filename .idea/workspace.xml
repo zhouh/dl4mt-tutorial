@@ -6,9 +6,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c9d0d8be-ffe4-4cfa-9c71-411b5c586e10" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/HMS-chunk/beam_decode.sh" afterPath="$PROJECT_DIR$/HMS-chunk/beam_decode.sh" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/HMS-chunk/nmt.py" afterPath="$PROJECT_DIR$/HMS-chunk/nmt.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/HMS-chunk/training_data_iterator.py" afterPath="$PROJECT_DIR$/HMS-chunk/training_data_iterator.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="dl4mt-tutorial.iws" />
@@ -33,8 +31,8 @@
       <file leaf-file-name="nmt.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/HMS-chunk/nmt.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.38657844">
-              <caret line="1607" column="22" selection-start-line="1607" selection-start-column="22" selection-end-line="1607" selection-end-column="22" />
+            <state vertical-scroll-proportion="0.5122873">
+              <caret line="1504" column="17" selection-start-line="1504" selection-start-column="17" selection-end-line="1504" selection-end-column="17" />
               <folding />
             </state>
           </provider>
@@ -518,8 +516,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/HMS-chunk/nmt.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.38657844">
-          <caret line="1607" column="22" selection-start-line="1607" selection-start-column="22" selection-end-line="1607" selection-end-column="22" />
+        <state vertical-scroll-proportion="0.5122873">
+          <caret line="1504" column="17" selection-start-line="1504" selection-start-column="17" selection-end-line="1504" selection-end-column="17" />
           <folding />
         </state>
       </provider>
