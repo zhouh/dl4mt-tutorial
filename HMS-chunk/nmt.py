@@ -167,7 +167,7 @@ def concatenate(tensor_list, axis=0):
 
 
 # batch preparation
-def prepare_training_data(seqs_x, seqs_y_c, seqs_y_cw, maxlen_chunk=None, maxlen_cw=None, n_words_src=30000,
+def prepare_training_data(seqs_x, seqs_y_c, seqs_y_cw,  maxlen_chunk=None, maxlen_cw=None, n_words_src=30000,
                  n_words=30000):
     # x: a list of sentences
     lengths_x = [len(s) for s in seqs_x]
@@ -1013,7 +1013,9 @@ def init_params(options):
                                               dim_chunk_hidden=options['dim_chunk_hidden'])
 
 
-    # readout
+    #
+    # used to predict the word
+    #
     params = get_layer('ff')[0](options, params, prefix='ff_logit_lstm',
                                 nin=options['dim'], nout=options['dim_word'],
                                 ortho=False)
@@ -1035,26 +1037,19 @@ def init_params(options):
 
     # readout
 
+    #
+    # used to predict the chunk label, and predict the end of sentence
+    #
     params = get_layer('ff')[0](options, params, prefix='ff_logit_lstm_chunk',
                                 nin=options['dim_chunk_hidden'], nout=options['dim_chunk'],
                                 ortho=False)
 
-    # we should note here, we use word dim
     params = get_layer('ff')[0](options, params, prefix='ff_logit_prev_chunk',
                                 nin=options['dim_chunk'],
                                 nout=options['dim_chunk'], ortho=False)
+
     params = get_layer('ff')[0](options, params, prefix='ff_logit_ctx_chunk',
                                 nin=ctxdim, nout=options['dim_chunk'],
-                                ortho=False)
-
-    params = get_layer('ff')[0](options, params, prefix='logit_ctx_last_word',
-                                nin=options['dim_word'],
-                                nout=options['dim_chunk'],
-                                ortho=False)
-
-    params = get_layer('ff')[0](options, params, prefix='logit_ctx_current_word_hidden1',
-                                nin=options['dim'],
-                                nout=options['dim_chunk'],
                                 ortho=False)
 
 
@@ -1062,6 +1057,30 @@ def init_params(options):
                                 nin=options['dim_chunk'],
                                 nout=options['n_chunks'],
                                 ortho=False)
+
+
+    #
+    # used for predict word boundary
+    #
+    # TODO hard coding
+    # we still use the dim_chunk as the hidden dim for boundary prediction here.
+    #
+    params = get_layer('ff')[0](options, params, prefix='ff_logit_ctx_last_word',
+                                nin=options['dim_word'],
+                                nout=options['dim_chunk'],
+                                ortho=False)
+
+    params = get_layer('ff')[0](options, params, prefix='ff_logit_ctx_current_word_hidden1',
+                                nin=options['dim'],
+                                nout=options['dim_chunk'],
+                                ortho=False)
+
+    params = get_layer('ff')[0](options, params, prefix='ff_logit_boundary',
+                                nin=options['dim_chunk'],
+                                nout=2,
+                                ortho=False)   # we set the boundary as hard code
+
+
 
 
     return params
@@ -1156,19 +1175,16 @@ def build_model(tparams, options):
                                                   context_mask=x_mask,
                                                   init_state_chunk=init_state_chunk,
                                                   init_state_chunk_words=init_state_chunk_words)
-    #
+
     opt_ret['dec_alphas_chunk'] = chunk_alpha
 
 
+
+    #
+    # predict the chunk label and end of the sentence
+    #
     logit_lstm_chunk = get_layer('ff')[1](tparams, current_position_hypo_chunk_hidden, options,
                                     prefix='ff_logit_lstm_chunk', activ='linear')
-
-    #
-    # revise
-    #
-    m = tensor.alloc(0., logit_lstm_chunk.shape[0], logit_lstm_chunk.shape[1], logit_lstm_chunk.shape[2])
-    logit_lstm_chunk = m * logit_lstm_chunk
-
 
     logit_prev_chunk = get_layer('ff')[1](tparams, last_chunk_emb, options,
                                     prefix='ff_logit_prev_chunk', activ='linear')
@@ -1177,20 +1193,9 @@ def build_model(tparams, options):
     logit_ctx_chunk = get_layer('ff')[1](tparams, chunk_ctx, options,
                                    prefix='ff_logit_ctx_chunk', activ='linear')
 
-    #
-    # revise
-    #
-    m = tensor.alloc(0., logit_ctx_chunk.shape[0], logit_ctx_chunk.shape[1], logit_ctx_chunk.shape[2])
-    logit_ctx_chunk = m * logit_ctx_chunk
-
-    logit_ctx_last_word = get_layer('ff')[1](tparams, emb, options,
-                                   prefix='logit_ctx_last_word', activ='linear')
-    logit_ctx_current_word_hidden1 = get_layer('ff')[1](tparams, word_hidden1, options,
-                                   prefix='logit_ctx_current_word_hidden1', activ='linear')
 
 
-
-    logit_chunk = tensor.tanh(logit_lstm_chunk+logit_prev_chunk+logit_ctx_chunk+logit_ctx_last_word+logit_ctx_current_word_hidden1)
+    logit_chunk = tensor.tanh(logit_lstm_chunk+logit_prev_chunk+logit_ctx_chunk)
 
     if options['use_dropout']:
         logit_chunk = dropout_layer(logit_chunk, use_noise, trng)
@@ -1203,8 +1208,39 @@ def build_model(tparams, options):
     # cost
     y_flat_chunk = y_chunk.flatten()
     y_flat_idx_chunk = tensor.arange(y_flat_chunk.shape[0]) * options['n_chunks'] + y_flat_chunk
-    cost = -tensor.log(probs_chunk.flatten()[y_flat_idx_chunk])
-    cost = cost.reshape([y_chunk.shape[0], y_chunk.shape[1]])
+    cost_chunk = -tensor.log(probs_chunk.flatten()[y_flat_idx_chunk])
+    cost_chunk = cost_chunk.reshape([y_chunk.shape[0], y_chunk.shape[1]])
+
+
+
+    #
+    # predict the word boundary
+    #
+    logit_ctx_last_word = get_layer('ff')[1](tparams, emb, options,
+                                   prefix='ff_logit_ctx_last_word', activ='linear')
+    logit_ctx_current_word_hidden1 = get_layer('ff')[1](tparams, word_hidden1, options,
+                                   prefix='ff_logit_ctx_current_word_hidden1', activ='linear')
+
+
+
+    logit_boundary = tensor.tanh(logit_ctx_last_word+logit_ctx_current_word_hidden1)
+
+    if options['use_dropout']:
+        logit_boundary = dropout_layer(logit_boundary, use_noise, trng)
+    logit_boundary = get_layer('ff')[1](tparams, logit_boundary, options,
+                               prefix='ff_logit_boundary', activ='linear')
+    logit_boundary_shp = logit_boundary.shape
+    probs_boundary = tensor.nnet.softmax(logit_boundary.reshape([logit_boundary_shp[0]*logit_boundary_shp[1],
+                                               logit_boundary_shp[2]]))
+
+    # cost
+    y_flat_chunk_indicator = chunk_indicator.flatten()
+    y_flat_chunk_indicator = tensor.cast(y_flat_chunk_indicator, 'int64')
+    y_flat_idx_chunk_indicator = tensor.arange(y_flat_chunk_indicator.shape[0]) * 2 + y_flat_chunk_indicator
+
+
+    cost_boundary = -tensor.log(probs_boundary.flatten()[y_flat_idx_chunk_indicator])
+    cost_boundary = cost_boundary.reshape([chunk_indicator.shape[0], chunk_indicator.shape[1]])
 
 
     # weights (alignment matrix)
@@ -1245,7 +1281,8 @@ def build_model(tparams, options):
     cost_cw = cost_cw.reshape([y_chunk_words.shape[0], y_chunk_words.shape[1]])
 
 
-    cost = cost + cost_cw
+    cost_chunk = cost_chunk * chunk_indicator
+    cost = cost_boundary + cost_cw + cost_chunk
     cost = (cost * y_mask).sum(0)
 
     return trng, use_noise, x, x_mask, y_chunk, y_mask, y_chunk_words, chunk_indicator,\
@@ -1301,7 +1338,7 @@ def build_sampler(tparams, options, trng, use_noise):
     #
 
     # TODO note that here the y_chunk and y_chunk_words are both vector, because it only conduct one steps!
-    # y_chunk = tensor.vector('y_sample_chunk', dtype='int64')
+    y_chunk = tensor.vector('y_sample_chunk', dtype='int64')
     y_chunk_words = tensor.vector('y_sample_chunk_words', dtype='int64')
 
     chunk_boundary = tensor.vector('chunk_boundary', dtype='float32')
@@ -1344,20 +1381,10 @@ def build_sampler(tparams, options, trng, use_noise):
 
 
     #
-    # get the chunk prediction
+    # predict the chunk label and end of the sentence
     #
-
     logit_lstm_chunk = get_layer('ff')[1](tparams, current_position_hypo_chunk_hidden, options,
                                     prefix='ff_logit_lstm_chunk', activ='linear')
-
-
-
-    #
-    # revise
-    #
-    m = tensor.alloc(0., logit_lstm_chunk.shape[0], logit_lstm_chunk.shape[1])
-    logit_lstm_chunk = m * logit_lstm_chunk
-
 
     logit_prev_chunk = get_layer('ff')[1](tparams, last_chunk_emb, options,
                                     prefix='ff_logit_prev_chunk', activ='linear')
@@ -1366,22 +1393,9 @@ def build_sampler(tparams, options, trng, use_noise):
     logit_ctx_chunk = get_layer('ff')[1](tparams, chunk_ctx, options,
                                    prefix='ff_logit_ctx_chunk', activ='linear')
 
-    #
-    # revise
-    #
-    m = tensor.alloc(0., logit_ctx_chunk.shape[0], logit_ctx_chunk.shape[1])
-    logit_ctx_chunk = m * logit_ctx_chunk
-
-    logit_ctx_last_word = get_layer('ff')[1](tparams, emb_chunk_word, options,
-                                   prefix='logit_ctx_last_word', activ='linear')
-
-    logit_ctx_current_word_hidden1 = get_layer('ff')[1](tparams, word_hidden1, options,
-                                   prefix='logit_ctx_current_word_hidden1', activ='linear')
 
 
-    logit_chunk = tensor.tanh(logit_lstm_chunk+logit_prev_chunk+logit_ctx_chunk+logit_ctx_last_word+logit_ctx_current_word_hidden1)
-
-
+    logit_chunk = tensor.tanh(logit_lstm_chunk+logit_prev_chunk+logit_ctx_chunk)
 
     if options['use_dropout']:
         logit_chunk = dropout_layer(logit_chunk, use_noise, trng)
@@ -1392,9 +1406,38 @@ def build_sampler(tparams, options, trng, use_noise):
     next_sample_chunk = trng.multinomial(pvals=probs_chunk).argmax(1)
 
 
+    #
+    # predict the word boundary
+    #
+    logit_ctx_last_word = get_layer('ff')[1](tparams, emb_chunk_word, options,
+                                   prefix='ff_logit_ctx_last_word', activ='linear')
+    logit_ctx_current_word_hidden1 = get_layer('ff')[1](tparams, word_hidden1, options,
+                                   prefix='ff_logit_ctx_current_word_hidden1', activ='linear')
+
+
+
+    logit_boundary = tensor.tanh(logit_ctx_last_word+logit_ctx_current_word_hidden1)
+
+    if options['use_dropout']:
+        logit_boundary = dropout_layer(logit_boundary, use_noise, trng)
+    logit_boundary = get_layer('ff')[1](tparams, logit_boundary, options,
+                               prefix='ff_logit_boundary', activ='linear')
+    probs_boundary = tensor.nnet.softmax(logit_boundary)
+
+    next_sample_boundary = trng.multinomial(pvals=probs_boundary).argmax(1)
+
+
+
+
     print 'Building f_next_chunk..'
     inps = [y_chunk_words, ctx, init_state_chunk, init_state_chunk_words, last_chunk_end_word_hidden1]
-    outs = [probs_chunk, next_sample_chunk, word_hidden1, current_position_hypo_chunk_hidden]
+    outs = [probs_chunk,
+            next_sample_chunk,
+            probs_boundary,
+            next_sample_boundary,
+            word_hidden1,
+            current_position_hypo_chunk_hidden]
+
     f_next_chunk = theano.function(inps, outs, name='f_next_chunk', profile=profile)
     print 'End Building f_next_chunk..'
 
@@ -1507,6 +1550,7 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
 
     sample = []
     sample_boundary = []
+    sample_chunk = []
     sample_score = []
     if stochastic:
         sample_score = 0
@@ -1516,6 +1560,7 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
 
     hyp_samples = [[]] * live_k
     hyp_sample_boundary = [[]] * live_k
+    hyp_sample_chunk = [[]] * live_k
     hyp_scores = numpy.zeros(live_k).astype('float32')
     hyp_states = []
     hyp_chunk_states = []
@@ -1541,20 +1586,18 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
                 next_state_chunk,
                 next_state_word,
                 last_chunk_last_word_hidden1]
+
+
         ret = f_next_chunk(*inps)
-        next_chunk_p, next_chunk, word_hidden1, hypo_chunk_hidden = ret[0], ret[1], ret[2], ret[3]
+        next_chunk_p, next_chunk, next_boudary_p, next_boundary, word_hidden1, hypo_chunk_hidden = \
+            ret[0], ret[1], ret[2], ret[3], ret[4], ret[5]
 
 
         # get the chunk boundrary indocator
 
         next_chunk = next_chunk_p.argmax(1)
-        chunk_boundary = numpy.zeros((next_chunk.shape[0],)).astype('float32')
 
-        # print 'next_chunk.shape[0] ', next_chunk.shape[0]
-        for i in xrange(next_chunk.shape[0]):
-            # print i, next_chunk[i]
-            if next_chunk[i] != 1:
-                chunk_boundary[i] = 1.0
+        chunk_boundary = next_boudary_p.argmax(1).astype('float32')
 
         inps = [next_w,
                 ctx,
@@ -1575,7 +1618,7 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
 
 
         if jointProb:
-            indicator_score = next_chunk_p.max(1)
+            indicator_score = next_boudary_p.max(1)
             indicator_score = indicator_score.reshape(indicator_score.shape[0], 1)
             next_word_p = indicator_score * next_word_p
 
@@ -1601,6 +1644,7 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
 
             new_hyp_samples = []
             new_hyp_sample_boundary = []
+            new_hyp_sample_chunk = []
             new_hyp_scores = numpy.zeros(k-dead_k).astype('float32')
             new_hyp_states = []
             new_hyp_chunk_states = []
@@ -1609,6 +1653,7 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
             for idx, [ti, wi] in enumerate(zip(trans_indices, word_indices)):
                 new_hyp_samples.append(hyp_samples[ti]+[wi])
                 new_hyp_sample_boundary.append(hyp_sample_boundary[ti] + [copy.copy(chunk_boundary[ti])])
+                new_hyp_sample_chunk.append(hyp_sample_chunk[ti] + [copy.copy(next_chunk[ti])])
 
                 new_hyp_scores[idx] = copy.copy(costs[idx])
                 new_hyp_states.append(copy.copy(next_state_word[ti]))
@@ -1619,21 +1664,26 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
             new_live_k = 0
             hyp_samples = []
             hyp_sample_boundary = []
+            hyp_sample_chunk = []
             hyp_scores = []
             hyp_states = []
             hyp_chunk_states = []
             hyp_last_chunk_last_word_hidden1 = []
 
             for idx in xrange(len(new_hyp_samples)):
-                if new_hyp_samples[idx][-1] == 0:
-                    sample.append(new_hyp_samples[idx])
+                if new_hyp_samples[idx][-1] == 0 \
+                        or \
+                        (new_hyp_sample_boundary[idx][-1] == 1.0 and  new_hyp_sample_chunk[idx][-1] == 0):
+                    sample.append(new_hyp_samples[idx][0:-2])
                     sample_boundary.append(new_hyp_sample_boundary[idx])
+                    sample_chunk.append(new_hyp_sample_chunk[idx])
                     sample_score.append(new_hyp_scores[idx])
                     dead_k += 1
                 else:
                     new_live_k += 1
                     hyp_samples.append(new_hyp_samples[idx])
                     hyp_sample_boundary.append(new_hyp_sample_boundary[idx])
+                    hyp_sample_chunk.append(new_hyp_sample_chunk[idx])
                     hyp_scores.append(new_hyp_scores[idx])
                     hyp_states.append(new_hyp_states[idx])
                     hyp_chunk_states.append(new_hyp_chunk_states[idx])
@@ -1658,14 +1708,16 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
             for idx in xrange(live_k):
                 sample.append(hyp_samples[idx])
                 sample_boundary.append(hyp_sample_boundary[idx])
+                sample_chunk.append(hyp_sample_chunk[idx])
                 sample_score.append(hyp_scores[idx])
 
     return sample, sample_boundary, sample_score
 
 
 # calculate the log probablities on a given corpus using translation model
-def pred_probs(f_log_probs, prepare_data, options, iterator, verbose=True):
+def pred_probs(f_log_probs, f_log_probs_cw, prepare_data, options, iterator, verbose=True):
     probs = []
+    probs_cw = []
 
     token_size = 0
 
@@ -1683,16 +1735,19 @@ def pred_probs(f_log_probs, prepare_data, options, iterator, verbose=True):
                                             n_words=options['n_words'])
 
         pprobs = f_log_probs(x, x_mask, y_c, y_mask, y_cw, chunk_indicator)
+        pprobs_cw = f_log_probs_cw(x, x_mask, y_c, y_mask, y_cw, chunk_indicator)
         for pp in pprobs:
             probs.append(pp)
+        for pp in pprobs_cw:
+            probs_cw.append(pp)
 
-        if numpy.isnan(numpy.mean(probs)):
+        if numpy.isnan(numpy.mean(probs)) or numpy.isnan(numpy.mean(probs_cw)):
             ipdb.set_trace()
 
         if verbose:
             print >>sys.stderr, '%d samples computed' % (n_done)
 
-    return numpy.array(probs)
+    return numpy.array(probs), numpy.array(probs_cw)
 
 
 # optimizers
@@ -1858,7 +1913,7 @@ def train(dim_word=100,  # word vector dimensionality
     #
     # we only predict boundrary
     #
-    model_options['n_chunks'] = 2
+    model_options['n_chunks'] = len(worddict_chunk)
 
 
     print 'chunk_dict size: ', model_options['n_chunks']
@@ -1914,6 +1969,7 @@ def train(dim_word=100,  # word vector dimensionality
     # before any regularizer
     print 'Building f_log_probs...',
     f_log_probs = theano.function(inps, cost, profile=profile)
+    f_log_probs_cw = theano.function(inps, cost_cw, profile=profile)
     print 'Done'
 
     cost = cost.mean()
@@ -1968,14 +2024,18 @@ def train(dim_word=100,  # word vector dimensionality
     print 'Optimization'
 
     best_p = None
+    best_p_cw = None
     bad_counter = 0
+    bad_counter_cw = 0
     uidx = 0
     estop = False
     history_errs = []
+    history_errs_cw = []
     # reload history
     if reload_ and os.path.exists(saveto):
         rmodel = numpy.load(saveto)
         history_errs = list(rmodel['history_errs'])
+        history_errs_cw = list(rmodel['history_errs_cw'])
         if 'uidx' in rmodel:
             uidx = rmodel['uidx']
 
@@ -1996,9 +2056,14 @@ def train(dim_word=100,  # word vector dimensionality
             uidx += 1
             use_noise.set_value(1.)
 
-            x, x_mask, y_c, y_cw, chunk_indicator, y_mask = prepare_training_data(x, y_chunk, y_cw, maxlen_chunk=maxlen_chunk, maxlen_cw=maxlen_chunk_words,
-                                                                              n_words_src=n_words_src,
-                                                                              n_words=n_words)
+            x, x_mask, y_c, y_cw, chunk_indicator, y_mask = \
+                prepare_training_data(x,
+                                      y_chunk,
+                                      y_cw,
+                                      maxlen_chunk=maxlen_chunk,
+                                      maxlen_cw=maxlen_chunk_words,
+                                      n_words_src=n_words_src,
+                                      n_words=n_words)
 
             if x is None:
                 print 'Minibatch with zero sample under chunk length ', maxlen_chunk, 'word length: ', maxlen_chunk_words
@@ -2037,7 +2102,12 @@ def train(dim_word=100,  # word vector dimensionality
                     params = best_p
                 else:
                     params = unzip(tparams)
-                numpy.savez(saveto, history_errs=history_errs, uidx=uidx, **params)
+                if best_p_cw is not None:
+                    params_cw = best_p_cw
+                else:
+                    params_cw = unzip(tparams)
+                numpy.savez(saveto, history_errs=history_errs, history_errs_cw=history_errs_cw, uidx=uidx, **params)
+                numpy.savez(saveto+'.cw', history_errs=history_errs, history_errs_cw=history_errs_cw, uidx=uidx, **params_cw)
                 pkl.dump(model_options, open('%s.pkl' % saveto, 'wb'))
                 print 'Done'
 
@@ -2046,7 +2116,7 @@ def train(dim_word=100,  # word vector dimensionality
                     print 'Saving the model at iteration {}...'.format(uidx),
                     saveto_uidx = '{}.iter{}.npz'.format(
                         os.path.splitext(saveto)[0], uidx)
-                    numpy.savez(saveto_uidx, history_errs=history_errs,
+                    numpy.savez(saveto_uidx, history_errs=history_errs,history_errs_cw=history_errs_cw,
                                 uidx=uidx, **unzip(tparams))
                     print 'Done'
 
@@ -2056,7 +2126,7 @@ def train(dim_word=100,  # word vector dimensionality
                 # FIXME: random selection?
                 for jj in xrange(numpy.minimum(5, x.shape[1])):
                     stochastic = True
-                    sample, score = gen_sample(tparams, f_init, f_next_chunk, f_next_word,
+                    sample, sample_boundary, score = gen_sample(tparams, f_init, f_next_chunk, f_next_word,
                                                x[:, jj][:, None],
                                                model_options, trng=trng, k=1,
                                                stochastic=stochastic,
@@ -2108,14 +2178,19 @@ def train(dim_word=100,  # word vector dimensionality
             # validate model on validation set and early stop if necessary
             if numpy.mod(uidx, validFreq) == 0:
                 use_noise.set_value(0.)
-                valid_errs = pred_probs(f_log_probs, prepare_training_data,
-                                        model_options, valid)
+                valid_errs, valid_errs_cw = pred_probs(f_log_probs, f_log_probs_cw, prepare_training_data,
+                                            model_options, valid)
                 valid_err = valid_errs.mean()
+                valid_err_cw = valid_errs_cw.mean()
                 history_errs.append(valid_err)
+                history_errs_cw.append(valid_err_cw)
 
                 if uidx == 0 or valid_err <= numpy.array(history_errs).min():
                     best_p = unzip(tparams)
                     bad_counter = 0
+                if uidx == 0 or valid_err_cw <= numpy.array(history_errs_cw).min():
+                    best_p = unzip(tparams)
+                    bad_counter_cw = 0
                 if len(history_errs) > patience and valid_err >= \
                         numpy.array(history_errs)[:-patience].min():
                     bad_counter += 1
@@ -2128,6 +2203,7 @@ def train(dim_word=100,  # word vector dimensionality
                     ipdb.set_trace()
 
                 print 'Valid ', valid_err
+                print 'Word Valid', valid_err_cw
 
             # finish after this many updates
             if uidx >= finish_after:
