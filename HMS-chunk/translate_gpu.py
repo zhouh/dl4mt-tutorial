@@ -73,9 +73,8 @@ def main(model, pklmodel, dictionary, dictionary_target, source_file, saveto, ck
                     # ww.append('|' +  str(w))
                     continue
 
-                if show_boundary:
-                    if b == 1.0:
-                        ww.append('| ' + str(c))
+                if b == 1.0:
+                    ww.append('| ' + str(c))
                 ww.append(word_idict_trg[w])
             capsw.append(' '.join(ww))
         return capsw

@@ -744,7 +744,7 @@ def  gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
         #
         # zero
         #
-        preact2 += tensor.dot(ctx_, Wc) + tensor.dot(zero_chunk_hidden, W_current_chunk_c)
+        preact2 += tensor.dot(ctx_, Wc) + tensor.dot(chunk_hidden, W_current_chunk_c)
         # preact2 += tensor.dot(ctx_, Wc)
         preact2 = tensor.nnet.sigmoid(preact2)
 
