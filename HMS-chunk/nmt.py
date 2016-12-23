@@ -527,7 +527,7 @@ def  gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
                    one_step=False, one_step_chunk=False, one_step_word=False,
                    init_state_chunk=None,init_state_chunk_words=None,
                    current_chunk_hidden=None,last_chunk_end_word_hidden1=None, current_word_hidden1=None,
-                   context_mask=None, **kwargs):
+                   chunk_context=None, context_mask=None, **kwargs):
 
 
     assert context, 'Context must be provided'
@@ -700,7 +700,7 @@ def  gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
     # word hidden2
     #
     def predict_word_hidden2(m_, word_hidden1, chunk_hidden,
-                             pctx_, cc_,
+                             pctx_, cc_, chunk_ctx,
                              W_current_chunk_hidden, W_current_chunk_c, U, Wc, W_comb_att,
                              W_cu_chunk_att, U_att, c_tt, Ux, Wcx, U_nl, Ux_nl, b_nl, bx_nl):
 
@@ -730,8 +730,12 @@ def  gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
         alpha = tensor.exp(alpha)
         if context_mask:
             alpha = alpha * context_mask
+
         alpha = alpha / alpha.sum(0, keepdims=True)
+        alpha = 0 * alpha
         ctx_ = (cc_ * alpha[:, :, None]).sum(0)  # current context
+
+        ctx_ = ctx_ + chunk_ctx
 
 
 
@@ -744,7 +748,7 @@ def  gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
         #
         # zero
         #
-        preact2 += tensor.dot(ctx_, Wc) + tensor.dot(chunk_hidden, W_current_chunk_c)
+        preact2 += tensor.dot(ctx_, Wc) + tensor.dot(zero_chunk_hidden, W_current_chunk_c)
         # preact2 += tensor.dot(ctx_, Wc)
         preact2 = tensor.nnet.sigmoid(preact2)
 
@@ -815,7 +819,7 @@ def  gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
         word_hidden2, \
         word_ctx_, \
         word_alpha = predict_word_hidden2(m_, word_hidden1, chunk_hidden,
-                                          pctx_cw, cc,
+                                          pctx_cw, cc, chunk_ctx,
                                           W_current_chunk_hidden, W_current_chunk_c, U, Wc, W_comb_att,
                                           W_cu_chunk_att, U_att, c_tt, Ux, Wcx, U_nl, Ux_nl, b_nl, bx_nl)
 
@@ -890,7 +894,7 @@ def  gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
                 tparams[_p(prefix, 'b_att')]
 
         seqs = [mask, current_word_hidden1, current_chunk_hidden,
-                pctx_, context]
+                pctx_, context, chunk_context]
 
         rval = predict_word_hidden2(*(seqs + word_shared_vars ))
         return rval[0], rval[1], rval[2], None, None, None, None, None, None, None
@@ -1438,7 +1442,8 @@ def build_sampler(tparams, options, trng, use_noise):
             probs_boundary,
             next_sample_boundary,
             word_hidden1,
-            current_position_hypo_chunk_hidden]
+            current_position_hypo_chunk_hidden,
+            chunk_ctx]
 
     f_next_chunk = theano.function(inps, outs, name='f_next_chunk', profile=profile)
     print 'End Building f_next_chunk..'
@@ -1482,7 +1487,8 @@ def build_sampler(tparams, options, trng, use_noise):
                                                             one_step_word=True,
                                                             one_step_chunk=False,
                                                             current_chunk_hidden=chunk_hidden,
-                                                            current_word_hidden1=word_hidden1)
+                                                            current_word_hidden1=word_hidden1,
+                                                            chunk_context=chunk_ctx)
 
 
     word_hidden2 = retval_predict_chunk[0]
@@ -1525,6 +1531,7 @@ def build_sampler(tparams, options, trng, use_noise):
     print 'Building f_next_word..'
     inps = [y_chunk_words,
             ctx,
+            chunk_ctx,
             chunk_boundary,
             current_chunk_hidden,
             current_position_hypo_chunk_hidden,
@@ -1591,8 +1598,8 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
 
 
         ret = f_next_chunk(*inps)
-        next_chunk_p, next_chunk, next_boudary_p, next_boundary, word_hidden1, hypo_chunk_hidden = \
-            ret[0], ret[1], ret[2], ret[3], ret[4], ret[5]
+        next_chunk_p, next_chunk, next_boudary_p, next_boundary, word_hidden1, hypo_chunk_hidden, chunk_ctx = \
+            ret[0], ret[1], ret[2], ret[3], ret[4], ret[5], ret[6]
 
 
         # get the chunk boundrary indocator
@@ -1603,6 +1610,7 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
 
         inps = [next_w,
                 ctx,
+                chunk_ctx,
                 chunk_boundary,
                 next_state_chunk,
                 hypo_chunk_hidden,
