@@ -38,11 +38,11 @@ def main(model, pklmodel, dictionary, dictionary_target, source_file, saveto, ck
     word_idict_trg[1] = 'UNK'
 
     # utility function
-    def _seqs2words(caps, boundary):
+    def _seqs2words(caps, boundary, chunk):
         capsw = []
-        for cc, bb in zip(caps, boundary):
+        for cc, bb, ch in zip(caps, boundary, chunk):
             ww = []
-            for w, b in zip(cc, bb):
+            for w, b, c in zip(cc, bb, ch):
                 if w == 0:
                     continue
                 # if w == -10000:
@@ -55,6 +55,27 @@ def main(model, pklmodel, dictionary, dictionary_target, source_file, saveto, ck
                 if show_boundary:
                     if b == 1.0:
                         ww.append('|')
+                ww.append(word_idict_trg[w])
+            capsw.append(' '.join(ww))
+        return capsw
+
+    def _seqs2wordsByChunk(caps, boundary, chunk):
+        capsw = []
+        for cc, bb, ch in zip(caps, boundary, chunk):
+            ww = []
+            for w, b, c in zip(cc, bb, ch):
+                if w == 0:
+                    continue
+                # if w == -10000:
+                #     ww.append('| NOTEND')
+                #     continue
+                elif w < 0:
+                    # ww.append('|' +  str(w))
+                    continue
+
+                if show_boundary:
+                    if b == 1.0:
+                        ww.append('| ' + str(c))
                 ww.append(word_idict_trg[w])
             capsw.append(' '.join(ww))
         return capsw
@@ -96,7 +117,7 @@ def main(model, pklmodel, dictionary, dictionary_target, source_file, saveto, ck
 
         be_stochastic = False
         # sample given an input sequence and obtain scores
-        sample, boundary, score = gen_sample(tparams, f_init, f_next_chunk, f_next_word,
+        sample, boundary, chunk, score = gen_sample(tparams, f_init, f_next_chunk, f_next_word,
                                              numpy.array(seq).reshape([len(seq), 1]),
                                              options, trng=trng, maxlen=200, k_chunk=ck, k_word=wk, k=k,
                                              stochastic=be_stochastic, argmax=True, jointProb=False)
@@ -113,25 +134,32 @@ def main(model, pklmodel, dictionary, dictionary_target, source_file, saveto, ck
         # print 'candidates', sample
 
         sidx = numpy.argmin(score)
-        return sample[sidx], boundary[sidx]
+        return sample[sidx], boundary[sidx], chunk[sidx]
+
+
 
     ys = []
     yb = []
+    yc = []
     idx = 0
     for x in n_samples:
-        y, y_boundary = _translate(x)
+        y, y_boundary, y_chunk = _translate(x)
         ys.append(y)
         yb.append(y_boundary)
+        yc.append(y_chunk)
         print idx
         idx += 1
 
 
     # print ys
     # print yb
-    trans = _seqs2words(ys, yb)
+    trans = _seqs2words(ys, yb, yc)
+    trans_chunk = _seqs2wordsByChunk(ys, yb, yc)
 
     with open(saveto, 'w') as f:
         print >> f, '\n'.join(trans)
+    with open(saveto+'chunk', 'w') as f:
+        print >> f, '\n'.join(trans_chunk)
     print 'Done'
 
 

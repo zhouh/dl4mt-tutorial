@@ -1628,11 +1628,15 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
         if stochastic:
             if argmax:
                 nw = next_word_p[0].argmax()
+                nc = next_chunk[0]
+                nb = chunk_boundary[0]
             else:
                 nw = next_w[0]
+                nc = next_chunk[0]
+                nb = next_boundary[0]
             sample.append(nw)
             sample_score -= numpy.log(next_word_p[0, nw])
-            if nw == 0:
+            if nw == 0 or (nc == 0 and nb == 1.0):
                 break
         else:
             cand_scores = hyp_scores[:, None] - numpy.log(next_word_p)
@@ -1713,11 +1717,11 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
                 sample_chunk.append(hyp_sample_chunk[idx])
                 sample_score.append(hyp_scores[idx])
 
-    return sample, sample_boundary, sample_score
+    return sample, sample_boundary, sample_chunk, sample_score
 
 
 # calculate the log probablities on a given corpus using translation model
-def pred_probs(f_log_probs, f_log_probs_cw, prepare_data, options, iterator, verbose=True):
+def pred_probs(f_log_probs, f_log_probs_cw, prepare_data, options, iterator, verbose=False):
     probs = []
     probs_cw = []
 
@@ -2128,7 +2132,7 @@ def train(dim_word=100,  # word vector dimensionality
                 # FIXME: random selection?
                 for jj in xrange(numpy.minimum(5, x.shape[1])):
                     stochastic = True
-                    sample, sample_boundary, score = gen_sample(tparams, f_init, f_next_chunk, f_next_word,
+                    sample, sample_boundary, sanple_chunk, score = gen_sample(tparams, f_init, f_next_chunk, f_next_word,
                                                x[:, jj][:, None],
                                                model_options, trng=trng, k=1,
                                                stochastic=stochastic,
@@ -2179,6 +2183,9 @@ def train(dim_word=100,  # word vector dimensionality
 
             # validate model on validation set and early stop if necessary
             if numpy.mod(uidx, validFreq) == 0:
+
+                print '### ' + str(uidx) + ' Valid ###'
+
                 use_noise.set_value(0.)
                 valid_errs, valid_errs_cw = pred_probs(f_log_probs, f_log_probs_cw, prepare_training_data,
                                             model_options, valid)
@@ -2204,7 +2211,7 @@ def train(dim_word=100,  # word vector dimensionality
                 if numpy.isnan(valid_err):
                     ipdb.set_trace()
 
-                print 'Valid ', valid_err
+                print 'Valid', valid_err
                 print 'Word Valid', valid_err_cw
 
             # finish after this many updates
@@ -2225,7 +2232,7 @@ def train(dim_word=100,  # word vector dimensionality
     valid_err, valid_errs_cw = pred_probs(f_log_probs, f_log_probs_cw, prepare_training_data,
                            model_options, valid)
 
-    print 'Valid ', valid_err.mean(), 'Valid word ', valid_errs_cw.mean()
+    print 'Valid', valid_err.mean(), 'ValidWord', valid_errs_cw.mean()
 
     params = copy.copy(best_p)
     params_cw = copy.copy(best_p_cw)
