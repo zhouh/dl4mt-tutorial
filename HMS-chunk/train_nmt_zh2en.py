@@ -28,13 +28,13 @@ def main(job_id, params):
                      saveFreq=1000,
                      sampleFreq=100,
                      maxlen_chunk_words=50,  # maximum length of the description
-                     datasets=['/home/Data/nmt/hms.ch.filter',
-                               '/home/Data/nmt/hms.en.filter.chunked'],
-                     valid_datasets=['/home/Data/nmt/devntest/MT02/MT02.src',
-                                     '/home/Data/nmt/devntest/MT02/reference0.tag.chunked.chunked'],
-                     dictionaries=['/home/Data/nmt/hms.ch.filter.pkl',
-                                   '/home/Data/nmt/hms.en.filter.chunked.pkl'],
-                     dictionary_chunk='/home/Data/nmt/hms.en.filter.chunked.chunktag.pkl',
+                     datasets=['/home/zhouh/Data/nmt/hms.ch.filter',
+                               '/home/zhouh/Data/nmt/hms.en.filter.chunked'],
+                     valid_datasets=['/home/zhouh/Data/nmt/devntest/MT02/MT02.src',
+                                     '/home/zhouh/Data/nmt/devntest/MT02/reference0.tag.chunked.chunked'],
+                     dictionaries=['/home/zhouh/Data/nmt/hms.ch.filter.pkl',
+                                   '/home/zhouh/Data/nmt/hms.en.filter.chunked.pkl'],
+                     dictionary_chunk='/home/zhouh/Data/nmt/hms.en.filter.chunked.chunktag.pkl',
                      use_dropout=params['use-dropout'][0],
                      overwrite=False)
     return validerr

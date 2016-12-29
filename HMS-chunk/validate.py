@@ -90,7 +90,7 @@ def main(model,
 
         print >> logfile, 'Iter ' + str(iter) + ', Word Cost ' + str(wordCost), 'Total Cost', totalCost
 
-        cost_cache.append(wordCost)
+        cost_cache.append(totalCost)
         cost_iter.append(iter)
 
 
@@ -166,56 +166,56 @@ def main(model,
 
             # decode the best five
 
-        if iter % 100000 == 0 and iter != beginModelIter:
-
-            decode_model_name ='./model_hal.npz.cw'
-
-            print >> logfile, '==========='
-
-            print >> logfile, 'Every 100000 Decode for', str(d_iter)
-
-            output_iter = outputfile + str(d_iter) + '.bws'
-
-            val_start_time = time.time()
-
-            cmd_translate = ['python',
-                             'translate_gpu.py',
-                             '-n',
-                             decode_model_name,
-                             pklmodel,
-                             dictionaries[0],
-                             dictionaries[1],
-                             valid_datasets[0],
-                             output_iter]
-
-            subprocess.check_call(" ".join(cmd_translate), shell=True)
-
-            print >> logfile, "Decoding took {} minutes".format(float(time.time() - val_start_time) / 60.)
-
-            cmd_bleu_cmd = ['perl', bleu_scrip, \
-                            valid_datasets[2], \
-                            '<', \
-                            output_iter, \
-                            '>'
-                            './output.eva']
-
-            subprocess.check_call(" ".join(cmd_bleu_cmd), shell=True)
-
-            fin = open('./output.eva', 'rU')
-            out = re.search('BLEU = [-.0-9]+', fin.readlines()[0])
-            fin.close()
-
-            bleu_score = float(out.group()[7:])
-
-            print >> logfile, 'Iter ' + str(d_iter) + 'BLEU: ' + str(bleu_score)
-
-            if bleu_score > best_bleu:
-                best_bleu = bleu_score
-                best_bleu_iter = d_iter
-
-            print >> logfile, '## Best BLEU: ' + str(best_bleu) + 'at Iter' + str(best_bleu_iter)
-
-            logfile.flush()
+        # if iter % 100000 == 0 and iter != beginModelIter:
+        #
+        #     decode_model_name ='./model_hal.npz.cw'
+        #
+        #     print >> logfile, '==========='
+        #
+        #     print >> logfile, 'Every 100000 Decode for', str(d_iter)
+        #
+        #     output_iter = outputfile + str(d_iter) + '.bws'
+        #
+        #     val_start_time = time.time()
+        #
+        #     cmd_translate = ['python',
+        #                      'translate_gpu.py',
+        #                      '-n',
+        #                      decode_model_name,
+        #                      pklmodel,
+        #                      dictionaries[0],
+        #                      dictionaries[1],
+        #                      valid_datasets[0],
+        #                      output_iter]
+        #
+        #     subprocess.check_call(" ".join(cmd_translate), shell=True)
+        #
+        #     print >> logfile, "Decoding took {} minutes".format(float(time.time() - val_start_time) / 60.)
+        #
+        #     cmd_bleu_cmd = ['perl', bleu_scrip, \
+        #                     valid_datasets[2], \
+        #                     '<', \
+        #                     output_iter, \
+        #                     '>'
+        #                     './output.eva']
+        #
+        #     subprocess.check_call(" ".join(cmd_bleu_cmd), shell=True)
+        #
+        #     fin = open('./output.eva', 'rU')
+        #     out = re.search('BLEU = [-.0-9]+', fin.readlines()[0])
+        #     fin.close()
+        #
+        #     bleu_score = float(out.group()[7:])
+        #
+        #     print >> logfile, 'Iter ' + str(d_iter) + 'BLEU: ' + str(bleu_score)
+        #
+        #     if bleu_score > best_bleu:
+        #         best_bleu = bleu_score
+        #         best_bleu_iter = d_iter
+        #
+        #     print >> logfile, '## Best BLEU: ' + str(best_bleu) + 'at Iter' + str(best_bleu_iter)
+        #
+        #     logfile.flush()
 
     logfile.close()
 

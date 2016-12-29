@@ -430,6 +430,16 @@ def param_init_gru_cond(options, params, prefix='gru_cond',
     params[_p(prefix, 'Ux_nl')] = Ux_nl
     params[_p(prefix, 'bx_nl')] = numpy.zeros((dim_nonlin,)).astype('float32')
 
+
+    U_word_hidden1 = norm_weight(dim_nonlin, dim_chunk_hidden)
+    params[_p(prefix, 'U_word_hidden1')] = U_word_hidden1
+    params[_p(prefix, 'b_gate_wordhidden_chunkhidden')] = numpy.zeros((dim_chunk_hidden,)).astype('float32')
+
+
+    U_chunk_hidden = ortho_weight(dim_chunk_hidden)
+    params[_p(prefix, 'U_chunk_hidden')] = U_chunk_hidden
+
+
     # context to LSTM
     Wc = norm_weight(dimctx, dim*2)
     params[_p(prefix, 'Wc')] = Wc
@@ -590,7 +600,7 @@ def  gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
                         Ux_chunk, Wcx_chunk, U_nl_chunk, Ux_nl_chunk, b_nl_chunk, bx_nl_chunk, Wx_chunk, bx_chunk,
                         W_chunk, b_chunk,
                         W_current_chunk_hidden, W_current_chunk_c, U, Wc, W_comb_att, W_cu_chunk_att, U_att, c_tt, Ux, Wcx, U_nl, Ux_nl,
-                        b_nl, bx_nl):
+                        b_nl, bx_nl, U_word_hidden1, b_gate_wordhidden_chunkhidden, U_chunk_hidden):
 
 
         #
@@ -702,7 +712,8 @@ def  gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
     def predict_word_hidden2(m_, word_hidden1, chunk_hidden,
                              pctx_, cc_, chunk_ctx,
                              W_current_chunk_hidden, W_current_chunk_c, U, Wc, W_comb_att,
-                             W_cu_chunk_att, U_att, c_tt, Ux, Wcx, U_nl, Ux_nl, b_nl, bx_nl):
+                             W_cu_chunk_att, U_att, c_tt, Ux, Wcx, U_nl, Ux_nl, b_nl, bx_nl,
+                             U_word_hidden1, b_gate_wordhidden_chunkhidden, U_chunk_hidden):
 
 
         zero_chunk_hidden = tensor.alloc(0., chunk_hidden.shape[0], chunk_hidden.shape[1])
@@ -732,13 +743,25 @@ def  gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
             alpha = alpha * context_mask
 
         alpha = alpha / alpha.sum(0, keepdims=True)
-        alpha = 0 * alpha
+        # alpha = 0 * alpha
         ctx_ = (cc_ * alpha[:, :, None]).sum(0)  # current context
 
+        chunk_ctx = 0 * chunk_ctx
+        # ctx_ = ctx_ + chunk_ctx
         ctx_ = ctx_ + chunk_ctx
 
 
 
+
+        gate = tensor.dot(word_hidden1, U_word_hidden1) + b_gate_wordhidden_chunkhidden
+        gate += tensor.dot(chunk_hidden, U_chunk_hidden)
+        gate = tensor.nnet.sigmoid(gate)
+
+        filter_hidden = gate * chunk_hidden
+        # filter_hidden += word_hidden1
+
+
+        # revise
         preact2 = tensor.dot(word_hidden1, U_nl)+b_nl
 
 
@@ -748,13 +771,15 @@ def  gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
         #
         # zero
         #
-        preact2 += tensor.dot(ctx_, Wc) + tensor.dot(zero_chunk_hidden, W_current_chunk_c)
+        preact2 += tensor.dot(ctx_, Wc) + tensor.dot(filter_hidden, W_current_chunk_c)
         # preact2 += tensor.dot(ctx_, Wc)
         preact2 = tensor.nnet.sigmoid(preact2)
 
         r2 = _slice(preact2, 0, dim)
         u2 = _slice(preact2, 1, dim)
 
+
+        # revise
         preactx2 = tensor.dot(word_hidden1, Ux_nl)+bx_nl
         preactx2 *= r2
 
@@ -762,14 +787,18 @@ def  gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
         ################
         # revise
         ################
-        preactx2 += tensor.dot(ctx_, Wcx) + tensor.dot(zero_chunk_hidden, W_current_chunk_hidden) # here we add current chunk representation
+        preactx2 += tensor.dot(ctx_, Wcx) + tensor.dot(filter_hidden, W_current_chunk_hidden) # here we add current chunk representation
         # preactx2 += tensor.dot(ctx_, Wcx) + tensor.dot(chunk_hidden, W_current_chunk_hidden) # here we add current chunk representation
         # preactx2 += tensor.dot(ctx_, Wcx) # here we add current chunk representation
 
 
         h2 = tensor.tanh(preactx2)
 
+
+        # revise
         h2 = u2 * word_hidden1 + (1. - u2) * h2
+
+
         h2 = m_[:, None] * h2 + (1. - m_)[:, None] * word_hidden1
 
         return h2, ctx_, alpha.T  # pstate_, preact, preactx, r, u
@@ -787,7 +816,7 @@ def  gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
                     Ux_chunk, Wcx_chunk, U_nl_chunk, Ux_nl_chunk, b_nl_chunk, bx_nl_chunk, Wx_chunk, bx_chunk,
                     W_chunk, b_chunk,
                     W_current_chunk_hidden, W_current_chunk_c, U, Wc, W_comb_att, W_cu_chunk_att, U_att, c_tt, Ux, Wcx,
-                    U_nl, Ux_nl, b_nl, bx_nl):
+                    U_nl, Ux_nl, b_nl, bx_nl, U_word_hidden1, b_gate_wordhidden_chunkhidden, U_chunk_hidden):
 
 
         word_hidden1, \
@@ -801,7 +830,7 @@ def  gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
                           Ux_chunk, Wcx_chunk, U_nl_chunk, Ux_nl_chunk, b_nl_chunk, bx_nl_chunk, Wx_chunk, bx_chunk,
                           W_chunk, b_chunk,
                           W_current_chunk_hidden, W_current_chunk_c, U, Wc, W_comb_att, W_cu_chunk_att, U_att, c_tt, Ux,
-                          Wcx, U_nl, Ux_nl, b_nl, bx_nl)
+                          Wcx, U_nl, Ux_nl, b_nl, bx_nl, U_word_hidden1, b_gate_wordhidden_chunkhidden, U_chunk_hidden)
 
 
         #
@@ -821,7 +850,8 @@ def  gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
         word_alpha = predict_word_hidden2(m_, word_hidden1, chunk_hidden,
                                           pctx_cw, cc, chunk_ctx,
                                           W_current_chunk_hidden, W_current_chunk_c, U, Wc, W_comb_att,
-                                          W_cu_chunk_att, U_att, c_tt, Ux, Wcx, U_nl, Ux_nl, b_nl, bx_nl)
+                                          W_cu_chunk_att, U_att, c_tt, Ux, Wcx, U_nl, Ux_nl, b_nl, bx_nl,
+                                          U_word_hidden1, b_gate_wordhidden_chunkhidden, U_chunk_hidden)
 
 
 
@@ -845,7 +875,10 @@ def  gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
                         tparams[_p(prefix, 'U_nl')],
                         tparams[_p(prefix, 'Ux_nl')],
                         tparams[_p(prefix, 'b_nl')],
-                        tparams[_p(prefix, 'bx_nl')]]
+                        tparams[_p(prefix, 'bx_nl')],
+                        tparams[_p(prefix, 'U_word_hidden1')],
+                        tparams[_p(prefix, 'b_gate_wordhidden_chunkhidden')],
+                        tparams[_p(prefix, 'U_chunk_hidden')]]
 
     chunk_shared_vars = [tparams[_p(prefix, 'chunk_transform_matrix')],
                          tparams[_p(prefix, 'U_chunk')],
