@@ -1996,7 +1996,7 @@ def pred_probs(f_log_probs, prepare_data, options, iterator, verbose=True):
 
         pprobs = f_log_probs(x, x_mask, y_c, y_mask_c, y_cw, y_mask_cw, last_word_in_chunk)
         for pp in pprobs:
-            probs.append(pp)
+            probs.append(pp)/home/zhouh/workspace/python/dl4mt-tutorial
 
         if numpy.isnan(numpy.mean(probs)):
             ipdb.set_trace()

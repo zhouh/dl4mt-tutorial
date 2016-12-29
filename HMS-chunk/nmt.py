@@ -79,6 +79,7 @@ def load_params(path, params):
 
 # layers: 'name': ('parameter initializer', 'feedforward')
 layers = {'ff': ('param_init_fflayer', 'fflayer'),
+          'bff': ('param_init_batch_fflayer', 'batch_fflayer'),
           'gru': ('param_init_gru', 'gru_layer'),
           'gru_cond': ('param_init_gru_cond', 'gru_cond_layer'),
           }
@@ -270,6 +271,37 @@ def fflayer(tparams, state_below, options, prefix='rconv',
     return eval(activ)(
         tensor.dot(state_below, tparams[_p(prefix, 'W')]) +
         tparams[_p(prefix, 'b')])
+
+
+# feedforward layer: affine transformation + point-wise nonlinearity
+def param_init_batch_fflayer(options, params, dict_size, prefix='ff', nin=None, nout=None,
+                       ortho=False):
+    if nin is None:
+        nin = options['dim_proj']
+    if nout is None:
+        nout = options['dim_proj']
+    params[_p(prefix, 'W')] = get_tensor_weight(dict_size, nin, nout, scale=0.01)
+    params[_p(prefix, 'b')] = numpy.zeros((dict_size, nout)).astype('float32')
+
+    return params
+
+
+def batch_fflayer(tparams, state_below, index, options, prefix='rconv',
+            activ='lambda x: tensor.tanh(x)', **kwargs):
+
+
+    if state_below.ndim == 3:
+        state_below_shape = state_below.shape
+        new_state = state_below.reshape([state_below_shape[0] * state_below_shape[1], state_below_shape[2]])
+        result = tensor.batched_dot(new_state, tparams[_p(prefix, 'W')][index.flatten()]) + \
+                 tparams[_p(prefix, 'b')][index.flatten()]
+        result = result.reshape([state_below_shape[0], state_below_shape[1], tparams[_p(prefix, 'W')][0].shape[1]])
+    else:
+        result = tensor.batched_dot(state_below, tparams[_p(prefix, 'W')][index]) + \
+                 tparams[_p(prefix, 'b')][index]
+
+
+    return eval(activ)(result)
 
 
 # GRU layer
@@ -1020,13 +1052,13 @@ def init_params(options):
     #
     # used to predict the word
     #
-    params = get_layer('ff')[0](options, params, prefix='ff_logit_lstm',
+    params = get_layer('bff')[0](options, params, options['n_chunks'], prefix='ff_logit_lstm',
                                 nin=options['dim'], nout=options['dim_word'],
                                 ortho=False)
-    params = get_layer('ff')[0](options, params, prefix='ff_logit_prev',
+    params = get_layer('bff')[0](options, params, options['n_chunks'], prefix='ff_logit_prev',
                                 nin=options['dim_word'],
                                 nout=options['dim_word'], ortho=False)
-    params = get_layer('ff')[0](options, params, prefix='ff_logit_ctx',
+    params = get_layer('bff')[0](options, params, options['n_chunks'], prefix='ff_logit_ctx',
                                 nin=ctxdim, nout=options['dim_word'],
                                 ortho=False)
     params = get_layer('ff')[0](options, params, prefix='ff_logit_using_chunk_hidden',
@@ -1035,7 +1067,7 @@ def init_params(options):
     # params = get_layer('ff')[0](options, params, prefix='ff_logit_chunk_hidden',
     #                             nin=ctxdim, nout=options['dim_word'],
     #                             ortho=False)
-    params = get_layer('ff')[0](options, params, prefix='ff_logit',
+    params = get_layer('bff')[0](options, params, options['n_chunks'], prefix='ff_logit',
                                 nin=options['dim_word'],
                                 nout=options['n_words'])
 
@@ -1156,6 +1188,34 @@ def build_model(tparams, options):
     emb_shifted = tensor.set_subtensor(emb_shifted[1:], emb[:-1])
     emb = emb_shifted
 
+
+    # shift the word embeddings
+    def _step_shift(chunk_idx, indicator, last_chunk_idx):
+
+
+
+        retval_y_chunk = indicator * chunk_idx \
+                   + (1. - indicator) * last_chunk_idx
+
+        return  retval_y_chunk.astype('int64')
+
+
+
+
+    # prepare scan arguments
+    seqs = [y_chunk, chunk_indicator]
+    init_states = [ tensor.zeros_like(y_chunk[0]) ]
+    _step = _step_shift
+    nsteps = y_chunk.shape[0]
+
+    y_chunk_cons, updates = theano.scan(_step,
+                                sequences=seqs,
+                                outputs_info=init_states,
+                                n_steps=nsteps,
+                                profile=profile,
+                                strict=True)
+
+
     y_chunk_shift = tensor.zeros_like(y_chunk)
     y_chunk_shift = tensor.set_subtensor(y_chunk_shift[1:], y_chunk[:-1])
 
@@ -1251,11 +1311,11 @@ def build_model(tparams, options):
     opt_ret['dec_alphas_cw'] = word_ctx_
 
     # compute word probabilities
-    logit_lstm_cw = get_layer('ff')[1](tparams, word_hidden2, options,
+    logit_lstm_cw = get_layer('bff')[1](tparams, word_hidden2, y_chunk_cons, options,
                                     prefix='ff_logit_lstm', activ='linear')
-    logit_prev_cw = get_layer('ff')[1](tparams, emb, options,
+    logit_prev_cw = get_layer('bff')[1](tparams, emb, y_chunk_cons, options,
                                     prefix='ff_logit_prev', activ='linear')
-    logit_ctx_cw = get_layer('ff')[1](tparams, word_ctx_, options,
+    logit_ctx_cw = get_layer('bff')[1](tparams, word_ctx_, y_chunk_cons, options,
                                    prefix='ff_logit_ctx', activ='linear')
 
 
@@ -1271,7 +1331,7 @@ def build_model(tparams, options):
 
     if options['use_dropout']:
         logit_cw = dropout_layer(logit_cw, use_noise, trng)
-    logit_cw = get_layer('ff')[1](tparams, logit_cw, options,
+    logit_cw = get_layer('bff')[1](tparams, logit_cw, y_chunk_cons, options,
                                prefix='ff_logit', activ='linear')
     logit_shp_cw = logit_cw.shape
     probs_cw = tensor.nnet.softmax(logit_cw.reshape([logit_shp_cw[0]*logit_shp_cw[1],
@@ -1466,9 +1526,8 @@ def build_sampler(tparams, options, trng, use_noise):
 
 
 
-    # given the chunk indicator, compute the word hidden2
     chunk_hidden = chunk_boundary[:, None] * current_position_hypo_chunk_hidden \
-                   + (1. - chunk_boundary)[:, None] * current_chunk_hidden
+                       + (1. - chunk_boundary)[:, None] * current_chunk_hidden
 
     h1_last_chunk_end_word = chunk_boundary[:, None] * word_hidden1 \
                              + (1. - chunk_boundary)[:, None] * last_chunk_end_word_hidden1
@@ -1497,11 +1556,11 @@ def build_sampler(tparams, options, trng, use_noise):
 
 
     # compute word probabilities
-    logit_lstm_cw = get_layer('ff')[1](tparams, word_hidden2, options,
+    logit_lstm_cw = get_layer('bff')[1](tparams, word_hidden2, y_chunk, options,
                                     prefix='ff_logit_lstm', activ='linear')
-    logit_prev_cw = get_layer('ff')[1](tparams, emb_chunk_word, options,
+    logit_prev_cw = get_layer('bff')[1](tparams, emb_chunk_word, y_chunk, options,
                                     prefix='ff_logit_prev', activ='linear')
-    logit_ctx_cw = get_layer('ff')[1](tparams, word_ctx, options,
+    logit_ctx_cw = get_layer('bff')[1](tparams, word_ctx, y_chunk, options,
                                    prefix='ff_logit_ctx', activ='linear')
 
 
@@ -1517,7 +1576,7 @@ def build_sampler(tparams, options, trng, use_noise):
 
     if options['use_dropout']:
         logit_cw = dropout_layer(logit_cw, use_noise, trng)
-    logit_cw = get_layer('ff')[1](tparams, logit_cw, options,
+    logit_cw = get_layer('bff')[1](tparams, logit_cw, y_chunk, options,
                                prefix='ff_logit', activ='linear')
     probs_cw = tensor.nnet.softmax(logit_cw)
     next_sample_cw = trng.multinomial(pvals=probs_cw).argmax(1)
@@ -1529,7 +1588,8 @@ def build_sampler(tparams, options, trng, use_noise):
     # compile a function to do the whole thing above, next word probability,
     # sampled word for the next target, next hidden state to be used
     print 'Building f_next_word..'
-    inps = [y_chunk_words,
+    inps = [y_chunk,
+            y_chunk_words,
             ctx,
             chunk_ctx,
             chunk_boundary,
@@ -1583,7 +1643,7 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
 
     next_w = -1 * numpy.ones((1,)).astype('int64')  # bos indicator
 
-    # next_chunk = -1 * numpy.ones((1,)).astype('int64')  # bos indicator
+    next_chunk = 0 * numpy.ones((1,)).astype('int64')  # bos indicator
     #
     # word_hidden1 = None
 
@@ -1598,17 +1658,23 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
 
 
         ret = f_next_chunk(*inps)
-        next_chunk_p, next_chunk, next_boudary_p, next_boundary, word_hidden1, hypo_chunk_hidden, chunk_ctx = \
+        next_chunk_p, current_next_chunk, next_boudary_p, next_boundary, word_hidden1, hypo_chunk_hidden, chunk_ctx = \
             ret[0], ret[1], ret[2], ret[3], ret[4], ret[5], ret[6]
 
 
         # get the chunk boundrary indocator
 
-        next_chunk = next_chunk_p.argmax(1)
-
+        current_next_chunk = next_chunk_p.argmax(1)
         chunk_boundary = next_boudary_p.argmax(1).astype('float32')
 
-        inps = [next_w,
+        next_chunk = chunk_boundary * current_next_chunk \
+                       + (1. - chunk_boundary) * next_chunk
+
+        next_chunk = next_chunk.astype('int64')
+
+
+        inps = [next_chunk,
+                next_w,
                 ctx,
                 chunk_ctx,
                 chunk_boundary,

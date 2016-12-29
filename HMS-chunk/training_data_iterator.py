@@ -70,7 +70,7 @@ class TrainingTextIterator:
             chunk_line = self.target.readline()
 
             if(chunk_line == '' and len(chunk_tag) == 0):
-                return None, None
+                return None, None, None
 
             # read until meeting empty line
             if(len(chunk_line.strip()) == 0):
@@ -182,6 +182,7 @@ class TrainingTextIterator:
 
                 tt = [self.target_chunk_dict[w] for w in tt]
 
+
                 #
                 # mark all the chunk tag in the dictionary as 0 and 1,
                 # we only want to predict the boundary
@@ -225,7 +226,7 @@ class TrainingTextIterator:
             print 'IOError'
             self.end_of_data = True
 
-        if len(source) <= 0 or len(target_chunk) <= 0 or len(target_chunk_words) <= 0:
+        if len(source) <= 0 or len(target_chunk) <= 0:
 
             # print len(source) ,len(target_chunk) , len(target_chunk_words)
             print 'StopIteration'
