@@ -748,7 +748,7 @@ def  gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
         #
         # zero
         #
-        preact2 += tensor.dot(ctx_, Wc) + tensor.dot(zero_chunk_hidden, W_current_chunk_c)
+        preact2 += tensor.dot(ctx_, Wc) + tensor.dot(chunk_hidden, W_current_chunk_c)
         # preact2 += tensor.dot(ctx_, Wc)
         preact2 = tensor.nnet.sigmoid(preact2)
 
@@ -762,7 +762,7 @@ def  gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
         ################
         # revise
         ################
-        preactx2 += tensor.dot(ctx_, Wcx) + tensor.dot(zero_chunk_hidden, W_current_chunk_hidden) # here we add current chunk representation
+        preactx2 += tensor.dot(ctx_, Wcx) + tensor.dot(chunk_hidden, W_current_chunk_hidden) # here we add current chunk representation
         # preactx2 += tensor.dot(ctx_, Wcx) + tensor.dot(chunk_hidden, W_current_chunk_hidden) # here we add current chunk representation
         # preactx2 += tensor.dot(ctx_, Wcx) # here we add current chunk representation
 
