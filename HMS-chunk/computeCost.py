@@ -89,8 +89,6 @@ def main(model,
     valid_errs, valid_errs_cw = pred_probs(f_log_probs, f_log_probs_cw, prepare_training_data,
                                             options, valid)
 
-    valid_errs = pred_probs(f_log_probs, prepare_training_data,
-                                        options, valid)
     valid_err = valid_errs.mean()
     valid_err_cw = valid_errs_cw.mean()
 

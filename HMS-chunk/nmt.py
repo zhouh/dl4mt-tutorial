@@ -743,12 +743,12 @@ def  gru_cond_layer(tparams, emb, chunk_index, options, prefix='gru',
             alpha = alpha * context_mask
 
         alpha = alpha / alpha.sum(0, keepdims=True)
-        # alpha = 0 * alpha
+        alpha = 0 * alpha
         ctx_ = (cc_ * alpha[:, :, None]).sum(0)  # current context
 
-        chunk_ctx = 0 * chunk_ctx
-        # ctx_ = ctx_ + chunk_ctx
+        # chunk_ctx = 0 * chunk_ctx
         ctx_ = ctx_ + chunk_ctx
+        # ctx_ = ctx_ + chunk_ctx
 
 
 
