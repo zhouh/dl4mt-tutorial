@@ -383,6 +383,59 @@ def param_init_gru_cond(options, params, prefix='gru_cond',
     c_att = numpy.zeros((1,)).astype('float32')
     params[_p(prefix, 'c_tt')] = c_att
 
+
+
+    #
+    # params for the second decode layer
+    #
+    W2 = numpy.concatenate([norm_weight(dim, dim),
+                           norm_weight(dim, dim)], axis=1)
+    params[_p(prefix, 'W2')] = W2
+    params[_p(prefix, 'b2')] = numpy.zeros((2 * dim,)).astype('float32')
+    U2 = numpy.concatenate([ortho_weight(dim_nonlin),
+                           ortho_weight(dim_nonlin)], axis=1)
+    params[_p(prefix, 'U2')] = U2
+
+    Wx2 = norm_weight(dim, dim_nonlin)
+    params[_p(prefix, 'Wx2')] = Wx2
+    Ux2 = ortho_weight(dim_nonlin)
+    params[_p(prefix, 'Ux2')] = Ux2
+    params[_p(prefix, 'bx2')] = numpy.zeros((dim_nonlin,)).astype('float32')
+
+    U_nl2 = numpy.concatenate([ortho_weight(dim_nonlin),
+                              ortho_weight(dim_nonlin)], axis=1)
+    params[_p(prefix, 'U_nl2')] = U_nl2
+    params[_p(prefix, 'b_nl2')] = numpy.zeros((2 * dim_nonlin,)).astype('float32')
+
+    Ux_nl2 = ortho_weight(dim_nonlin)
+    params[_p(prefix, 'Ux_nl2')] = Ux_nl2
+    params[_p(prefix, 'bx_nl2')] = numpy.zeros((dim_nonlin,)).astype('float32')
+
+    # context to LSTM
+    Wc2 = norm_weight(dimctx, dim*2)
+    params[_p(prefix, 'Wc2')] = Wc2
+
+    Wcx2 = norm_weight(dimctx, dim)
+    params[_p(prefix, 'Wcx2')] = Wcx2
+
+    # attention: combined -> hidden
+    W_comb_att2 = norm_weight(dim, dimctx)
+    params[_p(prefix, 'W_comb_att2')] = W_comb_att2
+
+    # attention: context -> hidden
+    Wc_att2 = norm_weight(dimctx)
+    params[_p(prefix, 'Wc_att2')] = Wc_att2
+
+    # attention: hidden bias
+    b_att2 = numpy.zeros((dimctx,)).astype('float32')
+    params[_p(prefix, 'b_att2')] = b_att2
+
+    # attention:
+    U_att2 = norm_weight(dimctx, 1)
+    params[_p(prefix, 'U_att2')] = U_att2
+    c_att2 = numpy.zeros((1,)).astype('float32')
+    params[_p(prefix, 'c_tt2')] = c_att2
+
     return params
 
 
@@ -418,6 +471,10 @@ def gru_cond_layer(tparams, state_below, options, prefix='gru',
         'Context must be 3-d: #annotation x #sample x dim'
     pctx_ = tensor.dot(context, tparams[_p(prefix, 'Wc_att')]) +\
         tparams[_p(prefix, 'b_att')]
+    pctx_2 = tensor.dot(context, tparams[_p(prefix, 'Wc_att2')]) +\
+        tparams[_p(prefix, 'b_att2')]
+
+
 
     def _slice(_x, n, dim):
         if _x.ndim == 3:
@@ -430,9 +487,13 @@ def gru_cond_layer(tparams, state_below, options, prefix='gru',
     state_below_ = tensor.dot(state_below, tparams[_p(prefix, 'W')]) +\
         tparams[_p(prefix, 'b')]
 
-    def _step_slice(m_, x_, xx_, h_, ctx_, alpha_, pctx_, cc_,
+    def _step_slice(m_, x_, xx_, h_, h__, ctx_, alpha_,
+                    pctx_, pctx_2, cc_,
                     U, Wc, W_comb_att, U_att, c_tt, Ux, Wcx,
-                    U_nl, Ux_nl, b_nl, bx_nl):
+                    U_nl, Ux_nl, b_nl, bx_nl,
+                    W2, b2, Wx2, bx2,
+                    U2, Wc2, W_comb_att2, U_att2, c_tt2, Ux2, Wcx2,
+                    U_nl2, Ux_nl2, b_nl2, bx_nl2):
 
         preact1 = tensor.dot(h_, U)
         preact1 += x_
@@ -479,7 +540,72 @@ def gru_cond_layer(tparams, state_below, options, prefix='gru',
         h2 = u2 * h1 + (1. - u2) * h2
         h2 = m_[:, None] * h2 + (1. - m_)[:, None] * h1
 
-        return h2, ctx_, alpha.T  # pstate_, preact, preactx, r, u
+        h_first_layer = h2
+
+
+
+        #
+        # the second layer
+        #
+
+
+
+        # projected x
+        xx_ = tensor.dot(h_first_layer, Wx2) + bx2
+        x_ = tensor.dot(h_first_layer, W2) + b2
+
+
+        preact1 = tensor.dot(h__, U2)
+        preact1 += x_
+        preact1 = tensor.nnet.sigmoid(preact1)
+
+        r1 = _slice(preact1, 0, dim)
+        u1 = _slice(preact1, 1, dim)
+
+        preactx1 = tensor.dot(h__, Ux2)
+        preactx1 *= r1
+        preactx1 += xx_
+
+        h1 = tensor.tanh(preactx1)
+
+        h1 = u1 * h__ + (1. - u1) * h1
+        h1 = m_[:, None] * h1 + (1. - m_)[:, None] * h__
+
+        # attention
+
+        pstate_ = tensor.dot(h1, W_comb_att2)
+        pctx__ = pctx_2 + pstate_[None, :, :]
+        #pctx__ += xc_
+        pctx__ = tensor.tanh(pctx__)
+        alpha = tensor.dot(pctx__, U_att2)+c_tt2
+        alpha = alpha.reshape([alpha.shape[0], alpha.shape[1]])
+        alpha = tensor.exp(alpha)
+        if context_mask:
+            alpha = alpha * context_mask
+        alpha = alpha / alpha.sum(0, keepdims=True)
+        ctx_ = (cc_ * alpha[:, :, None]).sum(0)  # current context
+
+        preact2 = tensor.dot(h1, U_nl2)+b_nl2
+        preact2 += tensor.dot(ctx_, Wc2)
+        preact2 = tensor.nnet.sigmoid(preact2)
+
+        r2 = _slice(preact2, 0, dim)
+        u2 = _slice(preact2, 1, dim)
+
+        preactx2 = tensor.dot(h1, Ux_nl2)+bx_nl2
+        preactx2 *= r2
+        preactx2 += tensor.dot(ctx_, Wcx2)
+
+        h2 = tensor.tanh(preactx2)
+
+        h2 = u2 * h1 + (1. - u2) * h2
+        h2 = m_[:, None] * h2 + (1. - m_)[:, None] * h1
+
+        h_second_layer = h2
+
+
+
+        return h_first_layer, h_second_layer, ctx_, alpha.T  # pstate_, preact, preactx, r, u
 
     seqs = [mask, state_below_, state_belowx]
     #seqs = [mask, state_below_, state_belowx, state_belowc]
@@ -495,20 +621,36 @@ def gru_cond_layer(tparams, state_below, options, prefix='gru',
                    tparams[_p(prefix, 'U_nl')],
                    tparams[_p(prefix, 'Ux_nl')],
                    tparams[_p(prefix, 'b_nl')],
-                   tparams[_p(prefix, 'bx_nl')]]
+                   tparams[_p(prefix, 'bx_nl')],
+                   tparams[_p(prefix, 'W2')],
+                   tparams[_p(prefix, 'b2')],
+                   tparams[_p(prefix, 'Wx2')],
+                   tparams[_p(prefix, 'bx2')],
+                   tparams[_p(prefix, 'U2')],
+                   tparams[_p(prefix, 'Wc2')],
+                   tparams[_p(prefix, 'W_comb_att2')],
+                   tparams[_p(prefix, 'U_att2')],
+                   tparams[_p(prefix, 'c_tt2')],
+                   tparams[_p(prefix, 'Ux2')],
+                   tparams[_p(prefix, 'Wcx2')],
+                   tparams[_p(prefix, 'U_nl2')],
+                   tparams[_p(prefix, 'Ux_nl2')],
+                   tparams[_p(prefix, 'b_nl2')],
+                   tparams[_p(prefix, 'bx_nl2')]]
 
     if one_step:
-        rval = _step(*(seqs + [init_state, None, None, pctx_, context] +
+        rval = _step(*(seqs + [init_state, init_state, None, None, pctx_, pctx_2, context] +
                        shared_vars))
     else:
         rval, updates = theano.scan(_step,
                                     sequences=seqs,
                                     outputs_info=[init_state,
+                                                  init_state,
                                                   tensor.alloc(0., n_samples,
                                                                context.shape[2]),
                                                   tensor.alloc(0., n_samples,
                                                                context.shape[0])],
-                                    non_sequences=[pctx_, context]+shared_vars,
+                                    non_sequences=[pctx_, pctx_2, context]+shared_vars,
                                     name=_p(prefix, '_layers'),
                                     n_steps=nsteps,
                                     profile=profile,
@@ -626,13 +768,13 @@ def build_model(tparams, options):
                                             one_step=False,
                                             init_state=init_state)
     # hidden states of the decoder gru
-    proj_h = proj[0]
+    proj_h = proj[1]
 
     # weighted averages of context, generated by attention module
-    ctxs = proj[1]
+    ctxs = proj[2]
 
     # weights (alignment matrix)
-    opt_ret['dec_alphas'] = proj[2]
+    opt_ret['dec_alphas'] = proj[3]
 
     # compute word probabilities
     logit_lstm = get_layer('ff')[1](tparams, proj_h, options,
@@ -709,10 +851,10 @@ def build_sampler(tparams, options, trng, use_noise):
                                             one_step=True,
                                             init_state=init_state)
     # get the next hidden state
-    next_state = proj[0]
+    next_state = proj[1]
 
     # get the weighted averages of context for this target word y
-    ctxs = proj[1]
+    ctxs = proj[2]
 
     logit_lstm = get_layer('ff')[1](tparams, next_state, options,
                                     prefix='ff_logit_lstm', activ='linear')
