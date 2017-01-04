@@ -1685,9 +1685,9 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
             hyp_last_chunk_last_word_hidden1 = []
 
             for idx in xrange(len(new_hyp_samples)):
-                if new_hyp_samples[idx][-1] == 0 \
-                        or \
-                        (new_hyp_sample_boundary[idx][-1] == 1.0 and  new_hyp_sample_chunk[idx][-1] == 0):
+                if new_hyp_samples[idx][-1] == 0:
+
+
                     sample.append(new_hyp_samples[idx][0:-2])
                     sample_boundary.append(new_hyp_sample_boundary[idx])
                     sample_chunk.append(new_hyp_sample_chunk[idx])
