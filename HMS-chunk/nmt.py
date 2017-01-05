@@ -1628,9 +1628,21 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
 
 
         if jointProb:
-            indicator_score = next_boudary_p.max(1)
+            indicator_score = numpy.log(next_boudary_p.max(1))
+
+            chunk_score = numpy.log(next_chunk_p.max(1))
+
+            chunk_score = chunk_boundary * chunk_score
+
+            indicator_score = indicator_score + chunk_score
             indicator_score = indicator_score.reshape(indicator_score.shape[0], 1)
-            next_word_p = indicator_score * next_word_p
+
+            # next_word_p = indicator_score + next_word_p
+
+            next_word_score = indicator_score + numpy.log(next_word_p)
+        else:
+            next_word_score = numpy.log(next_word_p)
+
 
 
         if stochastic:
@@ -1647,7 +1659,7 @@ def gen_sample(tparams, f_init, f_next_chunk, f_next_word, x,
             if nw == 0 or (nc == 0 and nb == 1.0):
                 break
         else:
-            cand_scores = hyp_scores[:, None] - numpy.log(next_word_p)
+            cand_scores = hyp_scores[:, None] - next_word_score
             cand_flat = cand_scores.flatten()
             ranks_flat = cand_flat.argsort()[:(k-dead_k)]
 
