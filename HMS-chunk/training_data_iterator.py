@@ -49,6 +49,7 @@ class TrainingTextIterator:
         self.source_buffer = []
         self.target_chunk_buffer = []
         self.target_chunk_words_buffer = []
+        self.target_phrase_buffer = []
         self.k = batch_size * 50
 
         self.end_of_data = False
@@ -65,12 +66,13 @@ class TrainingTextIterator:
     def readNextChunkSent(self):
         chunk_words = []
         chunk_tag = []
+        phrase = []
 
         while(True):
             chunk_line = self.target.readline()
 
             if(chunk_line == '' and len(chunk_tag) == 0):
-                return None, None
+                return None, None, None
 
             # read until meeting empty line
             if(len(chunk_line.strip()) == 0):
@@ -84,10 +86,18 @@ class TrainingTextIterator:
             ctags[0] = tokens[0]
             chunk_tag.extend( ctags )
             chunk_words.extend( words )
+            phrase.append(words)
+            phrase.extend([ [] ] * (len(words) - 1))
 
         assert len(chunk_tag) == len(chunk_words)
+        assert len(phrase) == len(chunk_tag)
 
-        return chunk_tag, chunk_words
+        # print 'chunk_tag',chunk_tag
+        # print 'chunk_words',chunk_words
+        # print 'phrase',phrase
+
+
+        return chunk_tag, chunk_words, phrase
 
     def readBuffer(self):
 
@@ -101,7 +111,7 @@ class TrainingTextIterator:
                 break
 
             # print ss
-            chunk_tags, chunk_words = self.readNextChunkSent()
+            chunk_tags, chunk_words, phrase = self.readNextChunkSent()
             if chunk_tags is None and chunk_words is None:
                 break
 
@@ -110,6 +120,7 @@ class TrainingTextIterator:
             self.source_buffer.append(ss.strip().split())
             self.target_chunk_buffer.append(chunk_tags)
             self.target_chunk_words_buffer.append(chunk_words)
+            self.target_phrase_buffer.append(phrase)
 
         # sort by target buffer
         tlen = numpy.array([len(t) for t in self.target_chunk_buffer])
@@ -118,10 +129,12 @@ class TrainingTextIterator:
         _sbuf = [self.source_buffer[i] for i in tidx]
         _tcbuf = [self.target_chunk_buffer[i] for i in tidx]
         _tcwbuf = [self.target_chunk_words_buffer[i] for i in tidx]
+        _pbuf = [self.target_phrase_buffer[i] for i in tidx]
 
         self.source_buffer = _sbuf
         self.target_chunk_buffer = _tcbuf
         self.target_chunk_words_buffer = _tcwbuf
+        self.target_phrase_buffer = _pbuf
 
         if len(self.source_buffer) == 0 or len(self.target_chunk_buffer) == 0:
 
@@ -140,6 +153,7 @@ class TrainingTextIterator:
         source = []
         target_chunk = []
         target_chunk_words = []
+        target_phrase = []
 
         get_none_items = False
 
@@ -182,6 +196,7 @@ class TrainingTextIterator:
 
                 tt = [self.target_chunk_dict[w] for w in tt]
 
+
                 #
                 # mark all the chunk tag in the dictionary as 0 and 1,
                 # we only want to predict the boundary
@@ -199,7 +214,17 @@ class TrainingTextIterator:
                 if self.n_words_target > 0:
                     tcw = [w if w < self.n_words_target else 1 for w in tcw]
 
-                # print 'target after', tcw
+
+                p = self.target_phrase_buffer.pop()
+                p_tmp = []
+
+                # print 'target before', tcw
+                for p_i in p:
+                    p_i = [self.target_dict[w] if w in self.target_dict else 1 for w in p_i]
+                    if self.n_words_target > 0:
+                        p_i = [w if w < self.n_words_target else 1 for w in p_i]
+                    p_tmp.append(p_i)
+                p = p_tmp
 
 
                 # if the source or target chunk or words in target chunk exceed max len, just skip
@@ -215,6 +240,7 @@ class TrainingTextIterator:
                 source.append(ss)
                 target_chunk.append(tt)
                 target_chunk_words.append(tcw)
+                target_phrase.append(p)
 
                 if len(source) >= self.batch_size or \
                         len(target_chunk) >= self.batch_size:
@@ -225,7 +251,7 @@ class TrainingTextIterator:
             print 'IOError'
             self.end_of_data = True
 
-        if len(source) <= 0 or len(target_chunk) <= 0 or len(target_chunk_words) <= 0:
+        if len(source) <= 0 or len(target_chunk) <= 0:
 
             # print len(source) ,len(target_chunk) , len(target_chunk_words)
             print 'StopIteration'
@@ -233,4 +259,9 @@ class TrainingTextIterator:
             self.reset()
             raise StopIteration
 
-        return source, target_chunk, target_chunk_words
+        return source, target_chunk, target_chunk_words, target_phrase
+
+
+
+
+

@@ -167,7 +167,7 @@ def concatenate(tensor_list, axis=0):
 
 
 # batch preparation
-def prepare_training_data(seqs_x, seqs_y_c, seqs_y_cw,  maxlen_chunk=None, maxlen_cw=None, n_words_src=30000,
+def prepare_training_data(seqs_x, seqs_y_c, seqs_y_cw, seqs_phrase, maxlen_chunk=None, maxlen_cw=None, n_words_src=30000,
                  n_words=30000):
     # x: a list of sentences
     lengths_x = [len(s) for s in seqs_x]
@@ -177,22 +177,24 @@ def prepare_training_data(seqs_x, seqs_y_c, seqs_y_cw,  maxlen_chunk=None, maxle
     maxlen_x = numpy.max(lengths_x) + 1
     maxlen_y = numpy.max(lengths_y) + 1
 
+    max_len_phrase = 6
+
+    # print seqs_y_cw
+    # print seqs_y_c
+    # print seqs_phrase
+
     x = numpy.zeros((maxlen_x, n_samples)).astype('int64')
     y_c = numpy.zeros((maxlen_y, n_samples)).astype('int64')
     y_cw = numpy.zeros((maxlen_y, n_samples)).astype('int64')
     x_mask = numpy.zeros((maxlen_x, n_samples)).astype('float32')
     y_mask = numpy.zeros((maxlen_y, n_samples)).astype('float32')
     chunk_indicator = numpy.zeros((maxlen_y, n_samples)).astype('float32')
+    phrase_mask = numpy.zeros((maxlen_y, n_samples, max_len_phrase)).astype('float32')
+    y_phrase = numpy.zeros((maxlen_y, n_samples, max_len_phrase)).astype('int64')
 
-    for idx, [s_x, s_y_c, s_y_cw] in enumerate(zip(seqs_x, seqs_y_c, seqs_y_cw)):
+    for idx, [s_x, s_y_c, s_y_cw, phrase] in enumerate(zip(seqs_x, seqs_y_c, seqs_y_cw, seqs_phrase)):
         x[:lengths_x[idx], idx] = s_x
         x_mask[:lengths_x[idx]+1, idx] = 1.
-        # print 'yc', y_c
-        # print 'shape yc', y_c.shape
-        # print 'idx', idx
-        # print 'max', maxlen_y[idx]
-        # print 'syc', s_y_c
-        # print 'shape syc', s_y_c.shape
         y_c[:lengths_y[idx], idx] = s_y_c
         y_cw[:lengths_y[idx], idx] = s_y_cw
         y_mask[:lengths_y[idx]+1, idx] = 1.
@@ -204,10 +206,27 @@ def prepare_training_data(seqs_x, seqs_y_c, seqs_y_cw,  maxlen_chunk=None, maxle
         chunk_indicator[:lengths_y[idx], idx] = indicator_mask
 
 
+        # print 'len', len(phrase), 'max', maxlen_y
+        for idx_times, p_i in enumerate(phrase):
+
+            l = len(p_i)
+            if l > max_len_phrase:
+                l = max_len_phrase
+
+            # print 'l', l
+            # print 'idx_times', idx_times
+
+            y_phrase[idx_times, idx, :l] = p_i[:l]
+            phrase_mask[idx_times, idx, :l] = 1
+
+        # the end word phrase only have one eos
+        phrase_mask[len(phrase), idx, 0] = 1
+
+
 
     # print y_cw
 
-    return x, x_mask, y_c, y_cw, chunk_indicator, y_mask
+    return x, x_mask, y_c, y_cw, chunk_indicator, y_mask, y_phrase, phrase_mask
 
 # batch preparation
 def prepare_data(seqs_x, seqs_y, maxlen=None, n_words_src=30000,
@@ -1063,6 +1082,12 @@ def init_params(options):
                                 ortho=False)
 
 
+    params = get_layer('ff')[0](options, params, prefix='ff_logit_phrase',
+                                nin=options['dim_chunk'],
+                                nout=options['n_words'],
+                                ortho=False)
+
+
     #
     # used for predict word boundary
     #
@@ -1105,6 +1130,9 @@ def build_model(tparams, options):
     y_chunk_words = tensor.matrix('y_chunk_words', dtype='int64')
     y_mask = tensor.matrix('y_mask', dtype='float32')
     chunk_indicator = tensor.matrix('chunk_indicator', dtype='float32')
+
+    y_phrase = tensor.tensor3('y_phrase', dtype='int64')
+    phrase_mask = tensor.tensor3('phrase_mask', dtype='float32')\
 
     # for the backward rnn, we just need to invert x and x_mask
     xr = x[::-1]
@@ -1201,6 +1229,8 @@ def build_model(tparams, options):
 
     logit_chunk = tensor.tanh(logit_lstm_chunk+logit_prev_chunk+logit_ctx_chunk)
 
+    logit_phrase = tensor.tanh(logit_lstm_chunk+logit_prev_chunk+logit_ctx_chunk)
+
     if options['use_dropout']:
         logit_chunk = dropout_layer(logit_chunk, use_noise, trng)
     logit_chunk = get_layer('ff')[1](tparams, logit_chunk, options,
@@ -1209,7 +1239,29 @@ def build_model(tparams, options):
     probs_chunk = tensor.nnet.softmax(logit_chunk.reshape([logit_shp_chunk[0]*logit_shp_chunk[1],
                                                logit_shp_chunk[2]]))
 
-    # cost
+
+    if options['use_dropout']:
+        logit_phrase = dropout_layer(logit_phrase, use_noise, trng)
+    logit_phrase = get_layer('ff')[1](tparams, logit_phrase, options,
+                               prefix='ff_logit_phrase', activ='linear')
+    logit_shp_phrase = logit_phrase.shape
+    probs_phrase = tensor.nnet.softmax(logit_phrase.reshape([logit_shp_phrase[0]*logit_shp_phrase[1],
+                                               logit_shp_phrase[2]]))
+
+
+    # cost phrase
+    y_flat_phrase = y_phrase.flatten()
+    y_flat_idx_phrase = tensor.arange(y_flat_phrase.shape[0]) * options['n_words'] + y_flat_phrase
+    probs = tensor.tile(probs_phrase, (1,1,6))
+    cost_phrase = -tensor.log(probs.flatten()[y_flat_idx_phrase])
+    cost_phrase = cost_phrase.reshape([y_phrase.shape[0], y_phrase.shape[1], y_phrase.shape[2]])
+
+    cost_phrase = cost_phrase * phrase_mask
+    cost_phrase = cost_phrase.sum(2)
+
+
+
+    # cost chunk
     y_flat_chunk = y_chunk.flatten()
     y_flat_idx_chunk = tensor.arange(y_flat_chunk.shape[0]) * options['n_chunks'] + y_flat_chunk
     cost_chunk = -tensor.log(probs_chunk.flatten()[y_flat_idx_chunk])
@@ -1286,12 +1338,13 @@ def build_model(tparams, options):
 
 
     cost_chunk = cost_chunk * chunk_indicator
-    cost = cost_boundary + cost_cw + cost_chunk
+    cost_phrase = cost_phrase * chunk_indicator
+    cost = cost_boundary + cost_cw + cost_chunk + cost_phrase
     cost = (cost * y_mask).sum(0)
 
     cost_cw = (cost_cw * y_mask).sum(0)
 
-    return trng, use_noise, x, x_mask, y_chunk, y_mask, y_chunk_words, chunk_indicator,\
+    return trng, use_noise, x, x_mask, y_chunk, y_mask, y_chunk_words, chunk_indicator, y_phrase, phrase_mask,\
            opt_ret, cost, cost_cw
 
 # build a sampler
@@ -1738,17 +1791,17 @@ def pred_probs(f_log_probs, f_log_probs_cw, prepare_data, options, iterator, ver
 
     n_done = 0
 
-    for x, y_chunk, y_cw in iterator:
+    for x, y_chunk, y_cw, y_p in iterator:
         n_done += len(x)
 
         len_list = [ len(y_cw[a])+1 for a in range(len(y_cw)) ]
         token_size += sum(len_list)
 
-        x, x_mask, y_c, y_cw, chunk_indicator, y_mask = prepare_data(x, y_chunk, y_cw,
+        x, x_mask, y_c, y_cw, chunk_indicator, y_mask, y_phrase, phrase_mask = prepare_data(x, y_chunk, y_cw, y_p,
                                             n_words_src=options['n_words_src'],
                                             n_words=options['n_words'])
 
-        pprobs = f_log_probs(x, x_mask, y_c, y_mask, y_cw, chunk_indicator)
+        pprobs = f_log_probs(x, x_mask, y_c, y_mask, y_cw, chunk_indicator, y_phrase, phrase_mask)
         pprobs_cw = f_log_probs_cw(x, x_mask, y_c, y_mask, y_cw, chunk_indicator)
         for pp in pprobs:
             probs.append(pp)
@@ -1970,12 +2023,13 @@ def train(dim_word=100,  # word vector dimensionality
     # modify the module of build model!
     # especially the inputs and outputs
     trng, use_noise, \
-    x, x_mask, y_chunk, y_mask, y_cw, y_chunk_indicator, \
+    x, x_mask, y_chunk, y_mask, y_cw, y_chunk_indicator, y_phrase, phrase_mask,\
     opt_ret, \
     cost, cost_cw= \
         build_model(tparams, model_options)
 
-    inps = [x, x_mask, y_chunk, y_mask, y_cw, y_chunk_indicator]
+    inps = [x, x_mask, y_chunk, y_mask, y_cw, y_chunk_indicator, y_phrase, phrase_mask]
+    inps_cw = [x, x_mask, y_chunk, y_mask, y_cw, y_chunk_indicator]
 
     print 'Building sampler'
     f_init, f_next_chunk, f_next_word = build_sampler(tparams, model_options, trng, use_noise)
@@ -1983,7 +2037,7 @@ def train(dim_word=100,  # word vector dimensionality
     # before any regularizer
     print 'Building f_log_probs...',
     f_log_probs = theano.function(inps, cost, profile=profile)
-    f_log_probs_cw = theano.function(inps, cost_cw, profile=profile)
+    f_log_probs_cw = theano.function(inps_cw, cost_cw, profile=profile)
     print 'Done'
 
     cost = cost.mean()
@@ -2065,15 +2119,16 @@ def train(dim_word=100,  # word vector dimensionality
     for eidx in xrange(max_epochs):
         n_samples = 0
 
-        for x, y_chunk, y_cw in train:
+        for x, y_chunk, y_cw, y_p in train:
             n_samples += len(x)
             uidx += 1
             use_noise.set_value(1.)
 
-            x, x_mask, y_c, y_cw, chunk_indicator, y_mask = \
+            x, x_mask, y_c, y_cw, chunk_indicator, y_mask, y_phrase, phrase_mask = \
                 prepare_training_data(x,
                                       y_chunk,
                                       y_cw,
+                                      y_p,
                                       maxlen_chunk=maxlen_chunk,
                                       maxlen_cw=maxlen_chunk_words,
                                       n_words_src=n_words_src,
@@ -2089,7 +2144,7 @@ def train(dim_word=100,  # word vector dimensionality
 
 
             # compute cost, grads and copy grads to sh            self.target_buffer = _tcbufared variables
-            cost = f_grad_shared(x, x_mask, y_c, y_mask, y_cw, chunk_indicator)
+            cost = f_grad_shared(x, x_mask, y_c, y_mask, y_cw, chunk_indicator,  y_phrase, phrase_mask)
 
             # print 'Epoch ', eidx, 'processed one batch'
 
